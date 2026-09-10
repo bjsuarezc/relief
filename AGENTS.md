@@ -10,6 +10,11 @@ Esas decisiones ya están tomadas y documentadas: no las contradigas ni las
 re-abras sin que el propietario lo pida. Ante una duda de diseño, la fuente
 de verdad es `docs/01-vision.md`.
 
+**Al iniciar cada sesión, lee primero `docs/05-bitacora.md`**: contiene el
+historial de decisiones, el estado actual y el siguiente paso acordado.
+Al terminar tu sesión, actualiza la bitácora con lo realizado y el nuevo
+siguiente paso (es el mecanismo de memoria entre sesiones).
+
 ## Modo de colaboración (acordado con el propietario)
 
 Este proyecto se desarrolla con IA, pero el propietario debe poder explicar
