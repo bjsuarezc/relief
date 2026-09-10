@@ -96,10 +96,31 @@ estado y la historia antes de continuar.
 - Error aprendido: al serializar el input para el payload faltaba derivar
   `Serialize` (solo tenía `Deserialize`); serde exige ambos para cada dirección.
 
+### UI de captura — paso 1 (barra de captura rápida)
+
+- Decisiones de producto del propietario (captura):
+  - **Sin fecha elegida = hoy**: el frontend manda la fecha de hoy en
+    `dueDate` (no null) — la BD siempre guarda la verdad, el evento
+    `created` captura la fecha real y "Atrasadas" no necesita lógica especial.
+  - **Selector persistente para captura en lote**: al abrirse "+ fecha",
+    el picker queda abierto para registrar varias tareas en distintos días
+    sin reabrir. Arranca en vista de semana, expandible a mes completo.
+- Implementado y probado por el propietario:
+  - Acción `createTask` en el store (Zustand): agrega la Task al final
+    (mismo orden que get_tasks), errores en `error` sin lanzar excepción.
+  - Componente `CaptureBar` (`src/components/`): input grande + Enter/[+],
+    dueDate = hoy vía date-fns, foco se conserva tras cada captura
+    (captura en lote), texto no se pierde si falla, mensaje de error
+    bajo el input. Validación de título vacío duplicada barra+Rust (a propósito).
+  - App.tsx: barra montada + lista provisional en texto plano para
+    verificar el loop. La lista real (check, prioridad, atrasadas) viene después.
+- Commits: `e9b7b78` (create_task + anotaciones), `fd33773` (barra de captura).
+- Nota pedagógica: `useRef` para manejar el foco sin re-render;
+  `<form onSubmit>` para Enter nativo.
+
 ### Estado / siguiente paso
 
-- ✅ `create_task` implementado y verificado (cargo build + npm run build OK).
-- ⏭️ Siguiente: **UI de captura** (input + selector de fecha + prioridad) y
-  acción `createTask` en el store (Zustand). Definir la UX de captura con el
-  propietario (principio: fricción cero, < 5 segundos).
-- Sin commit todavía: pendiente de revisión del propietario.
+- ✅ Loop básico verificado: capturar → guardar → mostrar.
+- ⏭️ Siguiente (acordado): **paso 2 — chips "+ fecha" (picker de semana
+  persistente) y "+ prioridad"**; luego paso 3 — expansión del picker a mes.
+  Después: lista visual de tareas (check, prioridad, sección Atrasadas).
