@@ -68,3 +68,38 @@ estado y la historia antes de continuar.
   "la UI nunca habla directo con la DB" → rusqlite dentro de comandos Rust.
 - El "contrato" UI↔Rust (comandos Tauri) permite cambiar la capa de datos sin
   tocar la UI.
+
+## Sesión 2 — 2026-09-10
+
+### Contrato de `create_task` (definido con el propietario antes de codificar)
+
+- Firma: `create_task(input) -> Task` con `input = { title, dueDate?, priority? }`.
+- Decisiones del propietario:
+  - Retornar la **Task completa** (evita re-consultar la lista tras crear).
+  - Dependencias **uuid** (id v4) y **chrono** (timestamps ISO 8601 + validación
+    de fecha) aprobadas. Ya estaban declaradas en Cargo.toml.
+  - Título: trim + **rechazar si queda vacío** + tope de 200 caracteres.
+  - Fechas: **doble capa** decidida por el propietario — la UI usará selector
+    de fecha (el usuario nunca escribe una fecha, la opción inválida no existe)
+    y Rust valida igual como cinturón de seguridad (fecha imposible ⇒ error).
+- Prioridad inválida o vacía por defecto: default `medium`, valores fuera de
+  high/medium/low ⇒ error.
+
+### Implementación
+
+- `create_task` en `src-tauri/src/tasks.rs`: validaciones, id v4, timestamps
+  RFC 3339 del lado de Rust, INSERT en `task` + INSERT del evento `created`
+  en `task_event` (payload = input serializado como JSON).
+- Registrado en `generate_handler` en `lib.rs`.
+- Frontend: `CreateTaskInput` en `types.ts` y `api.createTask` en `api.ts`.
+- El store todavía no lo usa: falta la UI de captura.
+- Error aprendido: al serializar el input para el payload faltaba derivar
+  `Serialize` (solo tenía `Deserialize`); serde exige ambos para cada dirección.
+
+### Estado / siguiente paso
+
+- ✅ `create_task` implementado y verificado (cargo build + npm run build OK).
+- ⏭️ Siguiente: **UI de captura** (input + selector de fecha + prioridad) y
+  acción `createTask` en el store (Zustand). Definir la UX de captura con el
+  propietario (principio: fricción cero, < 5 segundos).
+- Sin commit todavía: pendiente de revisión del propietario.
