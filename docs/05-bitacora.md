@@ -118,9 +118,43 @@ estado y la historia antes de continuar.
 - Nota pedagógica: `useRef` para manejar el foco sin re-render;
   `<form onSubmit>` para Enter nativo.
 
+### UI de captura — paso 2 (chips: fecha semanal + prioridad)
+
+- Contrato acordado con el propietario (4 decisiones, todas opción A):
+  1. Picker de semana **hecho a mano** con date-fns (no calendario nativo):
+     control de estilo y base para la expansión a mes.
+  2. **Selección de prioridad persistente** en captura en lote (como la fecha).
+  3. **Badge** junto al chip confirmando el destino (`+ fecha · vie 12 sep`) —
+     el propietario condicionó este punto: tiene sentido solo si existe un
+     conmutador de vista para VER las tareas del día capturado (⇒ paso 3).
+  4. **Permitir fechas pasadas** (es legítimo anotar algo ya vencido).
+- Implementado (solo CaptureBar.tsx + App.tsx; Rust y store sin cambios):
+  - Estado de captura: `captureDate` (destino activo), `priority` (null =
+    no se manda, Rust aplica medium), dos flags de panel abierto/cerrado.
+  - Al cerrar un chip su selección se resetea (fecha→hoy, prioridad→media).
+  - `WeekPicker`: 7 botones desde `startOfWeek(selected, {weekStartsOn:1})`
+    (lunes, convención española), flechas ±7 días, hoy con puntito.
+  - El pedido a Rust se arma como `CreateTaskInput` y agrega `priority`
+    solo si hay selección.
+- Extra solicitado por el propietario ("la lista se ve fea"): formato
+  legible en la lista provisional — fecha humana (`hoy` / `vie 12 sep`,
+  locale es de date-fns) y prioridad en español con color por "calor"
+  (alta roja, media ámbar, baja verde). Caso borde dueDate null → "sin fecha".
+- Error aprendido: definir un tipo que excluía "medium" chocó con la lista
+  de 3 pastillas — la ausencia de selección se modela con `null`, no
+  recortando el tipo.
+- Commit: `6142dfd`.
+
+### Alcance nuevo decidido: conmutador de vista (paso 3)
+
+- El propietario decidió que la lista necesita vistas **día / semana / mes**.
+  Advertencia de alcance hecha (MVP era hoy + atrasadas); decisión explícita
+  del propietario: justificado por el flujo de planeación semanal.
+- Plan acordado: paso 3 = conmutador de vista (Hoy default del MVP +
+  Semana + Mes); paso 4 = lista visual real (check, prioridad, Atrasadas).
+
 ### Estado / siguiente paso
 
-- ✅ Loop básico verificado: capturar → guardar → mostrar.
-- ⏭️ Siguiente (acordado): **paso 2 — chips "+ fecha" (picker de semana
-  persistente) y "+ prioridad"**; luego paso 3 — expansión del picker a mes.
-  Después: lista visual de tareas (check, prioridad, sección Atrasadas).
+- ✅ Captura con destino activo (día + prioridad) funcionando y probada.
+- ⏭️ Siguiente: **paso 3 — conmutador de vista Hoy/Semana/Mes** en la lista.
+  Después: lista real con check y sección Atrasadas.
