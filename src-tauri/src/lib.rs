@@ -1,14 +1,24 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+mod db;
+mod tasks;
+
+use std::sync::Mutex;
+
+use db::init_db;
+use rusqlite::Connection;
+use tauri::Manager;
+
+pub struct AppState(pub Mutex<Connection>);
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .setup(|app| {
+            let conn = init_db(app.handle()).expect("no se pudo inicializar la base de datos");
+            app.manage(AppState(Mutex::new(conn)));
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![tasks::get_tasks])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

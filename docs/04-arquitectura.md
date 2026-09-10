@@ -23,7 +23,8 @@ menor reescritura posible.
 │  completeTask | deleteTask | moveTask      │
 ├────────────────────────────────────────────┤
 │ Backend nativo (Rust)                      │
-│  - SQLite (tauri-plugin-sql)               │
+│  - SQLite (rusqlite, embebido en los       │
+│    comandos)                               │
 │  - Lógica de negocio de datos              │
 └────────────────────────────────────────────┘
 ```
@@ -92,7 +93,7 @@ se generan en el momento de la acción. Esos se capturan desde el día uno.
 | # | Decisión | Alternativas descartadas | Razón |
 |---|---|---|---|
 | D-01 | Tauri 2 | Electron | Binario ~10MB vs ~150MB; soporte móvil nativo (RF-14); Rust moderno |
-| D-02 | SQLite local | Postgres, archivos JSON | App sin servidor y offline por diseño (RNF-03); JSON no escala a consultas de vistas/estadísticas |
+| D-02 | SQLite vía rusqlite (en Rust) | Postgres, archivos JSON, tauri-plugin-sql | App sin servidor y offline por diseño (RNF-03); rusqlite mantiene SQL dentro de la capa Rust (la UI nunca habla directo con la DB); tauri-plugin-sql expone SQL a JavaScript y rompería ese aislamiento |
 | D-03 | Zustand | Redux, Context | Estado simple de una sola entidad; 10% del código de Redux |
 | D-04 | React + TS + Tailwind | Vue/Svelte | React domina las ofertas de trabajo (objetivo del proyecto); TS reduce bugs; Tailwind da UI consistente rápida |
 | D-05 | IA desde Rust (v2) | IA desde frontend | La API key nunca vive en el frontend (RNF-01); decisión a validar en v2 |
