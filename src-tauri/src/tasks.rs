@@ -89,6 +89,167 @@ pub fn get_tasks(state: State<AppState>) -> Result<Vec<Task>, String> {
 //   create_task(input) -> Task  |  input = { title, dueDate?, priority? }
 // El orden del cuerpo es: 1) validar, 2) generar datos del sistema,
 // 3) escribir en la BD (fila + evento), 4) devolver la Task completa.
+// set_task_completed: marca/desmarca una tarea como completada.
+// Contrato acordado con el propietario (paso 4, todo opción A):
+//   set_task_completed(id, completed) -> Task
+// Es un "toggle" (desmarcable por clicks accidentales) e IDEMPOTENTE:
+// si la tarea ya está en el estado pedido, no cambia nada ni duplica
+// eventos — el segundo click es un no-op honesto.
+// Registra SIEMPRE el hecho en task_event ('completed' o 'reopened'):
+// el estado actual (tabla task) dice "cómo está"; el log (task_event)
+// dice "qué pasó y cuándo" — la materia prima de la IA de la v2.
+#[tauri::command]
+pub fn set_task_completed(
+    state: State<AppState>,
+    id: String,
+    completed: bool,
+) -> Result<Task, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    // Leemos la fila ACTUAL: necesitamos su estado para 1) rechazar ids
+    // que no existen (query_row devuelve QueryReturnedNoRows), y
+    // 2) construir la Task final reutilizando los campos que no cambian.
+    let actual = conn
+        .query_row(
+            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at
+             FROM task WHERE id = ?1",
+            rusqlite::params![id],
+            |row| {
+                Ok(Task {
+                    id: row.get("id")?,
+                    title: row.get("title")?,
+                    due_date: row.get("due_date")?,
+                    priority: row.get("priority")?,
+                    completed: row.get::<_, i64>("completed")? != 0,
+                    completed_at: row.get("completed_at")?,
+                    created_at: row.get("created_at")?,
+                    updated_at: row.get("updated_at")?,
+                })
+            },
+        )
+        .map_err(|e| match e {
+            rusqlite::Error::QueryReturnedNoRows => {
+                format!("No existe una tarea con id {}", id)
+            }
+            _ => e.to_string(),
+        })?;
+
+    // Idempotencia: pedir lo que ya es verdad no genera UPDATE ni evento.
+    if actual.completed == completed {
+        return Ok(actual);
+    }
+
+    let now = chrono::Utc::now().to_rfc3339();
+    // completed_at guarda CUÁNDO se completó; al desmarcar vuelve a NULL
+    // (descompletar borra la marca de tiempo del completado anterior).
+    let completed_at = if completed { Some(now.clone()) } else { None };
+
+    conn.execute(
+        "UPDATE task SET completed = ?1, completed_at = ?2, updated_at = ?3 WHERE id = ?4",
+        rusqlite::params![completed, completed_at, now, id],
+    )
+    .map_err(|e| e.to_string())?;
+
+    // Evento distinto por dirección: 'completed' (tachar) o 'reopened'
+    // (desmarcar). Para la IA de la v2, "completó a las 9am" y "la reabrió"
+    // son señales conductuales diferentes.
+    let event_type = if completed { "completed" } else { "reopened" };
+    let payload = serde_json::json!({ "completed": completed }).to_string();
+
+    conn.execute(
+        "INSERT INTO task_event (id, task_id, event_type, payload, happened_at)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        rusqlite::params![uuid::Uuid::new_v4().to_string(), id, event_type, payload, now],
+    )
+    .map_err(|e| e.to_string())?;
+
+    // Task final: los campos que cambian van explícitos y `..actual`
+    // toma el resto tal cual (sintaxis de "struct update" de Rust).
+    Ok(Task {
+        completed,
+        completed_at,
+        updated_at: now,
+        ..actual
+    })
+}
+
+// set_task_due_date: mueve una tarea a otro día.
+// Contrato acordado con el propietario (paso 5): es el comando ÚNICO de
+// reorganización — "Mover a hoy" es un caso especial (mandar la fecha de
+// hoy) y "Más opciones" (elegir cualquier día) usa el mismo motor.
+// Registra el evento 'rescheduled' con { de, a }: para la IA de la v2,
+// cuánto y cómo se pospone una tarea es una señal conductual clave.
+#[tauri::command]
+pub fn set_task_due_date(
+    state: State<AppState>,
+    id: String,
+    due_date: String,
+) -> Result<Task, String> {
+    // Validación de fecha igual que en create_task (cinturón de seguridad).
+    chrono::NaiveDate::parse_from_str(&due_date, "%Y-%m-%d")
+        .map_err(|_| format!("Fecha inválida: {}", due_date))?;
+
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    // Leemos la fila actual: si el id no existe → error explícito; y
+    // necesitamos la due_date ANTERIOR para el payload del evento.
+    let actual = conn
+        .query_row(
+            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at
+             FROM task WHERE id = ?1",
+            rusqlite::params![id],
+            |row| {
+                Ok(Task {
+                    id: row.get("id")?,
+                    title: row.get("title")?,
+                    due_date: row.get("due_date")?,
+                    priority: row.get("priority")?,
+                    completed: row.get::<_, i64>("completed")? != 0,
+                    completed_at: row.get("completed_at")?,
+                    created_at: row.get("created_at")?,
+                    updated_at: row.get("updated_at")?,
+                })
+            },
+        )
+        .map_err(|e| match e {
+            rusqlite::Error::QueryReturnedNoRows => {
+                format!("No existe una tarea con id {}", id)
+            }
+            _ => e.to_string(),
+        })?;
+
+    // Idempotencia: moverla al día donde ya está no genera UPDATE ni evento.
+    if actual.due_date.as_deref() == Some(due_date.as_str()) {
+        return Ok(actual);
+    }
+
+    let now = chrono::Utc::now().to_rfc3339();
+
+    conn.execute(
+        "UPDATE task SET due_date = ?1, updated_at = ?2 WHERE id = ?3",
+        rusqlite::params![due_date, now, id],
+    )
+    .map_err(|e| e.to_string())?;
+
+    // { de, a } con clone(): actual se reutiliza después para la Task final,
+    // y el JSON del evento necesita su propia copia de la fecha anterior.
+    let payload =
+        serde_json::json!({ "de": actual.due_date.clone(), "a": due_date }).to_string();
+
+    conn.execute(
+        "INSERT INTO task_event (id, task_id, event_type, payload, happened_at)
+         VALUES (?1, ?2, 'rescheduled', ?3, ?4)",
+        rusqlite::params![uuid::Uuid::new_v4().to_string(), id, payload, now],
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(Task {
+        due_date: Some(due_date),
+        updated_at: now,
+        ..actual
+    })
+}
+
 #[tauri::command]
 pub fn create_task(state: State<AppState>, input: CreateTaskInput) -> Result<Task, String> {
     // --- 1. VALIDACIONES (el borde: nada de basura entra a la BD) ---

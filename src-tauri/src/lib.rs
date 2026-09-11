@@ -36,7 +36,12 @@ pub fn run() {
             app.manage(AppState(Mutex::new(conn)));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![tasks::get_tasks, tasks::create_task])
+        .invoke_handler(tauri::generate_handler![
+            tasks::get_tasks,
+            tasks::create_task,
+            tasks::set_task_completed,
+            tasks::set_task_due_date
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

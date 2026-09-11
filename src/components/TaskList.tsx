@@ -29,7 +29,9 @@ import {
   startOfWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, Circle } from "lucide-react";
+import { WeekPicker } from "./CaptureBar";
+import { useTasksStore } from "../lib/store";
 import type { Priority, Task } from "../lib/types";
 
 type Vista = "hoy" | "semana" | "mes";
@@ -55,10 +57,44 @@ const COLOR_PRIORIDAD: Record<Priority, string> = {
   low: "text-emerald-400",
 };
 
-function TareaLinea({ task }: { task: Task }) {
+// TareaLinea: una fila de tarea. Ahora es INTERACTIVA: el check a la
+// izquierda tacha/desmarca (toggle). Al completar: tachado + atenuado.
+// La tarea SE QUEDA en su grupo (decisión: las completadas son el muro
+// de victorias, nunca desaparecen de la vista donde las lograste).
+// onToggle viene inyectado desde TaskList (que lo toma del store) —
+// la fila es presentacional y no sabe cómo se guarda el cambio.
+function TareaLinea({
+  task,
+  onToggle,
+}: {
+  task: Task;
+  onToggle: (id: string, completed: boolean) => void;
+}) {
   return (
-    <li className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm">
-      <span>{task.title}</span>
+    <li className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm">
+      {/* El check: círculo vacío (lucide Circle) que se vuelve verde con
+          marca (CheckCircle2) al completar. active:scale-90 da el
+          "pop" táctil de la micro-victoria (transición CSS, sin librerías). */}
+      <button
+        type="button"
+        onClick={() => onToggle(task.id, !task.completed)}
+        aria-label={task.completed ? "Desmarcar tarea" : "Completar tarea"}
+        className="shrink-0 transition-transform active:scale-90"
+      >
+        {task.completed ? (
+          <CheckCircle2 size={18} className="text-emerald-500" />
+        ) : (
+          <Circle size={18} className="text-neutral-600 hover:text-neutral-400" />
+        )}
+      </button>
+
+      <span
+        className={`flex-1 ${
+          task.completed ? "text-neutral-600 line-through" : ""
+        }`}
+      >
+        {task.title}
+      </span>
       <span className="text-neutral-500">
         {formatoFecha(task.dueDate)} ·{" "}
         <span className={COLOR_PRIORIDAD[task.priority]}>
@@ -69,15 +105,115 @@ function TareaLinea({ task }: { task: Task }) {
   );
 }
 
+// AtrasadaLinea: una fila de la sección Atrasadas. Además del check
+// (tachar la victoria ya hecha), ofrece las dos ACCIONES DE REORGANIZACIÓN
+// decididas en la Sesión 1:
+// - "Mover a hoy": un click, se reagenda al día de hoy (usa el mismo
+//   motor set_task_due_date con la fecha de hoy).
+// - "Más opciones": abre el WeekPicker (reutilizado de CaptureBar) para
+//   elegir cualquier día. Al elegir, se reagenda y el picker se cierra.
+// El picker arranca en la semana de la fecha ACTUAL de la tarea (su día
+// sale resaltado — sabes desde dónde la estás moviendo).
+function AtrasadaLinea({
+  task,
+  onToggle,
+  onReschedule,
+}: {
+  task: Task;
+  onToggle: (id: string, completed: boolean) => void;
+  onReschedule: (id: string, dueDate: string) => void;
+}) {
+  const [showPicker, setShowPicker] = useState(false);
+  // La semana que se está viendo en el picker. Estado LOCAL de esta fila:
+  // si cada atrasada compartiera un picker global, se chocarían.
+  const [diaMostrado, setDiaMostrado] = useState<Date>(
+    task.dueDate ? parseISO(task.dueDate) : new Date(),
+  );
+
+  const reagenda = (d: Date) => {
+    onReschedule(task.id, format(d, "yyyy-MM-dd"));
+    setShowPicker(false);
+  };
+
+  return (
+    <>
+      <li className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm">
+        <button
+          type="button"
+          onClick={() => onToggle(task.id, !task.completed)}
+          aria-label={task.completed ? "Desmarcar tarea" : "Completar tarea"}
+          className="shrink-0 transition-transform active:scale-90"
+        >
+          {task.completed ? (
+            <CheckCircle2 size={18} className="text-emerald-500" />
+          ) : (
+            <Circle size={18} className="text-neutral-600 hover:text-neutral-400" />
+          )}
+        </button>
+
+        <span className={task.completed ? "flex-1 text-neutral-600 line-through" : "flex-1"}>
+          {task.title}
+        </span>
+        <span className="text-neutral-500">
+          {formatoFecha(task.dueDate)} ·{" "}
+          <span className={COLOR_PRIORIDAD[task.priority]}>
+            {ETIQUETA_PRIORIDAD[task.priority]}
+          </span>
+        </span>
+
+        {/* Acciones solo si está pendiente: una atrasada ya completada no
+            necesita reorganizarse (ya está resuelta). */}
+        {!task.completed && (
+          <>
+            <button
+              type="button"
+              onClick={() => reagenda(new Date())}
+              className="shrink-0 rounded-lg border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+            >
+              Mover a hoy
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPicker(!showPicker)}
+              aria-expanded={showPicker}
+              className="shrink-0 rounded-lg border border-neutral-800 px-2 py-1 text-xs text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+            >
+              <CalendarClock size={14} className="inline" /> Más opciones
+            </button>
+          </>
+        )}
+      </li>
+
+      {/* El picker va FUERA del <li> (un picker dentro de una fila flex
+          quedaría apretado): se abre debajo de la fila, a lo ancho. */}
+      {showPicker && (
+        <div className="vista-animada mt-2">
+          <WeekPicker
+            selected={diaMostrado}
+            onSelect={reagenda}
+            onMoverSemana={setDiaMostrado}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
 // GrupoDeDia: un encabezado de día + sus tareas. Se reutiliza en las
-// vistas Semana (7 grupos) y Mes (solo los días con tareas).
+// vistas Semana (7 grupos) y Mes (solo los días con tareas). onToggle
+// se transmite hasta cada fila. La variante "atrasada" usa AtrasadaLinea
+// (filas con acciones de reorganización).
 function GrupoDia({
   encabezado,
   tareas,
+  onToggle,
+  onReschedule,
   sutil = false,
 }: {
   encabezado: string;
   tareas: Task[];
+  onToggle: (id: string, completed: boolean) => void;
+  onReschedule?: (id: string, dueDate: string) => void;
   sutil?: boolean;
 }) {
   return (
@@ -93,9 +229,13 @@ function GrupoDia({
         <p className="text-sm text-neutral-700">—</p>
       ) : (
         <ul className="space-y-2">
-          {tareas.map((task) => (
-            <TareaLinea key={task.id} task={task} />
-          ))}
+          {tareas.map((task) =>
+            onReschedule ? (
+              <AtrasadaLinea key={task.id} task={task} onToggle={onToggle} onReschedule={onReschedule} />
+            ) : (
+              <TareaLinea key={task.id} task={task} onToggle={onToggle} />
+            ),
+          )}
         </ul>
       )}
     </section>
@@ -106,13 +246,23 @@ function GrupoDia({
 // Funciones puras = mismo input siempre produce el mismo output, sin
 // efectos: fáciles de entender, probar y reordenar.
 
-function VistaHoy({ tasks }: { tasks: Task[] }) {
+function VistaHoy({
+  tasks,
+  onToggle,
+  onReschedule,
+}: {
+  tasks: Task[];
+  onToggle: (id: string, completed: boolean) => void;
+  onReschedule: (id: string, dueDate: string) => void;
+}) {
   const hoy = new Date();
   const inicioHoy = startOfDay(hoy);
 
-  // Atrasadas: fecha anterior a hoy (las completadas también aparecen
-  // aquí por ahora — el paso 4 introduce el check y decide su trato).
-  // NOTA: dueDate puede ser null (tareas viejas); null NO es atrasada.
+  // Atrasadas: fecha anterior a hoy. Las COMPLETADAS SE QUEDAN (tachadas):
+  // ocultarlas sería esconder la victoria — la filosofía del proyecto es
+  // "tachar → ver que avanzaste" (decisión del propietario al probar:
+  // una atrasada completada no debe desaparecer).
+  // dueDate null (tareas viejas) NO es atrasada: va al grupo Sin fecha.
   const atrasadas = tasks.filter(
     (t) =>
       t.dueDate &&
@@ -126,20 +276,45 @@ function VistaHoy({ tasks }: { tasks: Task[] }) {
     return <p className="text-sm text-neutral-600">Nada por acá — captura una tarea arriba</p>;
   }
 
+  // La progresión del día (la "micro-victoria" de la visión):
+  // "Hoy · 3/8 completadas" — un dato, no un dashboard.
+  const completadasHoy = deHoy.filter((t) => t.completed).length;
+
   return (
     <div className="space-y-6">
       {atrasadas.length > 0 && (
-        <GrupoDia encabezado="Atrasadas" tareas={atrasadas} />
+        <GrupoDia
+          encabezado="Atrasadas"
+          tareas={atrasadas}
+          onToggle={onToggle}
+          onReschedule={onReschedule}
+        />
       )}
-      {deHoy.length > 0 && <GrupoDia encabezado="Hoy" tareas={deHoy} />}
+      {deHoy.length > 0 && (
+        <GrupoDia
+          encabezado={`Hoy · ${completadasHoy}/${deHoy.length} completadas`}
+          tareas={deHoy}
+          onToggle={onToggle}
+        />
+      )}
       {sinFecha.length > 0 && (
-        <GrupoDia encabezado="Sin fecha" tareas={sinFecha} sutil />
+        <GrupoDia encabezado="Sin fecha" tareas={sinFecha} onToggle={onToggle} sutil />
       )}
     </div>
   );
 }
 
-function VistaSemana({ tasks, ancla, onMover }: { tasks: Task[]; ancla: Date; onMover: (dias: number) => void }) {
+function VistaSemana({
+  tasks,
+  ancla,
+  onMover,
+  onToggle,
+}: {
+  tasks: Task[];
+  ancla: Date;
+  onMover: (dias: number) => void;
+  onToggle: (id: string, completed: boolean) => void;
+}) {
   // La semana contiene al "ancla": la fecha de navegación compartida.
   // CaptureBar y esta vista son independientes, pero ambas hablan de
   // "días" con el mismo formato — por eso se sienten coherentes.
@@ -173,6 +348,7 @@ function VistaSemana({ tasks, ancla, onMover }: { tasks: Task[]; ancla: Date; on
             tareas={tasks.filter(
               (t) => t.dueDate && isSameDay(parseISO(t.dueDate), d),
             )}
+            onToggle={onToggle}
             sutil={!isToday(d)}
           />
         ))}
@@ -181,7 +357,17 @@ function VistaSemana({ tasks, ancla, onMover }: { tasks: Task[]; ancla: Date; on
   );
 }
 
-function VistaMes({ tasks, ancla, onMover }: { tasks: Task[]; ancla: Date; onMover: (meses: number) => void }) {
+function VistaMes({
+  tasks,
+  ancla,
+  onMover,
+  onToggle,
+}: {
+  tasks: Task[];
+  ancla: Date;
+  onMover: (meses: number) => void;
+  onToggle: (id: string, completed: boolean) => void;
+}) {
   // Lista compacta: SOLO los días que tienen tareas (un mes vacío
   // completo sería una pared de guiones). El orden de días sale de
   // ordenar las fechas únicas presentes.
@@ -225,6 +411,7 @@ function VistaMes({ tasks, ancla, onMover }: { tasks: Task[]; ancla: Date; onMov
               key={d.toISOString()}
               encabezado={isToday(d) ? `Hoy · ${format(d, "EEE d MMM", { locale: es })}` : format(d, "EEE d MMM", { locale: es })}
               tareas={delMes.filter((t) => t.dueDate && isSameDay(parseISO(t.dueDate), d))}
+              onToggle={onToggle}
             />
           ))}
         </div>
@@ -240,6 +427,12 @@ function VistaMes({ tasks, ancla, onMover }: { tasks: Task[]; ancla: Date; onMov
 export function TaskList({ tasks }: { tasks: Task[] }) {
   const [vista, setVista] = useState<Vista>("hoy");
   const [ancla, setAncla] = useState<Date>(new Date());
+  // La acción del store entra por acá y baja como prop (onToggle) hasta
+  // cada fila. Así las vistas siguen siendo "puras" (solo reciben datos)
+  // y el único punto que sabe guardar es TaskList.
+  const setTaskCompleted = useTasksStore((s) => s.setTaskCompleted);
+  // La acción de reorganización: solo la usa la vista Hoy (Atrasadas).
+  const setTaskDueDate = useTasksStore((s) => s.setTaskDueDate);
 
   const moverSemana = (dias: number) => setAncla(addDays(ancla, dias));
   const moverMes = (meses: number) => setAncla(addMonths(ancla, meses));
@@ -275,12 +468,14 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
           cada vista/ancla → React re-monta este <div> → la animación CSS
           .vista-animada se dispara otra vez. Cambiar key = animación. */}
       <div key={`${vista}-${ancla.toISOString()}`} className="vista-animada mt-6">
-        {vista === "hoy" && <VistaHoy tasks={tasks} />}
+        {vista === "hoy" && (
+          <VistaHoy tasks={tasks} onToggle={setTaskCompleted} onReschedule={setTaskDueDate} />
+        )}
         {vista === "semana" && (
-          <VistaSemana tasks={tasks} ancla={ancla} onMover={moverSemana} />
+          <VistaSemana tasks={tasks} ancla={ancla} onMover={moverSemana} onToggle={setTaskCompleted} />
         )}
         {vista === "mes" && (
-          <VistaMes tasks={tasks} ancla={ancla} onMover={moverMes} />
+          <VistaMes tasks={tasks} ancla={ancla} onMover={moverMes} onToggle={setTaskCompleted} />
         )}
       </div>
     </div>

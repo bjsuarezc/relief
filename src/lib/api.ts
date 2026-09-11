@@ -13,4 +13,13 @@ export const api = {
   // El segundo argumento son los parámetros: { input } viaja como JSON
   // y Rust lo recibe como el struct CreateTaskInput.
   createTask: (input: CreateTaskInput) => invoke<Task>("create_task", { input }),
+  // Toggle de completado (desmarcable). Rust es idempotente: pedir lo que
+  // ya es verdad no cambia nada ni duplica eventos.
+  setTaskCompleted: (id: string, completed: boolean) =>
+    invoke<Task>("set_task_completed", { id, completed }),
+  // Reorganización: mueve una tarea a otro día (el motor único de
+  // "Mover a hoy" y "Más opciones"). Los argumentos camelCase viajan como
+  // JSON y Tauri los mapea a los parámetros snake_case de Rust.
+  setTaskDueDate: (id: string, dueDate: string) =>
+    invoke<Task>("set_task_due_date", { id, dueDate }),
 };

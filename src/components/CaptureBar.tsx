@@ -191,17 +191,27 @@ export function CaptureBar() {
 // mano con date-fns, no calendario nativo — control del estilo y base directa
 // de la expansión a mes del paso 3).
 //
-// Solo recibe la fecha seleccionada y "onSelect": es un componente de
-// presentación; el estado vive en CaptureBar. La semana deriva de
-// `selected`, así que al elegir un día de otra semana (con las flechas)
-// la vista salta a esa semana sin estado extra.
-function WeekPicker({
+// Exportado: lo reutiliza TaskList para las acciones de reorganización
+// ("Más opciones" en Atrasadas) — un solo selector de semana en la app.
+//
+// Dos callbacks separados (lección de reuso):
+// - onSelect: click en un día (ELEGIR destino).
+// - onMoverSemana: flechas ‹ › (SOLO navegar la vista). En la captura son
+//   lo mismo, pero al reorganizar una tarea las flechas NO deben mover la
+//   tarea: si no existiera este segundo callback, tocar ‹ › re-agendaría
+//   la tarea de inmediato. En CaptureBar no se pasa → las flechas usan
+//   onSelect y el comportamiento queda igual que antes.
+export function WeekPicker({
   selected,
   onSelect,
+  onMoverSemana,
 }: {
   selected: Date;
   onSelect: (d: Date) => void;
+  onMoverSemana?: (d: Date) => void;
 }) {
+  // ?? (coalescencia nula): "si no me pasaron onMoverSemana, uso onSelect".
+  const moverSemana = onMoverSemana ?? onSelect;
   // Semana que "contiene" al día seleccionado, empezando en LUNES
   // (weekStartsOn: 1 — convención española; el default de date-fns es domingo).
   const weekStart = startOfWeek(selected, { weekStartsOn: 1 });
@@ -216,7 +226,7 @@ function WeekPicker({
         <button
           type="button"
           aria-label="Semana anterior"
-          onClick={() => onSelect(addDays(selected, -7))}
+          onClick={() => moverSemana(addDays(selected, -7))}
           className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
         >
           <ChevronLeft size={18} />
@@ -228,7 +238,7 @@ function WeekPicker({
         <button
           type="button"
           aria-label="Semana siguiente"
-          onClick={() => onSelect(addDays(selected, 7))}
+          onClick={() => moverSemana(addDays(selected, 7))}
           className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
         >
           <ChevronRight size={18} />

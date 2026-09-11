@@ -18,6 +18,8 @@ interface TasksState {
   error: string | null;
   loadTasks: () => Promise<void>;
   createTask: (input: CreateTaskInput) => Promise<void>;
+  setTaskCompleted: (id: string, completed: boolean) => Promise<void>;
+  setTaskDueDate: (id: string, dueDate: string) => Promise<void>;
 }
 
 export const useTasksStore = create<TasksState>((set) => ({
@@ -50,6 +52,35 @@ export const useTasksStore = create<TasksState>((set) => ({
     try {
       const task = await api.createTask(input);
       set((state) => ({ tasks: [...state.tasks, task], error: null }));
+    } catch (e) {
+      set({ error: String(e) });
+    }
+  },
+  // setTaskCompleted: toggle de completado. Igual que createTask:
+  // errores al campo `error` sin lanzar; en éxito REEMPLAZA la tarea en
+  // la lista (por id) con la versión que devuelve Rust (trae completed,
+  // completed_at y updated_at reales de la BD). map() crea un array
+  // nuevo (React/Zustand necesitan una referencia distinta para notificar).
+  setTaskCompleted: async (id, completed) => {
+    try {
+      const task = await api.setTaskCompleted(id, completed);
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === id ? task : t)),
+        error: null,
+      }));
+    } catch (e) {
+      set({ error: String(e) });
+    }
+  },
+  // setTaskDueDate: reorganización (mismo patrón que setTaskCompleted:
+  // reemplazar la tarea por id con la versión real que devuelve Rust).
+  setTaskDueDate: async (id, dueDate) => {
+    try {
+      const task = await api.setTaskDueDate(id, dueDate);
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === id ? task : t)),
+        error: null,
+      }));
     } catch (e) {
       set({ error: String(e) });
     }
