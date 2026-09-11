@@ -176,11 +176,49 @@ estado y la historia antes de continuar.
   con log en %TEMP%): funciona bien.
 - Commit: `efa86fd`.
 
+### Paso 4 — el check: completar con gratificación
+
+- Contrato acordado (todo opción A): comando **toggle** `set_task_completed(id,
+  completed) -> Task`; completadas se quedan en su grupo tachadas (muro de
+  victorias); contador de progreso `Hoy · 3/8 completadas` en la vista Hoy.
+- Implementación: Rust idempotente (pedir lo que ya es verdad = no-op sin
+  evento); eventos `completed` / `reopened` según dirección; `completed_at`
+  vuelve a NULL al desmarcar; atrasadas completadas excluidas de Atrasadas
+  (luego corregido, ver abajo); check verde CheckCircle2 + tachado +
+  active:scale-90 (micro-victoria táctil, CSS puro).
+- Corrección tras probar el propietario: una atrasada completada **no debe
+  desaparecer** de Atrasadas (esconder la victoria contradice la filosofía).
+  Queda tachada y atenuada en el grupo. El propietario decidió este cambio.
+- Error dev aprendido (registrado para explicar en entrevistas): "TypeError:
+  api.setTaskDueDate is not a function" tras una tanda de edits con la app
+  corriendo — el HMR de Vite dejó la memoria del navegador con una mezcla
+  de módulos viejos/nuevos. El disco estaba correcto (builds pasaban).
+  Lección: sospechar del HMR antes del código; recargar/reiniciar el dev.
+
+### Paso 5 — reorganización de atrasadas
+
+- Contrato acordado: comando ÚNICO `set_task_due_date(id, due_date)` —
+  "Mover a hoy" (un click) y "Más opciones" (picker) usan el mismo motor;
+  redistribución MANUAL (opción A); la automática queda para la IA de la v2.
+- Idempotencia igual que set_task_completed; evento `rescheduled` con
+  payload `{ de, a }` (patrón conductual para la IA de la v2).
+- Reuso clave: WeekPicker exportado desde CaptureBar con callbacks separados
+  `onSelect` (elegir) vs `onMoverSemana` (flechas ‹ › solo navegan — si
+  reusaran onSelect, navegar re-agendaría la tarea por accidente). Patrón:
+  separar intención de navegación de intención de elección.
+- UI: `AtrasadaLinea` (check + 2 acciones, solo si está pendiente); picker
+  debajo de la fila, arranca en la semana de la fecha actual de la tarea,
+  se cierra al elegir; cada fila tiene su picker (estado local).
+- Commit: `eb05d4e`.
+
 ### Estado / siguiente paso
 
-- ✅ Paso 3 listo: captura con destino activo + vistas Hoy/Semana/Mes.
-- ⏭️ Siguiente: **paso 4 — lista visual real**: check de completado (comando
-  `complete_task` en Rust con evento `completed`, gratificación visible:
-  progreso del día), orden dentro de los grupos, sección Atrasadas con
-  acciones ("Mover a hoy", "Más opciones"). Definir contrato con el propietario
-  (firma + comportamiento) antes de codificar.
+- ✅ MVP funcional: captura (rápida + con fecha/prioridad), vistas
+  Hoy/Semana/Mes, check con progreso del día, atrasadas con reorganización.
+  Todos los comandos registran eventos (created/completed/reopened/rescheduled).
+- ⏭️ Siguiente (candidatos a decidir con el propietario):
+  1. Aceleradores de teclado del MVP (Sesión 1: Ctrl+N / Enter / Ctrl+D —
+     toda acción también por click).
+  2. Repo en GitHub (diferido desde Sesión 1).
+  3. Pulido visual / wireframes de la lista (diferidos).
+  4. Empaquetado/instalador para uso diario del propietario.
