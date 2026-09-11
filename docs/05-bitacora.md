@@ -233,11 +233,42 @@ estado y la historia antes de continuar.
   solución fue exportarla (una fuente de verdad), no duplicarla.
 - Commit: `ee9d680`.
 
+### Paso 7 — papelera de reciclaje
+
+- Origen: propietario detectó que no había opción de borrar ("ahora no
+  tenemos la opcion para borrar las tareas").
+- Decisión de producto del propietario (argumento de privacidad, citable):
+  guardar data que el usuario quiso borrar invade su privacidad ⇒ papelera
+  VISIBLE con borrado permanente desde ahí; "borrarlas todas con un solo
+  botón o una por una". Soft delete solo como sala de espera visible,
+  no archivo oculto.
+- Contrato acordado:
+  - Migración idempotente de BD (primera del proyecto): ALTER TABLE ADD
+    COLUMN deleted_at; corre cada arranque; "duplicate column name" = ya
+    aplicada, se ignora.
+  - Comandos: set_task_deleted(id, deleted) toggle (eventos
+    trashed/restored), purge_task(id) (fila + su task_event: sin rastro),
+    purge_all_tasks() (vacía papelera; sub-SELECT de eventos primero —
+    orden correcto si algún día se activan las FK de SQLite).
+  - Evento NO existe para purge: el borrado es el fin del historial,
+    no otro capítulo. Prioridad en el argumento de privacidad.
+- UI: pestaña Papelera con contador SOLO si hay algo (cero ruido vacía);
+  filas con Restaurar / Borrar (directos: llegar a la papelera ya fue
+  deliberado) y Vaciar papelera con confirmación inline ¿Sí/No (roja).
+  Basura en hover (opacity-0 + group-hover) SIN confirmación (reversible).
+- Refactor: helper task_de_fila en Rust (el mapeo fila→Task ya no se
+  repite en 4 comandos — misma filosofía que PRIORIDADES: no duplicar).
+- Error TS aprendido: pasar setTaskDeleted (2 params) donde onDelete
+  espera (id) => void → TS2322; solución: envolver en arrow con la
+  dirección fija (true).
+- El filtro deletedAt vive UNA vez (TaskList): las vistas siguen
+  recibiendo solo tareas activas — no se enteran de la papelera.
+- Commit: `29b2b87`.
+
 ### Estado / siguiente paso
 
-- ✅ MVP funcional completo: captura con destino, vistas Hoy/Semana/Mes,
-  check con progreso del día, atrasadas con reorganización, edición
-  completa minimalista. Eventos: created/completed/reopened/rescheduled/updated.
+- ✅ MVP funcional completo + papelera. Eventos:
+  created/completed/reopened/rescheduled/updated/trashed/restored.
 - ⏭️ Siguiente (candidatos a decidir con el propietario):
   1. Aceleradores de teclado del MVP (Sesión 1: Ctrl+N / Enter / Ctrl+D —
      toda acción también por click).
