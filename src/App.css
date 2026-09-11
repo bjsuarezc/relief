@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+/* Transición de vista (pedida por el propietario: "smooth al navegar").
+   Cada vez que cambia la vista/conmutador, el contenedor se re-monta
+   (React cambia la key) y CSS anima su entrada: aparece deslizando
+   levemente hacia arriba. Es CSS puro: cero dependencias nuevas. */
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vista-animada {
+  animation: aparecer 0.18s ease-out;
+}
