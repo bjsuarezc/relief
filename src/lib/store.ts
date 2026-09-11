@@ -6,7 +6,7 @@
 
 import { create } from "zustand";
 import { api } from "./api";
-import type { CreateTaskInput, Task } from "./types";
+import type { CreateTaskInput, Task, UpdateTaskInput } from "./types";
 
 // El almacén: tasks son los datos, el resto es estado de la llamada
 // (loading = "estoy pidiendo", error = "algo falló" para mostrar en UI).
@@ -20,6 +20,7 @@ interface TasksState {
   createTask: (input: CreateTaskInput) => Promise<void>;
   setTaskCompleted: (id: string, completed: boolean) => Promise<void>;
   setTaskDueDate: (id: string, dueDate: string) => Promise<void>;
+  updateTask: (id: string, cambios: UpdateTaskInput) => Promise<void>;
 }
 
 export const useTasksStore = create<TasksState>((set) => ({
@@ -77,6 +78,18 @@ export const useTasksStore = create<TasksState>((set) => ({
   setTaskDueDate: async (id, dueDate) => {
     try {
       const task = await api.setTaskDueDate(id, dueDate);
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === id ? task : t)),
+        error: null,
+      }));
+    } catch (e) {
+      set({ error: String(e) });
+    }
+  },
+  // updateTask: correcciones de título/prioridad (mismo patrón de reemplazo).
+  updateTask: async (id, cambios) => {
+    try {
+      const task = await api.updateTask(id, cambios);
       set((state) => ({
         tasks: state.tasks.map((t) => (t.id === id ? task : t)),
         error: null,

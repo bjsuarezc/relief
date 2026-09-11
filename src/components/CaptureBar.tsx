@@ -25,7 +25,9 @@ import type { CreateTaskInput, Priority } from "../lib/types";
 
 // Las 3 prioridades en orden visual (alta → media → baja), con etiqueta
 // legible para las pastillas y el badge del chip.
-const PRIORIDADES: { valor: Priority; etiqueta: string }[] = [
+// Exportadas: es la ÚNICA fuente de verdad de etiquetas de prioridad en
+// la UI — TaskList (popover de edición) las reutiliza en vez de repetirlas.
+export const PRIORIDADES: { valor: Priority; etiqueta: string }[] = [
   { valor: "high", etiqueta: "Alta" },
   { valor: "medium", etiqueta: "Media" },
   { valor: "low", etiqueta: "Baja" },

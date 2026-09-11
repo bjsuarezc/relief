@@ -5,7 +5,7 @@
 // sin tocar la UI).
 
 import { invoke } from "@tauri-apps/api/core";
-import type { CreateTaskInput, Task } from "./types";
+import type { CreateTaskInput, Task, UpdateTaskInput } from "./types";
 
 export const api = {
   // invoke<T>("nombre_comando") ejecuta el comando Rust y promete un T.
@@ -18,8 +18,13 @@ export const api = {
   setTaskCompleted: (id: string, completed: boolean) =>
     invoke<Task>("set_task_completed", { id, completed }),
   // Reorganización: mueve una tarea a otro día (el motor único de
-  // "Mover a hoy" y "Más opciones"). Los argumentos camelCase viajan como
-  // JSON y Tauri los mapea a los parámetros snake_case de Rust.
+  // "Mover a hoy" y del click en la fecha de cualquier fila). Los
+  // argumentos camelCase viajan como JSON y Tauri los mapea a los
+  // parámetros snake_case de Rust.
   setTaskDueDate: (id: string, dueDate: string) =>
     invoke<Task>("set_task_due_date", { id, dueDate }),
+  // Correcciones de título/prioridad (cada campo opcional; solo se manda
+  // lo que cambia — Rust registra un evento 'updated' por campo).
+  updateTask: (id: string, cambios: UpdateTaskInput) =>
+    invoke<Task>("update_task", { id, input: cambios }),
 };

@@ -29,10 +29,10 @@ import {
   startOfWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, Circle } from "lucide-react";
-import { WeekPicker } from "./CaptureBar";
+import { CheckCircle2, ChevronLeft, ChevronRight, Circle } from "lucide-react";
+import { PRIORIDADES, WeekPicker } from "./CaptureBar";
 import { useTasksStore } from "../lib/store";
-import type { Priority, Task } from "../lib/types";
+import type { Priority, Task, UpdateTaskInput } from "../lib/types";
 
 type Vista = "hoy" | "semana" | "mes";
 
@@ -57,78 +57,53 @@ const COLOR_PRIORIDAD: Record<Priority, string> = {
   low: "text-emerald-400",
 };
 
-// TareaLinea: una fila de tarea. Ahora es INTERACTIVA: el check a la
-// izquierda tacha/desmarca (toggle). Al completar: tachado + atenuado.
-// La tarea SE QUEDA en su grupo (decisión: las completadas son el muro
-// de victorias, nunca desaparecen de la vista donde las lograste).
-// onToggle viene inyectado desde TaskList (que lo toma del store) —
-// la fila es presentacional y no sabe cómo se guarda el cambio.
+// TareaLinea: una fila de tarea, INTERACTIVA y editable — pero sin cromo
+// nuevo (diseño "minimalista" acordado con el propietario): los textos
+// que ya se ven SON los botones.
+// - Click en el TÍTULO → se convierte en input. Enter guarda, Esc cancela.
+// - Click en la FECHA → abre el WeekPicker debajo de la fila (reuso del
+//   de CaptureBar) para moverla a cualquier día.
+// - Click en la PRIORIDAD → mini-popover con las 3 opciones.
+// - "Mover a hoy" solo existe en Atrasadas (moverAHoy: decisión Sesión 1).
+// El hover sube ligeramente el color del texto para insinuar que es
+// clicable — insinuación, no alarma visual.
 function TareaLinea({
   task,
   onToggle,
-}: {
-  task: Task;
-  onToggle: (id: string, completed: boolean) => void;
-}) {
-  return (
-    <li className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm">
-      {/* El check: círculo vacío (lucide Circle) que se vuelve verde con
-          marca (CheckCircle2) al completar. active:scale-90 da el
-          "pop" táctil de la micro-victoria (transición CSS, sin librerías). */}
-      <button
-        type="button"
-        onClick={() => onToggle(task.id, !task.completed)}
-        aria-label={task.completed ? "Desmarcar tarea" : "Completar tarea"}
-        className="shrink-0 transition-transform active:scale-90"
-      >
-        {task.completed ? (
-          <CheckCircle2 size={18} className="text-emerald-500" />
-        ) : (
-          <Circle size={18} className="text-neutral-600 hover:text-neutral-400" />
-        )}
-      </button>
-
-      <span
-        className={`flex-1 ${
-          task.completed ? "text-neutral-600 line-through" : ""
-        }`}
-      >
-        {task.title}
-      </span>
-      <span className="text-neutral-500">
-        {formatoFecha(task.dueDate)} ·{" "}
-        <span className={COLOR_PRIORIDAD[task.priority]}>
-          {ETIQUETA_PRIORIDAD[task.priority]}
-        </span>
-      </span>
-    </li>
-  );
-}
-
-// AtrasadaLinea: una fila de la sección Atrasadas. Además del check
-// (tachar la victoria ya hecha), ofrece las dos ACCIONES DE REORGANIZACIÓN
-// decididas en la Sesión 1:
-// - "Mover a hoy": un click, se reagenda al día de hoy (usa el mismo
-//   motor set_task_due_date con la fecha de hoy).
-// - "Más opciones": abre el WeekPicker (reutilizado de CaptureBar) para
-//   elegir cualquier día. Al elegir, se reagenda y el picker se cierra.
-// El picker arranca en la semana de la fecha ACTUAL de la tarea (su día
-// sale resaltado — sabes desde dónde la estás moviendo).
-function AtrasadaLinea({
-  task,
-  onToggle,
+  onUpdate,
   onReschedule,
+  moverAHoy = false,
 }: {
   task: Task;
   onToggle: (id: string, completed: boolean) => void;
+  onUpdate: (id: string, cambios: UpdateTaskInput) => void;
   onReschedule: (id: string, dueDate: string) => void;
+  moverAHoy?: boolean;
 }) {
+  const [editandoTitulo, setEditandoTitulo] = useState(false);
+  const [borradorTitulo, setBorradorTitulo] = useState("");
   const [showPicker, setShowPicker] = useState(false);
-  // La semana que se está viendo en el picker. Estado LOCAL de esta fila:
-  // si cada atrasada compartiera un picker global, se chocarían.
+  const [showPrioridad, setShowPrioridad] = useState(false);
+  // Semana que muestra el picker: arranca en la fecha ACTUAL de la tarea.
   const [diaMostrado, setDiaMostrado] = useState<Date>(
     task.dueDate ? parseISO(task.dueDate) : new Date(),
   );
+
+  // El input arranca con el título actual como borrador (no desde vacío).
+  const empezarEditar = () => {
+    setBorradorTitulo(task.title);
+    setEditandoTitulo(true);
+  };
+
+  const guardarTitulo = () => {
+    const limpio = borradorTitulo.trim();
+    // Guardar solo si cambió realmente y no quedó vacío (misma regla
+    // que Rust valida después — el borde doble de siempre).
+    if (limpio !== "" && limpio !== task.title) {
+      onUpdate(task.id, { title: limpio });
+    }
+    setEditandoTitulo(false);
+  };
 
   const reagenda = (d: Date) => {
     onReschedule(task.id, format(d, "yyyy-MM-dd"));
@@ -138,6 +113,7 @@ function AtrasadaLinea({
   return (
     <>
       <li className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm">
+        {/* El check de completado (micro-victoria táctil). */}
         <button
           type="button"
           onClick={() => onToggle(task.id, !task.completed)}
@@ -151,41 +127,65 @@ function AtrasadaLinea({
           )}
         </button>
 
-        <span className={task.completed ? "flex-1 text-neutral-600 line-through" : "flex-1"}>
-          {task.title}
-        </span>
-        <span className="text-neutral-500">
-          {formatoFecha(task.dueDate)} ·{" "}
-          <span className={COLOR_PRIORIDAD[task.priority]}>
-            {ETIQUETA_PRIORIDAD[task.priority]}
+        {/* Título: texto normal; al click, input editable al vuelo.
+            maxLength de HTML + validación Rust = doble cinturón. */}
+        {editandoTitulo ? (
+          <input
+            autoFocus
+            value={borradorTitulo}
+            maxLength={200}
+            onChange={(e) => setBorradorTitulo(e.target.value)}
+            onBlur={guardarTitulo}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") guardarTitulo();
+              if (e.key === "Escape") setEditandoTitulo(false);
+            }}
+            aria-label="Editar título"
+            className="flex-1 rounded-md border border-neutral-600 bg-neutral-800 px-2 py-1 text-sm outline-none"
+          />
+        ) : (
+          <span
+            onClick={empezarEditar}
+            className={`flex-1 cursor-text hover:text-neutral-300 ${
+              task.completed ? "text-neutral-600 line-through" : ""
+            }`}
+          >
+            {task.title}
           </span>
-        </span>
+        )}
 
-        {/* Acciones solo si está pendiente: una atrasada ya completada no
-            necesita reorganizarse (ya está resuelta). */}
-        {!task.completed && (
-          <>
-            <button
-              type="button"
-              onClick={() => reagenda(new Date())}
-              className="shrink-0 rounded-lg border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
-            >
-              Mover a hoy
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowPicker(!showPicker)}
-              aria-expanded={showPicker}
-              className="shrink-0 rounded-lg border border-neutral-800 px-2 py-1 text-xs text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
-            >
-              <CalendarClock size={14} className="inline" /> Más opciones
-            </button>
-          </>
+        {/* Fecha: clicable → picker. La fecha VISIBLE es el botón. */}
+        <button
+          type="button"
+          onClick={() => setShowPicker(!showPicker)}
+          className="shrink-0 text-neutral-500 hover:text-neutral-200"
+        >
+          {formatoFecha(task.dueDate)}
+        </button>
+
+        {/* Prioridad: clicable → popover con las 3 opciones. */}
+        <button
+          type="button"
+          onClick={() => setShowPrioridad(!showPrioridad)}
+          className={`shrink-0 hover:brightness-125 ${COLOR_PRIORIDAD[task.priority]}`}
+        >
+          {ETIQUETA_PRIORIDAD[task.priority]}
+        </button>
+
+        {/* Solo en Atrasadas (decisión Sesión 1) y solo si está pendiente. */}
+        {moverAHoy && !task.completed && (
+          <button
+            type="button"
+            onClick={() => onReschedule(task.id, format(new Date(), "yyyy-MM-dd"))}
+            className="shrink-0 rounded-lg border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+          >
+            Mover a hoy
+          </button>
         )}
       </li>
 
-      {/* El picker va FUERA del <li> (un picker dentro de una fila flex
-          quedaría apretado): se abre debajo de la fila, a lo ancho. */}
+      {/* Paneles debajo de la fila (fuera del <li> flex, a lo ancho).
+          Solo uno a la vez: abrir uno cierra el otro (menos ruido). */}
       {showPicker && (
         <div className="vista-animada mt-2">
           <WeekPicker
@@ -195,25 +195,51 @@ function AtrasadaLinea({
           />
         </div>
       )}
+      {showPrioridad && (
+        <div className="vista-animada mt-2 flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
+          <span className="text-xs text-neutral-500">Prioridad:</span>
+          {PRIORIDADES.map((p) => (
+            <button
+              key={p.valor}
+              type="button"
+              onClick={() => {
+                onUpdate(task.id, { priority: p.valor });
+                setShowPrioridad(false);
+              }}
+              className={`rounded-full border px-3 py-1 text-sm ${
+                task.priority === p.valor
+                  ? "border-neutral-500 bg-neutral-800 text-neutral-100"
+                  : "border-neutral-800 text-neutral-400 hover:bg-neutral-800"
+              }`}
+            >
+              {p.etiqueta}
+            </button>
+          ))}
+        </div>
+      )}
     </>
   );
 }
 
 // GrupoDeDia: un encabezado de día + sus tareas. Se reutiliza en las
-// vistas Semana (7 grupos) y Mes (solo los días con tareas). onToggle
-// se transmite hasta cada fila. La variante "atrasada" usa AtrasadaLinea
-// (filas con acciones de reorganización).
+// vistas Semana (7 grupos) y Mes (solo los días con tareas). El flag
+// moverAHoy pasa por acá: es la única diferencia de comportamiento del
+// grupo Atrasadas respecto a los demás (decisión Sesión 1).
 function GrupoDia({
   encabezado,
   tareas,
   onToggle,
+  onUpdate,
   onReschedule,
+  moverAHoy = false,
   sutil = false,
 }: {
   encabezado: string;
   tareas: Task[];
   onToggle: (id: string, completed: boolean) => void;
-  onReschedule?: (id: string, dueDate: string) => void;
+  onUpdate: (id: string, cambios: UpdateTaskInput) => void;
+  onReschedule: (id: string, dueDate: string) => void;
+  moverAHoy?: boolean;
   sutil?: boolean;
 }) {
   return (
@@ -229,13 +255,16 @@ function GrupoDia({
         <p className="text-sm text-neutral-700">—</p>
       ) : (
         <ul className="space-y-2">
-          {tareas.map((task) =>
-            onReschedule ? (
-              <AtrasadaLinea key={task.id} task={task} onToggle={onToggle} onReschedule={onReschedule} />
-            ) : (
-              <TareaLinea key={task.id} task={task} onToggle={onToggle} />
-            ),
-          )}
+          {tareas.map((task) => (
+            <TareaLinea
+              key={task.id}
+              task={task}
+              onToggle={onToggle}
+              onUpdate={onUpdate}
+              onReschedule={onReschedule}
+              moverAHoy={moverAHoy}
+            />
+          ))}
         </ul>
       )}
     </section>
@@ -249,10 +278,12 @@ function GrupoDia({
 function VistaHoy({
   tasks,
   onToggle,
+  onUpdate,
   onReschedule,
 }: {
   tasks: Task[];
   onToggle: (id: string, completed: boolean) => void;
+  onUpdate: (id: string, cambios: UpdateTaskInput) => void;
   onReschedule: (id: string, dueDate: string) => void;
 }) {
   const hoy = new Date();
@@ -287,7 +318,9 @@ function VistaHoy({
           encabezado="Atrasadas"
           tareas={atrasadas}
           onToggle={onToggle}
+          onUpdate={onUpdate}
           onReschedule={onReschedule}
+          moverAHoy
         />
       )}
       {deHoy.length > 0 && (
@@ -295,10 +328,19 @@ function VistaHoy({
           encabezado={`Hoy · ${completadasHoy}/${deHoy.length} completadas`}
           tareas={deHoy}
           onToggle={onToggle}
+          onUpdate={onUpdate}
+          onReschedule={onReschedule}
         />
       )}
       {sinFecha.length > 0 && (
-        <GrupoDia encabezado="Sin fecha" tareas={sinFecha} onToggle={onToggle} sutil />
+        <GrupoDia
+          encabezado="Sin fecha"
+          tareas={sinFecha}
+          onToggle={onToggle}
+          onUpdate={onUpdate}
+          onReschedule={onReschedule}
+          sutil
+        />
       )}
     </div>
   );
@@ -309,11 +351,15 @@ function VistaSemana({
   ancla,
   onMover,
   onToggle,
+  onUpdate,
+  onReschedule,
 }: {
   tasks: Task[];
   ancla: Date;
   onMover: (dias: number) => void;
   onToggle: (id: string, completed: boolean) => void;
+  onUpdate: (id: string, cambios: UpdateTaskInput) => void;
+  onReschedule: (id: string, dueDate: string) => void;
 }) {
   // La semana contiene al "ancla": la fecha de navegación compartida.
   // CaptureBar y esta vista son independientes, pero ambas hablan de
@@ -349,6 +395,8 @@ function VistaSemana({
               (t) => t.dueDate && isSameDay(parseISO(t.dueDate), d),
             )}
             onToggle={onToggle}
+            onUpdate={onUpdate}
+            onReschedule={onReschedule}
             sutil={!isToday(d)}
           />
         ))}
@@ -362,11 +410,15 @@ function VistaMes({
   ancla,
   onMover,
   onToggle,
+  onUpdate,
+  onReschedule,
 }: {
   tasks: Task[];
   ancla: Date;
   onMover: (meses: number) => void;
   onToggle: (id: string, completed: boolean) => void;
+  onUpdate: (id: string, cambios: UpdateTaskInput) => void;
+  onReschedule: (id: string, dueDate: string) => void;
 }) {
   // Lista compacta: SOLO los días que tienen tareas (un mes vacío
   // completo sería una pared de guiones). El orden de días sale de
@@ -412,6 +464,8 @@ function VistaMes({
               encabezado={isToday(d) ? `Hoy · ${format(d, "EEE d MMM", { locale: es })}` : format(d, "EEE d MMM", { locale: es })}
               tareas={delMes.filter((t) => t.dueDate && isSameDay(parseISO(t.dueDate), d))}
               onToggle={onToggle}
+              onUpdate={onUpdate}
+              onReschedule={onReschedule}
             />
           ))}
         </div>
@@ -431,8 +485,10 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
   // cada fila. Así las vistas siguen siendo "puras" (solo reciben datos)
   // y el único punto que sabe guardar es TaskList.
   const setTaskCompleted = useTasksStore((s) => s.setTaskCompleted);
-  // La acción de reorganización: solo la usa la vista Hoy (Atrasadas).
+  // Las acciones que bajan hasta cada fila: completar, corregir
+  // (título/prioridad) y reagendar (fecha / "Mover a hoy").
   const setTaskDueDate = useTasksStore((s) => s.setTaskDueDate);
+  const updateTask = useTasksStore((s) => s.updateTask);
 
   const moverSemana = (dias: number) => setAncla(addDays(ancla, dias));
   const moverMes = (meses: number) => setAncla(addMonths(ancla, meses));
@@ -469,13 +525,32 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
           .vista-animada se dispara otra vez. Cambiar key = animación. */}
       <div key={`${vista}-${ancla.toISOString()}`} className="vista-animada mt-6">
         {vista === "hoy" && (
-          <VistaHoy tasks={tasks} onToggle={setTaskCompleted} onReschedule={setTaskDueDate} />
+          <VistaHoy
+            tasks={tasks}
+            onToggle={setTaskCompleted}
+            onUpdate={updateTask}
+            onReschedule={setTaskDueDate}
+          />
         )}
         {vista === "semana" && (
-          <VistaSemana tasks={tasks} ancla={ancla} onMover={moverSemana} onToggle={setTaskCompleted} />
+          <VistaSemana
+            tasks={tasks}
+            ancla={ancla}
+            onMover={moverSemana}
+            onToggle={setTaskCompleted}
+            onUpdate={updateTask}
+            onReschedule={setTaskDueDate}
+          />
         )}
         {vista === "mes" && (
-          <VistaMes tasks={tasks} ancla={ancla} onMover={moverMes} onToggle={setTaskCompleted} />
+          <VistaMes
+            tasks={tasks}
+            ancla={ancla}
+            onMover={moverMes}
+            onToggle={setTaskCompleted}
+            onUpdate={updateTask}
+            onReschedule={setTaskDueDate}
+          />
         )}
       </div>
     </div>

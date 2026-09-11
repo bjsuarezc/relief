@@ -250,6 +250,148 @@ pub fn set_task_due_date(
     })
 }
 
+// UpdateTaskInput: los campos que se pueden CORREGIR (no crear) de una
+// tarea. Solo título y prioridad: la fecha tiene su propio comando
+// (set_task_due_date) porque semánticamente son hechos distintos para la
+// IA de la v2 — "corregí un typo" (updated) vs "pospongo la tarea"
+// (rescheduled). Cada cosa, su evento.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateTaskInput {
+    pub title: Option<String>,
+    pub priority: Option<String>,
+}
+
+// update_task: corrige título y/o prioridad de una tarea.
+// Contrato (paso 6, opción B completa, minimalista): update_task(id, input)
+// donde cada campo es opcional; solo se toca lo que viene.
+// Idempotente como sus hermanos: si nada cambia realmente, no hay UPDATE
+// ni eventos. Cada campo cambiado genera su propio evento 'updated' con
+// payload { campo, de, a } — la granularidad importa para los patrones.
+#[tauri::command]
+pub fn update_task(
+    state: State<AppState>,
+    id: String,
+    input: UpdateTaskInput,
+) -> Result<Task, String> {
+    // --- Validaciones (mismas reglas del borde que en create_task) ---
+    let titulo_nuevo = input.title.map(|t| t.trim().to_string());
+    if let Some(t) = &titulo_nuevo {
+        if t.is_empty() {
+            return Err("El título no puede estar vacío".to_string());
+        }
+        if t.chars().count() > 200 {
+            return Err("El título no puede superar los 200 caracteres".to_string());
+        }
+    }
+    if let Some(p) = &input.priority {
+        if !PRIORIDADES_VALIDAS.contains(&p.as_str()) {
+            return Err(format!("Prioridad inválida: {}", p));
+        }
+    }
+
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    let actual = conn
+        .query_row(
+            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at
+             FROM task WHERE id = ?1",
+            rusqlite::params![id],
+            |row| {
+                Ok(Task {
+                    id: row.get("id")?,
+                    title: row.get("title")?,
+                    due_date: row.get("due_date")?,
+                    priority: row.get("priority")?,
+                    completed: row.get::<_, i64>("completed")? != 0,
+                    completed_at: row.get("completed_at")?,
+                    created_at: row.get("created_at")?,
+                    updated_at: row.get("updated_at")?,
+                })
+            },
+        )
+        .map_err(|e| match e {
+            rusqlite::Error::QueryReturnedNoRows => {
+                format!("No existe una tarea con id {}", id)
+            }
+            _ => e.to_string(),
+        })?;
+
+    // Solo cambios REALES (idempotencia): comparar contra el estado actual.
+    let cambia_titulo = titulo_nuevo
+        .as_ref()
+        .map(|t| *t != actual.title)
+        .unwrap_or(false);
+    let cambia_prioridad = input
+        .priority
+        .as_ref()
+        .map(|p| *p != actual.priority)
+        .unwrap_or(false);
+
+    if !cambia_titulo && !cambia_prioridad {
+        return Ok(actual);
+    }
+
+    // Valores finales: lo que cambia toma lo nuevo; lo demás conserva.
+    let titulo_final = if cambia_titulo {
+        titulo_nuevo.clone().unwrap()
+    } else {
+        actual.title.clone()
+    };
+    let prioridad_final = if cambia_prioridad {
+        input.priority.clone().unwrap()
+    } else {
+        actual.priority.clone()
+    };
+
+    let now = chrono::Utc::now().to_rfc3339();
+
+    conn.execute(
+        "UPDATE task SET title = ?1, priority = ?2, updated_at = ?3 WHERE id = ?4",
+        rusqlite::params![titulo_final, prioridad_final, now, id],
+    )
+    .map_err(|e| e.to_string())?;
+
+    // Un evento 'updated' POR CAMPO cambiado (granular para la IA v2).
+    // json!() construye JSON literal con valores interpolados; aquí
+    // TÍTULO usa referencias (&) porque aún no se mueven.
+    if cambia_titulo {
+        let payload = serde_json::json!({
+            "campo": "title",
+            "de": actual.title,
+            "a": titulo_final
+        })
+        .to_string();
+        conn.execute(
+            "INSERT INTO task_event (id, task_id, event_type, payload, happened_at)
+             VALUES (?1, ?2, 'updated', ?3, ?4)",
+            rusqlite::params![uuid::Uuid::new_v4().to_string(), id, payload, now],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+    if cambia_prioridad {
+        let payload = serde_json::json!({
+            "campo": "priority",
+            "de": actual.priority,
+            "a": prioridad_final
+        })
+        .to_string();
+        conn.execute(
+            "INSERT INTO task_event (id, task_id, event_type, payload, happened_at)
+             VALUES (?1, ?2, 'updated', ?3, ?4)",
+            rusqlite::params![uuid::Uuid::new_v4().to_string(), id, payload, now],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+
+    Ok(Task {
+        title: titulo_final,
+        priority: prioridad_final,
+        updated_at: now,
+        ..actual
+    })
+}
+
 #[tauri::command]
 pub fn create_task(state: State<AppState>, input: CreateTaskInput) -> Result<Task, String> {
     // --- 1. VALIDACIONES (el borde: nada de basura entra a la BD) ---

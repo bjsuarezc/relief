@@ -40,7 +40,8 @@ pub fn run() {
             tasks::get_tasks,
             tasks::create_task,
             tasks::set_task_completed,
-            tasks::set_task_due_date
+            tasks::set_task_due_date,
+            tasks::update_task
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

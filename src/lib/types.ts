@@ -14,6 +14,15 @@ export interface CreateTaskInput {
   priority?: Priority;
 }
 
+// Lo que enviamos al CORREGIR una tarea (título/prioridad). Cada campo
+// es opcional: solo se manda lo que cambia. La fecha NO va aquí — tiene
+// su propio comando (setTaskDueDate) porque para la historia de eventos
+// "corregir un typo" y "posponer la tarea" son hechos distintos.
+export interface UpdateTaskInput {
+  title?: string;
+  priority?: Priority;
+}
+
 // La tarea completa tal como la devuelve Rust.
 // Nota camelCase: en la BD es due_date/completed_at, pero Rust traduce a
 // camelCase al serializar (serde rename_all), y aquí consumimos esa versión.
