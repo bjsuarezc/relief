@@ -1,4 +1,4 @@
-# Casos de uso — TaskLens
+# Casos de uso — Relief
 
 ## CU-01: Planificar la semana
 

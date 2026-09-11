@@ -1,4 +1,4 @@
-# AGENTS.md — Modo de trabajo TaskLens
+# AGENTS.md — Modo de trabajo Relief
 
 Instrucciones para asistentes de IA (opencode u otros) que trabajen en este
 proyecto. Léelas antes de cada sesión y aplícalas en todo momento.

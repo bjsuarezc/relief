@@ -1,4 +1,4 @@
-# Bitácora del proyecto — TaskLens
+# Bitácora del proyecto — Relief
 
 Registro cronológico del trabajo y las decisiones conversadas con los
 asistentes de IA. **Cualquier sesión nueva debe leer esto** para conocer el
@@ -264,6 +264,28 @@ estado y la historia antes de continuar.
 - El filtro deletedAt vive UNA vez (TaskList): las vistas siguen
   recibiendo solo tareas activas — no se enteran de la papelera.
 - Commit: `29b2b87`.
+
+### Renombre del producto: TaskLens → Relief (2026-09-11)
+
+- Decisión del propietario: el nombre era lo más flojo del proyecto y lo
+  dijo explícito ("quiero cambiarle el nombre... uno mejor"). Proceso:
+  opciones en español (Alivio, Listo, Ya., Tacha, Hoy) → decisión de ir a
+  inglés ("como relieve") → opciones (Relief, Exhale, Sigh, Clear, Offload)
+  → **Relief**. Es el sentimiento del final del loop: el alivio de tachar.
+- Alcance: renombre completo punta a punta (elección del propietario,
+  opción B de datos):
+  - Nivel 1 visible: título de ventana, h1 de la UI, title de index.html,
+    package.json, encabezados de docs y AGENTS.md.
+  - Nivel 2 técnico: package Cargo `relief`, lib `relief_lib` (+ main.rs),
+    identificador Tauri `com.benja.relief`, productName `Relief`,
+    BD `relief.db`.
+  - **Opción B (BD fresca)**: la BD vieja `tasklens.db` queda huérfana en
+    el directorio del identificador anterior; se arranca sin datos. El
+    historial corto se sacrifica a cambio de coherencia total.
+  - Bitácora histórica: las menciones a TaskLens en entradas pasadas SE
+    MANTIENEN (registro cronológico, no se falsifica). Solo encabezados
+    y visión reflejan el nombre actual.
+- Pendiente: README del proyecto (para GitHub), ícono/branding de la app.
 
 ### Estado / siguiente paso
 

@@ -17,7 +17,7 @@ function App() {
 
   return (
     <main className="flex min-h-screen flex-col items-center bg-neutral-950 px-4 py-10 text-neutral-100">
-      <h1 className="text-3xl font-bold tracking-tight">TaskLens</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Relief</h1>
 
       <div className="mt-8 w-full max-w-xl">
         <CaptureBar />

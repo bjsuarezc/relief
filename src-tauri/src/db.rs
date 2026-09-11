@@ -1,7 +1,6 @@
 // db.rs: la capa de persistencia.
 // Solo sabe dos cosas: cómo crear el esquema y cómo abrir la conexión.
 // No contiene lógica de negocio: eso vive en tasks.rs.
-
 use rusqlite::Connection;
 use tauri::Manager;
 
@@ -34,8 +33,10 @@ CREATE TABLE IF NOT EXISTS task_event (
 ";
 
 // init_db: abre (o crea) la BD y garantiza que el esquema exista.
-// La guardamos en el directorio de datos de la app (app_data/tasklens.db),
+// La guardamos en el directorio de datos de la app (app_data/relief.db),
 // no junto al ejecutable: ahí es donde Windows/OS esperan datos de usuario.
+// Nota: la BD vive bajo el IDENTIFICADOR de la app (tauri.conf.json) —
+// cambiar el identificador cambia el directorio de datos (renombre 2026-09).
 // Migraciones: cambios al esquema que se aplican sobre una BD que YA
 // existe en el disco del usuario. El SCHEMA (CREATE TABLE IF NOT EXISTS)
 // no puede agregar columnas a una tabla que ya existe — para eso son
@@ -64,7 +65,7 @@ pub fn init_db(app: &tauri::AppHandle) -> Result<Connection, rusqlite::Error> {
         .expect("no se pudo resolver el directorio de datos de la app");
     std::fs::create_dir_all(&data_dir).expect("no se pudo crear el directorio de datos");
 
-    let conn = Connection::open(data_dir.join("tasklens.db"))?;
+    let conn = Connection::open(data_dir.join("relief.db"))?;
     conn.execute_batch(SCHEMA)?;
 
     // Aplicar migraciones, tolerando las que ya se aplicaron antes.

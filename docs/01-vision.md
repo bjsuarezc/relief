@@ -1,4 +1,8 @@
-# Visión del producto — TaskLens
+# Visión del producto — Relief
+
+> Nombre anterior: TaskLens. Renombrado el 2026-09-11 a **Relief** —
+> el nombre es el sentimiento del final del loop: el alivio (relief)
+> de tachar. Ver bitácora, Sesión 2.
 
 ## El problema
 
@@ -11,7 +15,7 @@ el loop básico se pierde: **anotar una tarea, tacharla, sentir alivio**.
 
 ## La propuesta de valor
 
-TaskLens devuelve el loop emocional a la gestión de tareas:
+Relief devuelve el loop emocional a la gestión de tareas:
 
 - **Capturar rápido**: anotar la tarea en segundos, sin formularios ni fricción.
 - **Ver una por una**: una lista enfocada, no un tablero gigante.
