@@ -211,14 +211,36 @@ estado y la historia antes de continuar.
   se cierra al elegir; cada fila tiene su picker (estado local).
 - Commit: `eb05d4e`.
 
+### Paso 6 — edición de tareas (doble motor, UI minimalista)
+
+- Origen: dogfooding del propietario ("cuando me equivoco de fecha no puedo
+  modificarla"). Fricción real detectada por uso diario, como preveía la visión.
+- Decisión del propietario: opción **B completa en una tanda** (título +
+  prioridad + fecha), con UI "clever y minimalista" — sin ruido visual.
+- Diseño acordado: los textos visibles SON los botones (cero cromo nuevo).
+  Click en título → input (Enter/Esc/click fuera); click en fecha → WeekPicker
+  debajo de la fila; click en prioridad → mini-popover. Un panel a la vez.
+  Hover sutil como insinuación. "Mover a hoy" solo en Atrasadas; el botón
+  "Más opciones" desapareció (reemplazado por el click en la fecha).
+- Rust: `update_task(id, {title?, priority?})` — idempotente (solo cambios
+  reales), evento `updated` POR CAMPO con payload {campo, de, a}.
+  La fecha sigue por `set_task_due_date` (evento `rescheduled`): semántica
+  separada para la IA v2 — "corregir typo" ≠ "posponer tarea".
+- Refactor: `AtrasadaLinea` eliminada (redundante con TareaLinea
+  generalizada); `PRIORIDADES` exportada de CaptureBar como única fuente
+  de etiquetas de prioridad (TaskList la reutiliza).
+- Error del build aprendido: `PRIORIDADES` no exportada → TS2459; la
+  solución fue exportarla (una fuente de verdad), no duplicarla.
+- Commit: `ee9d680`.
+
 ### Estado / siguiente paso
 
-- ✅ MVP funcional: captura (rápida + con fecha/prioridad), vistas
-  Hoy/Semana/Mes, check con progreso del día, atrasadas con reorganización.
-  Todos los comandos registran eventos (created/completed/reopened/rescheduled).
+- ✅ MVP funcional completo: captura con destino, vistas Hoy/Semana/Mes,
+  check con progreso del día, atrasadas con reorganización, edición
+  completa minimalista. Eventos: created/completed/reopened/rescheduled/updated.
 - ⏭️ Siguiente (candidatos a decidir con el propietario):
   1. Aceleradores de teclado del MVP (Sesión 1: Ctrl+N / Enter / Ctrl+D —
      toda acción también por click).
-  2. Repo en GitHub (diferido desde Sesión 1).
-  3. Pulido visual / wireframes de la lista (diferidos).
-  4. Empaquetado/instalador para uso diario del propietario.
+  2. Empaquetado/instalador para uso diario del propietario.
+  3. Repo en GitHub (diferido desde Sesión 1).
+  4. Pulido visual guiado por más dogfooding.
