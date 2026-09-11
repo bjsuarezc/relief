@@ -29,12 +29,12 @@ import {
   startOfWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, ChevronLeft, ChevronRight, Circle } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Circle, Trash2, Undo2 } from "lucide-react";
 import { PRIORIDADES, WeekPicker } from "./CaptureBar";
 import { useTasksStore } from "../lib/store";
 import type { Priority, Task, UpdateTaskInput } from "../lib/types";
 
-type Vista = "hoy" | "semana" | "mes";
+type Vista = "hoy" | "semana" | "mes" | "papelera";
 
 // Helpers de PRESENTACIÓN: convierten lo crudo de la BD (fechas ISO,
 // claves en inglés) en texto/color humano. Vivían en App.tsx y se
@@ -72,12 +72,14 @@ function TareaLinea({
   onToggle,
   onUpdate,
   onReschedule,
+  onDelete,
   moverAHoy = false,
 }: {
   task: Task;
   onToggle: (id: string, completed: boolean) => void;
   onUpdate: (id: string, cambios: UpdateTaskInput) => void;
   onReschedule: (id: string, dueDate: string) => void;
+  onDelete: (id: string) => void;
   moverAHoy?: boolean;
 }) {
   const [editandoTitulo, setEditandoTitulo] = useState(false);
@@ -112,7 +114,7 @@ function TareaLinea({
 
   return (
     <>
-      <li className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm">
+      <li className="group flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm">
         {/* El check de completado (micro-victoria táctil). */}
         <button
           type="button"
@@ -182,6 +184,18 @@ function TareaLinea({
             Mover a hoy
           </button>
         )}
+
+        {/* Papelera: SOLO al pasar el mouse (opacity 0 → group-hover:100,
+            el "group" vive en el <li>). Mandar a papelera es reversible
+            (Restaurar), por eso no pide confirmación aquí. */}
+        <button
+          type="button"
+          onClick={() => onDelete(task.id)}
+          aria-label="Mandar a la papelera"
+          className="shrink-0 text-neutral-700 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+        >
+          <Trash2 size={15} />
+        </button>
       </li>
 
       {/* Paneles debajo de la fila (fuera del <li> flex, a lo ancho).
@@ -231,6 +245,7 @@ function GrupoDia({
   onToggle,
   onUpdate,
   onReschedule,
+  onDelete,
   moverAHoy = false,
   sutil = false,
 }: {
@@ -239,6 +254,7 @@ function GrupoDia({
   onToggle: (id: string, completed: boolean) => void;
   onUpdate: (id: string, cambios: UpdateTaskInput) => void;
   onReschedule: (id: string, dueDate: string) => void;
+  onDelete: (id: string) => void;
   moverAHoy?: boolean;
   sutil?: boolean;
 }) {
@@ -262,6 +278,7 @@ function GrupoDia({
               onToggle={onToggle}
               onUpdate={onUpdate}
               onReschedule={onReschedule}
+              onDelete={onDelete}
               moverAHoy={moverAHoy}
             />
           ))}
@@ -280,11 +297,13 @@ function VistaHoy({
   onToggle,
   onUpdate,
   onReschedule,
+  onDelete,
 }: {
   tasks: Task[];
   onToggle: (id: string, completed: boolean) => void;
   onUpdate: (id: string, cambios: UpdateTaskInput) => void;
   onReschedule: (id: string, dueDate: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const hoy = new Date();
   const inicioHoy = startOfDay(hoy);
@@ -320,6 +339,7 @@ function VistaHoy({
           onToggle={onToggle}
           onUpdate={onUpdate}
           onReschedule={onReschedule}
+          onDelete={onDelete}
           moverAHoy
         />
       )}
@@ -330,6 +350,7 @@ function VistaHoy({
           onToggle={onToggle}
           onUpdate={onUpdate}
           onReschedule={onReschedule}
+          onDelete={onDelete}
         />
       )}
       {sinFecha.length > 0 && (
@@ -339,6 +360,7 @@ function VistaHoy({
           onToggle={onToggle}
           onUpdate={onUpdate}
           onReschedule={onReschedule}
+          onDelete={onDelete}
           sutil
         />
       )}
@@ -353,6 +375,7 @@ function VistaSemana({
   onToggle,
   onUpdate,
   onReschedule,
+  onDelete,
 }: {
   tasks: Task[];
   ancla: Date;
@@ -360,6 +383,7 @@ function VistaSemana({
   onToggle: (id: string, completed: boolean) => void;
   onUpdate: (id: string, cambios: UpdateTaskInput) => void;
   onReschedule: (id: string, dueDate: string) => void;
+  onDelete: (id: string) => void;
 }) {
   // La semana contiene al "ancla": la fecha de navegación compartida.
   // CaptureBar y esta vista son independientes, pero ambas hablan de
@@ -397,6 +421,7 @@ function VistaSemana({
             onToggle={onToggle}
             onUpdate={onUpdate}
             onReschedule={onReschedule}
+            onDelete={onDelete}
             sutil={!isToday(d)}
           />
         ))}
@@ -412,6 +437,7 @@ function VistaMes({
   onToggle,
   onUpdate,
   onReschedule,
+  onDelete,
 }: {
   tasks: Task[];
   ancla: Date;
@@ -419,6 +445,7 @@ function VistaMes({
   onToggle: (id: string, completed: boolean) => void;
   onUpdate: (id: string, cambios: UpdateTaskInput) => void;
   onReschedule: (id: string, dueDate: string) => void;
+  onDelete: (id: string) => void;
 }) {
   // Lista compacta: SOLO los días que tienen tareas (un mes vacío
   // completo sería una pared de guiones). El orden de días sale de
@@ -466,6 +493,7 @@ function VistaMes({
               onToggle={onToggle}
               onUpdate={onUpdate}
               onReschedule={onReschedule}
+              onDelete={onDelete}
             />
           ))}
         </div>
@@ -474,10 +502,106 @@ function VistaMes({
   );
 }
 
-// El conmutador: las 3 pestañas + el "ancla" de navegación compartida.
+// VistaPapelera: lo que está borrado "suave" esperando decisión.
+// Tres acciones (contrato del propietario): restaurar una, borrar una
+// permanente, o vaciar TODO con un botón (con confirmación inline — es
+// la única acción que mata varias de golpe y no tiene vuelta atrás).
+// Borrar individual NO pide confirmación: llegar a la papelera ya fue
+// un paso deliberado; el click aquí es el segundo y definitivo.
+function VistaPapelera({
+  tasks,
+  onRestaurar,
+  onPurgar,
+  onVaciar,
+}: {
+  tasks: Task[];
+  onRestaurar: (id: string) => void;
+  onPurgar: (id: string) => void;
+  onVaciar: () => void;
+}) {
+  const [confirmarVaciar, setConfirmarVaciar] = useState(false);
+
+  if (tasks.length === 0) {
+    return <p className="text-sm text-neutral-600">La papelera está vacía</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <ul className="space-y-2">
+        {tasks.map((task) => (
+          <li
+            key={task.id}
+            className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm"
+          >
+            <span className="flex-1 text-neutral-400">{task.title}</span>
+            {/* Cuándo entró a la papelera (el mismo formato humano). */}
+            <span className="text-xs text-neutral-600">
+              borrada {formatoFecha(task.deletedAt)}
+            </span>
+            <button
+              type="button"
+              onClick={() => onRestaurar(task.id)}
+              className="shrink-0 rounded-lg border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+            >
+              <Undo2 size={13} className="inline" /> Restaurar
+            </button>
+            <button
+              type="button"
+              onClick={() => onPurgar(task.id)}
+              aria-label="Borrar permanentemente"
+              className="shrink-0 rounded-lg border border-neutral-800 p-1.5 text-neutral-500 hover:border-red-900 hover:text-red-400"
+            >
+              <Trash2 size={14} />
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {/* Vaciar todo: dos pasos (click → confirmación inline → click). */}
+      {confirmarVaciar ? (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-neutral-400">
+            ¿Vaciar la papelera? ({tasks.length} tarea(s) se borrarán para siempre)
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              onVaciar();
+              setConfirmarVaciar(false);
+            }}
+            className="rounded-lg border border-red-900 bg-red-950 px-3 py-1 text-sm text-red-300 hover:bg-red-900"
+          >
+            Sí
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmarVaciar(false)}
+            className="rounded-lg border border-neutral-800 px-3 py-1 text-sm text-neutral-400 hover:bg-neutral-800"
+          >
+            No
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setConfirmarVaciar(true)}
+          className="rounded-lg border border-neutral-800 px-3 py-1.5 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+        >
+          Vaciar papelera ({tasks.length})
+        </button>
+      )}
+    </div>
+  );
+}
+
+// El conmutador: las pestañas + el "ancla" de navegación compartida.
 // El ancla es UNA fecha: la semana la interpreta como "semana de esta
 // fecha" y el mes como "mes de esta fecha". Al cambiar de vista se
 // conserva — te mueves sin perder donde estabas.
+//
+// La pestaña Papelera (decisión del propietario en el paso 7):
+// - SOLO se muestra si hay algo en la papelera (cero ruido si está vacía).
+// - VistaPapelera permite restaurar, borrar una por una o vaciar todo.
 export function TaskList({ tasks }: { tasks: Task[] }) {
   const [vista, setVista] = useState<Vista>("hoy");
   const [ancla, setAncla] = useState<Date>(new Date());
@@ -489,6 +613,16 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
   // (título/prioridad) y reagendar (fecha / "Mover a hoy").
   const setTaskDueDate = useTasksStore((s) => s.setTaskDueDate);
   const updateTask = useTasksStore((s) => s.updateTask);
+  // Papelera: mandar/restaurar, borrar permanente (una o todas).
+  const setTaskDeleted = useTasksStore((s) => s.setTaskDeleted);
+  const purgeTask = useTasksStore((s) => s.purgeTask);
+  const purgeAllTasks = useTasksStore((s) => s.purgeAllTasks);
+
+  // Dos listas derivadas: activas (las 3 vistas) y papelera.
+  // El filtro vive AQUÍ, una sola vez: las vistas no saben que existe
+  // deletedAt — siguen recibiendo solo tareas activas, sin cambios.
+  const activas = tasks.filter((t) => t.deletedAt === null);
+  const enPapelera = tasks.filter((t) => t.deletedAt !== null);
 
   const moverSemana = (dias: number) => setAncla(addDays(ancla, dias));
   const moverMes = (meses: number) => setAncla(addMonths(ancla, meses));
@@ -518,6 +652,22 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
             {p.etiqueta}
           </button>
         ))}
+
+        {/* La pestaña Papelera: con contador, y SOLO si hay algo que
+            purgar. Si la papelera está vacía, no existe en la UI. */}
+        {enPapelera.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setVista("papelera")}
+            className={`flex-1 rounded-lg py-1.5 text-sm ${
+              vista === "papelera"
+                ? "bg-neutral-800 text-neutral-50"
+                : "text-neutral-400 hover:text-neutral-200"
+            }`}
+          >
+            <Trash2 size={14} className="inline" /> {enPapelera.length}
+          </button>
+        )}
       </div>
 
       {/* Transición smooth (pedida por el propietario): la "key" cambia con
@@ -526,30 +676,41 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
       <div key={`${vista}-${ancla.toISOString()}`} className="vista-animada mt-6">
         {vista === "hoy" && (
           <VistaHoy
-            tasks={tasks}
+            tasks={activas}
             onToggle={setTaskCompleted}
             onUpdate={updateTask}
             onReschedule={setTaskDueDate}
+            onDelete={(id) => setTaskDeleted(id, true)}
           />
         )}
         {vista === "semana" && (
           <VistaSemana
-            tasks={tasks}
+            tasks={activas}
             ancla={ancla}
             onMover={moverSemana}
             onToggle={setTaskCompleted}
             onUpdate={updateTask}
             onReschedule={setTaskDueDate}
+            onDelete={(id) => setTaskDeleted(id, true)}
           />
         )}
         {vista === "mes" && (
           <VistaMes
-            tasks={tasks}
+            tasks={activas}
             ancla={ancla}
             onMover={moverMes}
             onToggle={setTaskCompleted}
             onUpdate={updateTask}
             onReschedule={setTaskDueDate}
+            onDelete={(id) => setTaskDeleted(id, true)}
+          />
+        )}
+        {vista === "papelera" && (
+          <VistaPapelera
+            tasks={enPapelera}
+            onRestaurar={(id) => setTaskDeleted(id, false)}
+            onPurgar={purgeTask}
+            onVaciar={purgeAllTasks}
           />
         )}
       </div>

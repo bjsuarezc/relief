@@ -36,6 +36,24 @@ CREATE TABLE IF NOT EXISTS task_event (
 // init_db: abre (o crea) la BD y garantiza que el esquema exista.
 // La guardamos en el directorio de datos de la app (app_data/tasklens.db),
 // no junto al ejecutable: ahí es donde Windows/OS esperan datos de usuario.
+// Migraciones: cambios al esquema que se aplican sobre una BD que YA
+// existe en el disco del usuario. El SCHEMA (CREATE TABLE IF NOT EXISTS)
+// no puede agregar columnas a una tabla que ya existe — para eso son
+// estas migraciones.
+//
+// Cada entrada es una instrucción ALTER TABLE que:
+// - se ejecuta en CADA arranque, y
+// - es IDEMPOTENTE: si ya se aplicó (la columna existe), el error
+//   "duplicate column name" se detecta y se ignora. No hay tabla de
+//   versiones por ahora (con una migración basta; cuando haya varias,
+//   un número de versión en la BD es el siguiente paso).
+const MIGRACIONES: &[&str] = &[
+    // v0.1: papelera de reciclaje (decisión del propietario: soft delete
+    // VISIBLE en una papelera, con borrado permanente desde ahí por
+    // privacidad — nada queda oculto sin que el usuario pueda purgarlo).
+    "ALTER TABLE task ADD COLUMN deleted_at TEXT",
+];
+
 pub fn init_db(app: &tauri::AppHandle) -> Result<Connection, rusqlite::Error> {
     // app_data_dir() en Windows resuelve a %APPDATA%/<identificador de la app>.
     // expect() en vez de map_err: sin directorio de datos no tiene sentido
@@ -48,5 +66,18 @@ pub fn init_db(app: &tauri::AppHandle) -> Result<Connection, rusqlite::Error> {
 
     let conn = Connection::open(data_dir.join("tasklens.db"))?;
     conn.execute_batch(SCHEMA)?;
+
+    // Aplicar migraciones, tolerando las que ya se aplicaron antes.
+    for migracion in MIGRACIONES {
+        if let Err(e) = conn.execute_batch(migracion) {
+            let msg = e.to_string();
+            // "duplicate column name" = la migración ya estaba aplicada
+            // en un arranque anterior: es el caso feliz, se ignora.
+            if !msg.contains("duplicate column name") {
+                return Err(e);
+            }
+        }
+    }
+
     Ok(conn)
 }

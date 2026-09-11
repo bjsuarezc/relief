@@ -40,6 +40,25 @@ pub struct Task {
     pub completed_at: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+    pub deleted_at: Option<String>,
+}
+
+// Helper interno: convierte una fila de la tabla task en un Task.
+// Se creó para la papelera: 4 comandos hacen el mismo mapeo y repetirlo
+// era 4 lugares para equivocarse. Una sola fuente de verdad del mapeo
+// (mismo principio que PRIORIDADES en el frontend: no duplicar).
+fn task_de_fila(row: &rusqlite::Row) -> rusqlite::Result<Task> {
+    Ok(Task {
+        id: row.get("id")?,
+        title: row.get("title")?,
+        due_date: row.get("due_date")?,
+        priority: row.get("priority")?,
+        completed: row.get::<_, i64>("completed")? != 0,
+        completed_at: row.get("completed_at")?,
+        created_at: row.get("created_at")?,
+        updated_at: row.get("updated_at")?,
+        deleted_at: row.get("deleted_at")?,
+    })
 }
 
 // get_tasks: devuelve TODAS las tareas, sin filtros.
@@ -54,29 +73,17 @@ pub fn get_tasks(state: State<AppState>) -> Result<Vec<Task>, String> {
 
     let mut stmt = conn
         .prepare(
-            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at
+            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at, deleted_at
              FROM task
              ORDER BY created_at",
         )
         .map_err(|e| e.to_string())?;
 
-    // query_map recorre fila por fila y convierte cada una en un Task.
-    // - completed viene como INTEGER (0/1) en SQLite; lo convertimos a bool.
-    // - El "?" final de cada row.get() convierte el error de BD en error
-    //   del closure; el .collect() al final junta todo en Result<Vec<Task>>.
+    // query_map recorre fila por fila y convierte cada una en un Task
+    // (el mapeo vive en task_de_fila). completed viene como INTEGER (0/1)
+    // en SQLite; el helper lo convierte a bool.
     let tasks = stmt
-        .query_map([], |row| {
-            Ok(Task {
-                id: row.get("id")?,
-                title: row.get("title")?,
-                due_date: row.get("due_date")?,
-                priority: row.get("priority")?,
-                completed: row.get::<_, i64>("completed")? != 0,
-                completed_at: row.get("completed_at")?,
-                created_at: row.get("created_at")?,
-                updated_at: row.get("updated_at")?,
-            })
-        })
+        .query_map([], task_de_fila)
         .map_err(|e| e.to_string())?
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
@@ -111,21 +118,10 @@ pub fn set_task_completed(
     // 2) construir la Task final reutilizando los campos que no cambian.
     let actual = conn
         .query_row(
-            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at
+            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at, deleted_at
              FROM task WHERE id = ?1",
             rusqlite::params![id],
-            |row| {
-                Ok(Task {
-                    id: row.get("id")?,
-                    title: row.get("title")?,
-                    due_date: row.get("due_date")?,
-                    priority: row.get("priority")?,
-                    completed: row.get::<_, i64>("completed")? != 0,
-                    completed_at: row.get("completed_at")?,
-                    created_at: row.get("created_at")?,
-                    updated_at: row.get("updated_at")?,
-                })
-            },
+            task_de_fila,
         )
         .map_err(|e| match e {
             rusqlite::Error::QueryReturnedNoRows => {
@@ -195,21 +191,10 @@ pub fn set_task_due_date(
     // necesitamos la due_date ANTERIOR para el payload del evento.
     let actual = conn
         .query_row(
-            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at
+            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at, deleted_at
              FROM task WHERE id = ?1",
             rusqlite::params![id],
-            |row| {
-                Ok(Task {
-                    id: row.get("id")?,
-                    title: row.get("title")?,
-                    due_date: row.get("due_date")?,
-                    priority: row.get("priority")?,
-                    completed: row.get::<_, i64>("completed")? != 0,
-                    completed_at: row.get("completed_at")?,
-                    created_at: row.get("created_at")?,
-                    updated_at: row.get("updated_at")?,
-                })
-            },
+            task_de_fila,
         )
         .map_err(|e| match e {
             rusqlite::Error::QueryReturnedNoRows => {
@@ -294,21 +279,10 @@ pub fn update_task(
 
     let actual = conn
         .query_row(
-            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at
+            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at, deleted_at
              FROM task WHERE id = ?1",
             rusqlite::params![id],
-            |row| {
-                Ok(Task {
-                    id: row.get("id")?,
-                    title: row.get("title")?,
-                    due_date: row.get("due_date")?,
-                    priority: row.get("priority")?,
-                    completed: row.get::<_, i64>("completed")? != 0,
-                    completed_at: row.get("completed_at")?,
-                    created_at: row.get("created_at")?,
-                    updated_at: row.get("updated_at")?,
-                })
-            },
+            task_de_fila,
         )
         .map_err(|e| match e {
             rusqlite::Error::QueryReturnedNoRows => {
@@ -469,5 +443,116 @@ pub fn create_task(state: State<AppState>, input: CreateTaskInput) -> Result<Tas
         completed_at: None,
         created_at: now.clone(),
         updated_at: now,
+        deleted_at: None,
     })
+}
+
+// set_task_deleted: manda una tarea a la papelera (true) o la restaura (false).
+// Contrato (paso 7, decisión del propietario: papelera con borrado
+// permanente desde ahí — nada queda oculto sin poder purgarse).
+// Es un TOGGLE como set_task_completed: simétrico, idempotente, y registra
+// el hecho ('trashed' / 'restored') mientras la tarea siga viva en la BD.
+#[tauri::command]
+pub fn set_task_deleted(
+    state: State<AppState>,
+    id: String,
+    deleted: bool,
+) -> Result<Task, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    let actual = conn
+        .query_row(
+            "SELECT id, title, due_date, priority, completed, completed_at, created_at, updated_at, deleted_at
+             FROM task WHERE id = ?1",
+            rusqlite::params![id],
+            task_de_fila,
+        )
+        .map_err(|e| match e {
+            rusqlite::Error::QueryReturnedNoRows => {
+                format!("No existe una tarea con id {}", id)
+            }
+            _ => e.to_string(),
+        })?;
+
+    // Idempotencia: pedir lo que ya es verdad no genera UPDATE ni evento.
+    if (actual.deleted_at.is_some()) == deleted {
+        return Ok(actual);
+    }
+
+    let now = chrono::Utc::now().to_rfc3339();
+    // deleted_at guarda CUÁNDO entró a la papelera; restaurar lo limpia
+    // (el "cuándo se borró" histórico queda en task_event... hasta que
+    // la tarea se purge: entonces todo su log muere con ella — decisión
+    // de privacidad del propietario).
+    let deleted_at = if deleted { Some(now.clone()) } else { None };
+
+    conn.execute(
+        "UPDATE task SET deleted_at = ?1, updated_at = ?2 WHERE id = ?3",
+        rusqlite::params![deleted_at, now, id],
+    )
+    .map_err(|e| e.to_string())?;
+
+    let event_type = if deleted { "trashed" } else { "restored" };
+    let payload = serde_json::json!({ "deleted": deleted }).to_string();
+
+    conn.execute(
+        "INSERT INTO task_event (id, task_id, event_type, payload, happened_at)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        rusqlite::params![uuid::Uuid::new_v4().to_string(), id, event_type, payload, now],
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(Task {
+        deleted_at,
+        updated_at: now,
+        ..actual
+    })
+}
+
+// purge_task: borrado PERMANENTE de una tarea — la fila Y todo su log de
+// task_event desaparecen (el log de una tarea purgada no sirve a nadie y
+// dejarlo sería el huérfano que discutimos con el propietario).
+// Devuelve () porque no queda nada que devolver.
+#[tauri::command]
+pub fn purge_task(state: State<AppState>, id: String) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    // Primero el log (los eventos), después la fila. El orden importa si
+    // algún día se activan las foreign keys de SQLite: los eventos
+    // referencian a task(id) y el padre no puede morir primero.
+    conn.execute("DELETE FROM task_event WHERE task_id = ?1", rusqlite::params![id])
+        .map_err(|e| e.to_string())?;
+
+    let eliminadas = conn
+        .execute("DELETE FROM task WHERE id = ?1", rusqlite::params![id])
+        .map_err(|e| e.to_string())?;
+
+    if eliminadas == 0 {
+        return Err(format!("No existe una tarea con id {}", id));
+    }
+
+    Ok(())
+}
+
+// purge_all_tasks: vacía la papelera entera con un solo comando
+// ("borrarlas todas con un solo botón", decisión del propietario).
+// Devuelve cuántas tareas purgó, por si la UI quiere confirmarlo.
+#[tauri::command]
+pub fn purge_all_tasks(state: State<AppState>) -> Result<u64, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    // El sub-SELECT dentro del DELETE borra los eventos de TODAS las
+    // tareas que están en la papelera, en una sola pasada por la tabla.
+    conn.execute(
+        "DELETE FROM task_event
+         WHERE task_id IN (SELECT id FROM task WHERE deleted_at IS NOT NULL)",
+        [],
+    )
+    .map_err(|e| e.to_string())?;
+
+    let purgadas = conn
+        .execute("DELETE FROM task WHERE deleted_at IS NOT NULL", [])
+        .map_err(|e| e.to_string())?;
+
+    Ok(purgadas as u64)
 }

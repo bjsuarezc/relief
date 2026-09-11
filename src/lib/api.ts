@@ -27,4 +27,10 @@ export const api = {
   // lo que cambia — Rust registra un evento 'updated' por campo).
   updateTask: (id: string, cambios: UpdateTaskInput) =>
     invoke<Task>("update_task", { id, input: cambios }),
+  // Papelera: mandar/restaurar (toggle suave), y borrado permanente
+  // (una o todas). purge* borra fila + task_event: sin rastro.
+  setTaskDeleted: (id: string, deleted: boolean) =>
+    invoke<Task>("set_task_deleted", { id, deleted }),
+  purgeTask: (id: string) => invoke<void>("purge_task", { id }),
+  purgeAllTasks: () => invoke<number>("purge_all_tasks"),
 };

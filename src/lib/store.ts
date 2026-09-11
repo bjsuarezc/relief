@@ -21,6 +21,9 @@ interface TasksState {
   setTaskCompleted: (id: string, completed: boolean) => Promise<void>;
   setTaskDueDate: (id: string, dueDate: string) => Promise<void>;
   updateTask: (id: string, cambios: UpdateTaskInput) => Promise<void>;
+  setTaskDeleted: (id: string, deleted: boolean) => Promise<void>;
+  purgeTask: (id: string) => Promise<void>;
+  purgeAllTasks: () => Promise<void>;
 }
 
 export const useTasksStore = create<TasksState>((set) => ({
@@ -92,6 +95,44 @@ export const useTasksStore = create<TasksState>((set) => ({
       const task = await api.updateTask(id, cambios);
       set((state) => ({
         tasks: state.tasks.map((t) => (t.id === id ? task : t)),
+        error: null,
+      }));
+    } catch (e) {
+      set({ error: String(e) });
+    }
+  },
+  // setTaskDeleted: mandar/restaurar de la papelera (reemplazo por id).
+  setTaskDeleted: async (id, deleted) => {
+    try {
+      const task = await api.setTaskDeleted(id, deleted);
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === id ? task : t)),
+        error: null,
+      }));
+    } catch (e) {
+      set({ error: String(e) });
+    }
+  },
+  // purgeTask: borrado permanente — la tarea sale de la lista local
+  // (filter, no map: ya no existe que reemplazar).
+  purgeTask: async (id) => {
+    try {
+      await api.purgeTask(id);
+      set((state) => ({
+        tasks: state.tasks.filter((t) => t.id !== id),
+        error: null,
+      }));
+    } catch (e) {
+      set({ error: String(e) });
+    }
+  },
+  // purgeAllTasks: vacía la papelera — salen TODAS las que estaban en
+  // ella (deletedAt != null) de la lista local.
+  purgeAllTasks: async () => {
+    try {
+      await api.purgeAllTasks();
+      set((state) => ({
+        tasks: state.tasks.filter((t) => t.deletedAt === null),
         error: null,
       }));
     } catch (e) {

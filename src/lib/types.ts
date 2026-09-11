@@ -26,6 +26,7 @@ export interface UpdateTaskInput {
 // La tarea completa tal como la devuelve Rust.
 // Nota camelCase: en la BD es due_date/completed_at, pero Rust traduce a
 // camelCase al serializar (serde rename_all), y aquí consumimos esa versión.
+// deletedAt: fecha en que entró a la papelera (null = tarea activa).
 export interface Task {
   id: string;
   title: string;
@@ -35,4 +36,5 @@ export interface Task {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
 }
