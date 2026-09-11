@@ -153,8 +153,34 @@ estado y la historia antes de continuar.
 - Plan acordado: paso 3 = conmutador de vista (Hoy default del MVP +
   Semana + Mes); paso 4 = lista visual real (check, prioridad, Atrasadas).
 
+### Paso 3 — conmutador de vista Hoy/Semana/Mes
+
+- Contrato acordado con el propietario (6 decisiones, todas opción A):
+  1. Vista **Hoy fija** (no navegable): la pregunta central del MVP.
+     Grupos: Atrasadas (fecha < hoy, sin estética de alarma) + Hoy + Sin fecha.
+  2. Semana y Mes **navegables** con ‹ › (necesario para verificar lo
+     capturado a futuro; captura y vista comparten el concepto).
+  3. Semana **apilada por día** (no columnas): responsive para la v2 móvil.
+  4. Mes como **lista compacta** solo con días que tienen tareas.
+  5. Tareas sin fecha (null, legacy): grupo "Sin fecha" al final de Hoy.
+  6. Extracción a `components/TaskList.tsx`; App.tsx queda como armador.
+- Propietario pidió además transiciones smooth al cambiar de vista:
+  implementado con CSS puro (keyframes `aparecer` en App.css + re-montaje
+  del contenedor vía React `key` al cambiar vista/ancla). Sin dependencias nuevas.
+- Detalles técnicos: filtrado todo del lado frontend (get_tasks sin filtros,
+  decisión registrada); "ancla" compartida entre Semana y Mes (una fecha que
+  cada vista interpreta como su semana/mes); vistas como funciones puras.
+- Error aprendido: import sin usar detectado por `noUnusedLocals` de TS —
+  TaskList recibe tasks como prop, no consulta el store directamente.
+- Probado por el propietario con `npm run tauri dev` (lanzamiento desacoplado
+  con log en %TEMP%): funciona bien.
+- Commit: `efa86fd`.
+
 ### Estado / siguiente paso
 
-- ✅ Captura con destino activo (día + prioridad) funcionando y probada.
-- ⏭️ Siguiente: **paso 3 — conmutador de vista Hoy/Semana/Mes** en la lista.
-  Después: lista real con check y sección Atrasadas.
+- ✅ Paso 3 listo: captura con destino activo + vistas Hoy/Semana/Mes.
+- ⏭️ Siguiente: **paso 4 — lista visual real**: check de completado (comando
+  `complete_task` en Rust con evento `completed`, gratificación visible:
+  progreso del día), orden dentro de los grupos, sección Atrasadas con
+  acciones ("Mover a hoy", "Más opciones"). Definir contrato con el propietario
+  (firma + comportamiento) antes de codificar.
