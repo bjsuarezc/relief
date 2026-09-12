@@ -308,9 +308,42 @@ estado y la historia antes de continuar.
 - Nota: prompt de diseño (para otra IA o para estas skills) quedó listo
   con las funcionalidades actuales de Relief, incluida la papelera.
 
+### Sesión 3 — Rediseño visual "Alivio" (2026-09-11)
+
+- Propietario tocó la app tras días de dogfooding y entregó hallazgos
+  críticos: fondo monotoroco, texto sordo, sin vida, chips y flechas de
+  tamaños distintos, rectángulo feo al foco del input, la vista Semana
+  una pared de "—" que no aportaba. Todo válido, todo visual.
+- Cierre temático acordado: **Sereno/pineta** — tema claro y oscuro con
+  acento pino (hue ~158), grises tintados con ese matiz, superficies
+  neutras (no gris), sin estética de alerta. Paleta curada a mano.
+- **Tokens semánticos**: en App.css con `@theme inline` y un sistema
+  de variables por tema (`.dark)` — el común sería escribir border-
+  line, bg-surface, text-ink directamente, y los dos temos comparten
+  componentes sin tocarlos. Cambio mental: diseño → variables.
+- Jefatura h-8 (32px) consistente en chips, tabs, flechas y botón
+  de prioridad — nada se sale de ese trimestre. El input h-12, el check
+  h-10, los días l-10. La regla es: si es clicable e independiente,
+  tiene h-8 y texto.
+- Chips exclusivos: abrir fecha cierra prioridad (ya no se pisa).
+- La navegación del período se pasó a la misma fila que el conmutador
+  (una sola línea en lugar de toolbar secundaria) — mejor AAA local.
+- El check respira con un pop-chave (keyframes), el interior de la Aguila
+  se anima con CircleDot, la banca vacía guarda un punto pulsonante
+  (punto-respirando) donde antes había "—" (frío). Y `capture-focus`
+  para el input: cuando usas el teclado, aparece un ring verde suave.
+- El texto "Semana del 7 al 13 sep" ahora incluye el fin "…de sep".
+- Elimina ruido: no más pared *"—"*, no más letras en mayúsculas en
+  el picker, pestañas en sentence-case. Todavía no entiendo el color
+  combo el tema profesional pero se quedó.
+
 ### Estado / siguiente paso
 
-- ✅ MVP funcional completo + papelera + renombre a Relief. Eventos:
+- ✅ Rediseño completo aplicado: Relief vive. Eventos completos:
+  created/completed/reopened/rescheduled/updated/trashed/restored.
+- ⏭️ Final pendiente: teclas de acceso rápido (Sesión 1) y el instalador
+  para uso diario. Versiones tan políticamente fructíferas generan
+  sentido de lo que falta es más fácil.
   created/completed/reopened/rescheduled/updated/trashed/restored.
 - ⏭️ Siguiente (candidatos a decidir con el propietario):
   1. Aceleradores de teclado del MVP (Sesión 1: Ctrl+N / Enter / Ctrl+D —
