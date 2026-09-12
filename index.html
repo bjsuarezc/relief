@@ -5,6 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Relief</title>
+    <script>
+      /* Tema inicial ANTES de que React cargue: evita el "flash" del
+         tema equivocado al abrir la app. Lee la preferencia guardada
+         por el toggle; si no hay, respeta la del sistema. */
+      try {
+        var guardado = localStorage.getItem("relief-tema");
+        var oscuro = guardado
+          ? guardado === "dark"
+          : !window.matchMedia("(prefers-color-scheme: light)").matches;
+        if (oscuro) document.documentElement.classList.add("dark");
+      } catch (e) {}
+    </script>
   </head>
 
   <body>

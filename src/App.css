@@ -1,5 +1,66 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Relief — sistema visual "sereno".
+   Tokens semánticos (roles, no colores crudos): la paleta vive
+   acá y los componentes consumen ROLES (bg-surface, text-ink…).
+   Grises tintados con el matiz del acento (hue 165-170, verde
+   salvia): no son grises puros — cohesión sutil en ambos temas.
+   Cambiar de tema = cambiar estas variables, no tocar componentes.
+   ============================================================ */
+
+/* Variante dark por CLASE (.dark en <html>), no por preferencia del
+   SO: el usuario elige su tema con el toggle y se persiste. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* El puente tokens → Tailwind: define las utilidades
+   bg-canvas, bg-surface, border-line, text-ink, text-accent… */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+}
+
+/* TEMA CLARO — v2 (corrección del propietario): canvas casi blanco y
+   neutro (el tintado se veía sucio), tinta casi negra con matiz mínimo
+   (antes era grisácea), acento con más luz y saturación (antes apagado),
+   y separación de capas con sombra sutil (la profundidad faltante). */
+:root {
+  --canvas: oklch(0.965 0.004 158);
+  --surface: oklch(1 0 0);
+  --line: oklch(0.9 0.008 158);
+  --line-strong: oklch(0.83 0.012 158);
+  --ink: oklch(0.22 0.008 158);
+  --ink-soft: oklch(0.45 0.012 158);
+  --ink-faint: oklch(0.62 0.01 158);
+  --accent: oklch(0.58 0.115 158);
+  --accent-soft: oklch(0.95 0.03 158);
+  /* Sombra de elevación: dos capas (borde inferior difuso + contacto).
+     Solo existe en claro — en oscuro la profundidad la dan los bordes. */
+  --sombra: 0 1px 2px oklch(0.2 0.01 158 / 0.06), 0 1px 1px oklch(0.2 0.01 158 / 0.05);
+}
+
+/* TEMA OSCURO: verde noche profundo (no negro-neutro), superficies
+   apenas más claras, acento aclarado para leerse en la oscuridad. */
+.dark {
+  --canvas: oklch(0.215 0.012 158);
+  --surface: oklch(0.255 0.014 158);
+  --line: oklch(0.335 0.018 158);
+  --line-strong: oklch(0.42 0.02 158);
+  --ink: oklch(0.93 0.008 158);
+  --ink-soft: oklch(0.7 0.012 158);
+  --ink-faint: oklch(0.52 0.014 158);
+  --accent: oklch(0.72 0.09 158);
+  --accent-soft: oklch(0.3 0.045 158);
+  --sombra: none;
+}
+
 /* Transición de vista (pedida por el propietario: "smooth al navegar").
    Cada vez que cambia la vista/conmutador, el contenedor se re-monta
    (React cambia la key) y CSS anima su entrada: aparece deslizando
@@ -17,4 +78,117 @@
 
 .vista-animada {
   animation: aparecer 0.18s ease-out;
+}
+
+/* Alivio visual: el canvas tiene presencia viva. */
+
+/* Gradiente ambiental que respira — sutil, no distrae.
+   oscuro: un resplandor verde en el tope que se infla/absorbe.
+   claro: pasa casi desapercibido, pero lo suficiente para que el
+   papel se sienta en su lugar (no flotante en el void). */
+@keyframes respirar {
+  0%, 100% { opacity: 0.3; transform: scale(0.96); }
+  50% { opacity: 0.55; transform: scale(1.04); }
+}
+
+.ambiente-vivo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 420px;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% -10%,
+    oklch(from var(--accent) l c h / 0.2) 0%,
+    transparent 70%
+  );
+  animation: respirar 8s ease-in-out infinite;
+}
+
+/* El punto de gracia en estados vacíos — un pulso verde que respira. */
+@keyframes punto-respirar {
+  0%, 100% { opacity: 0.28; transform: scale(0.85); }
+  50% { opacity: 0.55; transform: scale(1.1); }
+}
+
+.punto-respirando {
+  animation: punto-respirar 3s ease-in-out infinite;
+}
+
+/* El check: trazo de círculo + pop. El punto de máxima satisfacción. */
+@keyframes check-pop {
+  0% { transform: scale(0.72); transform-origin: center; }
+  55% { transform: scale(1.14); }
+  100% { transform: scale(1); transform-origin: center; }
+}
+
+.check-svg {
+  animation: check-pop 0.32s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+/* El foco de la captura: halo sutil alrededor del input. */
+.capture-focus:focus-within {
+  box-shadow: 0 0 0 2px var(--accent-soft),
+    0 4px 24px oklch(from var(--accent) l c h / 0.12);
+}
+
+/* Reducir movimiento: ninguna de estas animaciones corre. */
+@media (prefers-reduced-motion: reduce) {
+  .ambiente-vivo,
+  .check-svg,
+  .punto-respirando {
+    animation: none;
+  }
+}
+
+/* Los paneles (picker, popover de prioridad) "caen" desde arriba:
+   entra desde -4px — dirección natural de un panel desplegable.
+   0.15s ease-out: interruptsible y discreto (motion restraint). */
+@keyframes caer {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel-animada {
+  animation: caer 0.15s ease-out;
+}
+
+/* Foco visible para teclado (calidad base): acento, sin anular el
+   hover — solo entra por foco de teclado (focus-visible). */
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Respeta la preferencia del sistema: quien pidió menos movimiento
+   no ve las animaciones de entrada (todo lo demás sigue igual). */
+@media (prefers-reduced-motion: reduce) {
+  .vista-animada,
+  .panel-animada {
+    animation: none;
+  }
+}
+
+/* Superficie elevada: sombra sutil solo en tema claro (en oscuro la
+   profundidad la dan los bordes — ahí la sombra no se percibe). */
+.elevada {
+  box-shadow: var(--sombra);
+}
+
+/* Supresión de transiciones al cambiar de tema (mejor práctica de
+   better-ui): sin esto, cada elemento transiciona su color al mismo
+   tiempo y el cambio de tema "se emborrona" en vez de snap. El toggle
+   agrega esta clase, fuerza reflow y la quita en el siguiente frame. */
+.sin-transiciones *,
+.sin-transiciones *::before,
+.sin-transiciones *::after {
+  transition: none !important;
 }
