@@ -287,9 +287,30 @@ estado y la historia antes de continuar.
     y visión reflejan el nombre actual.
 - Pendiente: README del proyecto (para GitHub), ícono/branding de la app.
 
+### Skills de diseño instaladas (2026-09-11)
+
+- Propietario aprobó instalar 5 skills de UI Skills (ui-skills.com, de
+  ibelick) en `.opencode/skills/` — archivos de texto con instrucciones de
+  diseño para agentes, NO dependencias del proyecto:
+  - `improve-ui` (ibelick): auditoría read-only con plan de implementación.
+  - `frontend-design` (Anthropic): rediseño distintivo anti-genérico.
+  - `improve-animations` (emilkowalski): auditoría de movimiento.
+  - `better-ui` (jakubkrehel): pulido fino (hover, sombras, radios).
+  - `web-design-guidelines` (vercel/antfu): revisión final + a11y.
+- **Plan de rediseño visual acordado** (para la próxima sesión):
+  1. `improve-ui`: auditoría honesta de la UI actual.
+  2. Dirección visual: propietario decide tema (claro/oscuro por decidir,
+     NO asumimos dark) con el prompt de diseño ya preparado (sin paleta:
+     la IA describe ROLES de color, valores los elige el propietario).
+  3. `frontend-design` + `better-ui`: aplicar el rediseño.
+  4. `improve-animations`: motion.
+  5. `web-design-guidelines`: control final.
+- Nota: prompt de diseño (para otra IA o para estas skills) quedó listo
+  con las funcionalidades actuales de Relief, incluida la papelera.
+
 ### Estado / siguiente paso
 
-- ✅ MVP funcional completo + papelera. Eventos:
+- ✅ MVP funcional completo + papelera + renombre a Relief. Eventos:
   created/completed/reopened/rescheduled/updated/trashed/restored.
 - ⏭️ Siguiente (candidatos a decidir con el propietario):
   1. Aceleradores de teclado del MVP (Sesión 1: Ctrl+N / Enter / Ctrl+D —
