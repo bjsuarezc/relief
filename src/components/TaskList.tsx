@@ -29,7 +29,7 @@ import {
   startOfWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, ChevronLeft, ChevronRight, Circle, Trash2, Undo2 } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Circle, CircleDot, Trash2, Undo2 } from "lucide-react";
 import { PRIORIDADES, WeekPicker } from "./CaptureBar";
 import { useTasksStore } from "../lib/store";
 import type { Priority, Task, UpdateTaskInput } from "../lib/types";
@@ -51,10 +51,14 @@ const ETIQUETA_PRIORIDAD: Record<Priority, string> = {
   low: "Baja",
 };
 
+// COLOR de prioridad (decisión del propietario tras ver la captura):
+// la prioridad es METADATO, no protagonista — y "Media" es el DEFAULT,
+// por eso no lleva color (el estado por defecto no colorear nada).
+// Solo "Alta" (calor de atención) tiene color; Media/Baja van neutras.
 const COLOR_PRIORIDAD: Record<Priority, string> = {
-  high: "text-red-400",
-  medium: "text-amber-400",
-  low: "text-emerald-400",
+  high: "text-red-600 dark:text-red-400",
+  medium: "text-ink-soft",
+  low: "text-ink-soft",
 };
 
 // TareaLinea: una fila de tarea, INTERACTIVA y editable — pero sin cromo
@@ -74,6 +78,7 @@ function TareaLinea({
   onReschedule,
   onDelete,
   moverAHoy = false,
+  fechaRedundante = false,
 }: {
   task: Task;
   onToggle: (id: string, completed: boolean) => void;
@@ -81,6 +86,11 @@ function TareaLinea({
   onReschedule: (id: string, dueDate: string) => void;
   onDelete: (id: string) => void;
   moverAHoy?: boolean;
+  // La fecha del grupo ya dice el día (Semana/Mes/grupo Hoy): la fila no
+  // la repite en reposo — pero aparece en hover, porque sigue siendo el
+  // acceso al picker de cambio de fecha. Ocultar matando la edición sería
+  // romper el principio "los textos son los botones".
+  fechaRedundante?: boolean;
 }) {
   const [editandoTitulo, setEditandoTitulo] = useState(false);
   const [borradorTitulo, setBorradorTitulo] = useState("");
@@ -114,19 +124,37 @@ function TareaLinea({
 
   return (
     <>
-      <li className="group flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm">
-        {/* El check de completado (micro-victoria táctil). */}
+          <li className="group elevada flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-sm">
+        {/* El check de completado: LA micro-victoria. Cross-fade de iconos
+            (receta de iconos contextuales sin librerías): el círculo sale
+            (escala 0.75→0.25 + fade) y el check entra (0.25→1 + fade),
+            con la curva exacta cubic-bezier(0.2,0,0,1). Además scale 0.96
+            al presionar (feedback táctil estándar, no 0.90 exagerado). */}
         <button
           type="button"
           onClick={() => onToggle(task.id, !task.completed)}
           aria-label={task.completed ? "Desmarcar tarea" : "Completar tarea"}
-          className="shrink-0 transition-transform active:scale-90"
+          className="shrink-0 transition-transform duration-150 active:scale-[0.96]"
         >
-          {task.completed ? (
-            <CheckCircle2 size={18} className="text-emerald-500" />
-          ) : (
-            <Circle size={18} className="text-neutral-600 hover:text-neutral-400" />
-          )}
+          <span className="relative block h-[18px] w-[18px]">
+            <Circle
+              size={18}
+              className="absolute inset-0 text-ink-faint transition-[opacity,scale] duration-150 [transition-timing-function:cubic-bezier(0.2,0,0,1)] hover:text-ink-soft"
+              style={{ opacity: task.completed ? 0 : 1, scale: task.completed ? 0.25 : 1 }}
+            />
+            <CheckCircle2
+              key={`${task.id}-${task.completed}`}
+              size={18}
+              className={`absolute inset-0 text-accent ${task.completed ? "check-svg" : ""}`}
+              style={{
+                opacity: task.completed ? 1 : 0,
+                scale: task.completed ? 1 : 0.25,
+                transitionProperty: "opacity, scale",
+                transitionDuration: "150ms",
+                transitionTimingFunction: "cubic-bezier(0.2, 0, 0, 1)",
+              }}
+            />
+          </span>
         </button>
 
         {/* Título: texto normal; al click, input editable al vuelo.
@@ -143,24 +171,28 @@ function TareaLinea({
               if (e.key === "Escape") setEditandoTitulo(false);
             }}
             aria-label="Editar título"
-            className="flex-1 rounded-md border border-neutral-600 bg-neutral-800 px-2 py-1 text-sm outline-none"
+            className="flex-1 rounded-md border border-accent bg-canvas px-2 py-1 text-sm text-ink outline-none"
           />
         ) : (
           <span
             onClick={empezarEditar}
-            className={`flex-1 cursor-text hover:text-neutral-300 ${
-              task.completed ? "text-neutral-600 line-through" : ""
+            className={`flex-1 cursor-text transition-colors duration-150 hover:text-ink-soft ${
+              task.completed ? "text-ink-faint line-through" : ""
             }`}
           >
             {task.title}
           </span>
         )}
 
-        {/* Fecha: clicable → picker. La fecha VISIBLE es el botón. */}
+        {/* Fecha: clicable → picker. Si el encabezado del grupo YA dice
+            el día (fechaRedundante), solo aparece al pasar el mouse —
+            mismo patrón que la papelera (hover). */}
         <button
           type="button"
           onClick={() => setShowPicker(!showPicker)}
-          className="shrink-0 text-neutral-500 hover:text-neutral-200"
+          className={`shrink-0 transition-[opacity,color] duration-150 hover:text-ink ${
+            fechaRedundante ? "text-ink-soft opacity-0 group-hover:opacity-100" : "text-ink-soft"
+          }`}
         >
           {formatoFecha(task.dueDate)}
         </button>
@@ -169,7 +201,7 @@ function TareaLinea({
         <button
           type="button"
           onClick={() => setShowPrioridad(!showPrioridad)}
-          className={`shrink-0 hover:brightness-125 ${COLOR_PRIORIDAD[task.priority]}`}
+          className={`shrink-0 transition-colors duration-150 hover:text-ink-soft ${COLOR_PRIORIDAD[task.priority]}`}
         >
           {ETIQUETA_PRIORIDAD[task.priority]}
         </button>
@@ -179,7 +211,7 @@ function TareaLinea({
           <button
             type="button"
             onClick={() => onReschedule(task.id, format(new Date(), "yyyy-MM-dd"))}
-            className="shrink-0 rounded-lg border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+            className="shrink-0 rounded-lg border border-line-strong px-2 py-1 text-xs text-ink transition-colors duration-150 hover:bg-ink/5 active:scale-[0.96]"
           >
             Mover a hoy
           </button>
@@ -192,16 +224,17 @@ function TareaLinea({
           type="button"
           onClick={() => onDelete(task.id)}
           aria-label="Mandar a la papelera"
-          className="shrink-0 text-neutral-700 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+          className="shrink-0 text-ink-faint opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500"
         >
           <Trash2 size={15} />
         </button>
       </li>
 
       {/* Paneles debajo de la fila (fuera del <li> flex, a lo ancho).
-          Solo uno a la vez: abrir uno cierra el otro (menos ruido). */}
+          Solo uno a la vez: abrir uno cierra el otro (menos ruido).
+          Caen desde arriba (panel-animada) — dirección de desplegable. */}
       {showPicker && (
-        <div className="vista-animada mt-2">
+        <div className="panel-animada mt-2">
           <WeekPicker
             selected={diaMostrado}
             onSelect={reagenda}
@@ -210,8 +243,8 @@ function TareaLinea({
         </div>
       )}
       {showPrioridad && (
-        <div className="vista-animada mt-2 flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
-          <span className="text-xs text-neutral-500">Prioridad:</span>
+        <div className="panel-animada mt-2 elevada flex items-center gap-2 rounded-xl border border-line bg-surface p-3">
+          <span className="text-xs text-ink-faint">Prioridad:</span>
           {PRIORIDADES.map((p) => (
             <button
               key={p.valor}
@@ -222,8 +255,8 @@ function TareaLinea({
               }}
               className={`rounded-full border px-3 py-1 text-sm ${
                 task.priority === p.valor
-                  ? "border-neutral-500 bg-neutral-800 text-neutral-100"
-                  : "border-neutral-800 text-neutral-400 hover:bg-neutral-800"
+                  ? "border-accent bg-accent-soft text-ink"
+                  : "border-line text-ink-soft hover:bg-ink/5"
               }`}
             >
               {p.etiqueta}
@@ -247,6 +280,7 @@ function GrupoDia({
   onReschedule,
   onDelete,
   moverAHoy = false,
+  fechaRedundante = false,
   sutil = false,
 }: {
   encabezado: string;
@@ -256,20 +290,26 @@ function GrupoDia({
   onReschedule: (id: string, dueDate: string) => void;
   onDelete: (id: string) => void;
   moverAHoy?: boolean;
+  fechaRedundante?: boolean;
   sutil?: boolean;
 }) {
   return (
     <section>
+      {/* Encabezado en sentence case (corrección del propietario: las
+          mayúsculas espaciadas eran "chrome de plantilla"). Peso 600 y
+          color según el grupo — sin transformación tipográfica. */}
       <h3
-        className={`mb-2 text-xs font-semibold uppercase tracking-wide ${
-          sutil ? "text-neutral-600" : "text-neutral-500"
+        className={`mb-2 text-[13px] font-semibold ${
+          sutil ? "text-ink-faint" : "text-ink-soft"
         }`}
       >
         {encabezado}
       </h3>
-      {tareas.length === 0 ? (
-        <p className="text-sm text-neutral-700">—</p>
-      ) : (
+      {/*
+        Días sin tareas: la etiqueta del día hace toda la comunicación
+        ("está vacío"). No poner nada es la respuesta, no un guión.
+      */}
+      {tareas.length > 0 && (
         <ul className="space-y-2">
           {tareas.map((task) => (
             <TareaLinea
@@ -280,6 +320,7 @@ function GrupoDia({
               onReschedule={onReschedule}
               onDelete={onDelete}
               moverAHoy={moverAHoy}
+              fechaRedundante={fechaRedundante}
             />
           ))}
         </ul>
@@ -323,7 +364,14 @@ function VistaHoy({
   const sinFecha = tasks.filter((t) => !t.dueDate);
 
   if (atrasadas.length + deHoy.length + sinFecha.length === 0) {
-    return <p className="text-sm text-neutral-600">Nada por acá — captura una tarea arriba</p>;
+    return (
+      <div className="flex flex-col items-center gap-2 py-6">
+        <span className="punto-respirando text-accent">
+          <CircleDot size={20} />
+        </span>
+        <p className="text-sm text-ink-faint">Nada por acá — captura una tarea arriba</p>
+      </div>
+    );
   }
 
   // La progresión del día (la "micro-victoria" de la visión):
@@ -344,14 +392,31 @@ function VistaHoy({
         />
       )}
       {deHoy.length > 0 && (
-        <GrupoDia
-          encabezado={`Hoy · ${completadasHoy}/${deHoy.length} completadas`}
-          tareas={deHoy}
-          onToggle={onToggle}
-          onUpdate={onUpdate}
-          onReschedule={onReschedule}
-          onDelete={onDelete}
-        />
+        <section>
+          {/* El encabezado de Hoy es especial (progreso del día): se
+              renderiza a mano para poner el conteo en color de acento —
+              el único dato "vivo" de la vista. El resto usa GrupoDia. */}
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">
+            Hoy ·{" "}
+            <span className="text-accent">
+              {completadasHoy}/{deHoy.length}
+            </span>{" "}
+            completadas
+          </h3>
+          <ul className="space-y-2">
+            {deHoy.map((task) => (
+              <TareaLinea
+                key={task.id}
+                task={task}
+                onToggle={onToggle}
+                onUpdate={onUpdate}
+                onReschedule={onReschedule}
+                onDelete={onDelete}
+                fechaRedundante
+              />
+            ))}
+          </ul>
+        </section>
       )}
       {sinFecha.length > 0 && (
         <GrupoDia
@@ -371,7 +436,6 @@ function VistaHoy({
 function VistaSemana({
   tasks,
   ancla,
-  onMover,
   onToggle,
   onUpdate,
   onReschedule,
@@ -379,53 +443,39 @@ function VistaSemana({
 }: {
   tasks: Task[];
   ancla: Date;
-  onMover: (dias: number) => void;
   onToggle: (id: string, completed: boolean) => void;
   onUpdate: (id: string, cambios: UpdateTaskInput) => void;
   onReschedule: (id: string, dueDate: string) => void;
   onDelete: (id: string) => void;
 }) {
   // La semana contiene al "ancla": la fecha de navegación compartida.
-  // CaptureBar y esta vista son independientes, pero ambas hablan de
-  // "días" con el mismo formato — por eso se sienten coherentes.
+  // La navegación del período (‹ ›) NO vive acá: subió a la fila del
+  // conmutador (corrección de estructura del propietario — una sola
+  // fila de navegación en la app).
   const inicio = startOfWeek(ancla, { weekStartsOn: 1 });
   const dias = Array.from({ length: 7 }, (_, i) => addDays(inicio, i));
 
   return (
-    <div>
-      <div className="mb-3 flex items-center justify-between">
-        <button type="button" aria-label="Semana anterior" onClick={() => onMover(-7)} className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100">
-          <ChevronLeft size={16} />
-        </button>
-        <span className="text-sm text-neutral-400">
-          Semana del {format(dias[0], "d MMM", { locale: es })} al{" "}
-          {format(dias[6], "d MMM", { locale: es })}
-        </span>
-        <button type="button" aria-label="Semana siguiente" onClick={() => onMover(7)} className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100">
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
-      <div className="space-y-5">
-        {dias.map((d) => (
-          <GrupoDia
-            key={d.toISOString()}
-            encabezado={
-              isToday(d)
-                ? `Hoy · ${format(d, "EEE d MMM", { locale: es })}`
-                : format(d, "EEE d MMM", { locale: es })
-            }
-            tareas={tasks.filter(
-              (t) => t.dueDate && isSameDay(parseISO(t.dueDate), d),
-            )}
-            onToggle={onToggle}
-            onUpdate={onUpdate}
-            onReschedule={onReschedule}
-            onDelete={onDelete}
-            sutil={!isToday(d)}
-          />
-        ))}
-      </div>
+    <div className="space-y-5">
+      {dias.map((d) => (
+        <GrupoDia
+          key={d.toISOString()}
+          encabezado={
+            isToday(d)
+              ? `Hoy · ${format(d, "EEE d MMM", { locale: es })}`
+              : format(d, "EEE d MMM", { locale: es })
+          }
+          tareas={tasks.filter(
+            (t) => t.dueDate && isSameDay(parseISO(t.dueDate), d),
+          )}
+          onToggle={onToggle}
+          onUpdate={onUpdate}
+          onReschedule={onReschedule}
+          onDelete={onDelete}
+          fechaRedundante
+          sutil={!isToday(d)}
+        />
+      ))}
     </div>
   );
 }
@@ -433,7 +483,6 @@ function VistaSemana({
 function VistaMes({
   tasks,
   ancla,
-  onMover,
   onToggle,
   onUpdate,
   onReschedule,
@@ -441,7 +490,6 @@ function VistaMes({
 }: {
   tasks: Task[];
   ancla: Date;
-  onMover: (meses: number) => void;
   onToggle: (id: string, completed: boolean) => void;
   onUpdate: (id: string, cambios: UpdateTaskInput) => void;
   onReschedule: (id: string, dueDate: string) => void;
@@ -469,20 +517,8 @@ function VistaMes({
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
-        <button type="button" aria-label="Mes anterior" onClick={() => onMover(-1)} className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100">
-          <ChevronLeft size={16} />
-        </button>
-        <span className="text-sm text-neutral-400">
-          {format(ancla, "MMMM yyyy", { locale: es })}
-        </span>
-        <button type="button" aria-label="Mes siguiente" onClick={() => onMover(1)} className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100">
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
       {delMes.length === 0 ? (
-        <p className="text-sm text-neutral-600">Nada en este mes</p>
+        <p className="text-sm text-ink-faint">Nada en este mes</p>
       ) : (
         <div className="space-y-5">
           {diasConTareas.map((d) => (
@@ -494,6 +530,7 @@ function VistaMes({
               onUpdate={onUpdate}
               onReschedule={onReschedule}
               onDelete={onDelete}
+              fechaRedundante
             />
           ))}
         </div>
@@ -522,7 +559,7 @@ function VistaPapelera({
   const [confirmarVaciar, setConfirmarVaciar] = useState(false);
 
   if (tasks.length === 0) {
-    return <p className="text-sm text-neutral-600">La papelera está vacía</p>;
+    return <p className="text-sm text-ink-faint">La papelera está vacía</p>;
   }
 
   return (
@@ -531,17 +568,17 @@ function VistaPapelera({
         {tasks.map((task) => (
           <li
             key={task.id}
-            className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm"
+            className="elevada flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-sm"
           >
-            <span className="flex-1 text-neutral-400">{task.title}</span>
+            <span className="flex-1 text-ink-soft">{task.title}</span>
             {/* Cuándo entró a la papelera (el mismo formato humano). */}
-            <span className="text-xs text-neutral-600">
+            <span className="text-xs text-ink-faint">
               borrada {formatoFecha(task.deletedAt)}
             </span>
             <button
               type="button"
               onClick={() => onRestaurar(task.id)}
-              className="shrink-0 rounded-lg border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+              className="shrink-0 rounded-lg border border-line-strong px-2 py-1 text-xs text-ink transition-colors duration-150 hover:bg-ink/5 active:scale-[0.96]"
             >
               <Undo2 size={13} className="inline" /> Restaurar
             </button>
@@ -549,7 +586,7 @@ function VistaPapelera({
               type="button"
               onClick={() => onPurgar(task.id)}
               aria-label="Borrar permanentemente"
-              className="shrink-0 rounded-lg border border-neutral-800 p-1.5 text-neutral-500 hover:border-red-900 hover:text-red-400"
+              className="shrink-0 rounded-lg border border-line p-1.5 text-ink-soft transition-colors duration-150 hover:border-red-900 hover:text-red-500 active:scale-[0.96]"
             >
               <Trash2 size={14} />
             </button>
@@ -560,7 +597,7 @@ function VistaPapelera({
       {/* Vaciar todo: dos pasos (click → confirmación inline → click). */}
       {confirmarVaciar ? (
         <div className="flex items-center gap-2">
-          <span className="text-sm text-neutral-400">
+          <span className="text-sm text-ink-soft">
             ¿Vaciar la papelera? ({tasks.length} tarea(s) se borrarán para siempre)
           </span>
           <button
@@ -576,7 +613,7 @@ function VistaPapelera({
           <button
             type="button"
             onClick={() => setConfirmarVaciar(false)}
-            className="rounded-lg border border-neutral-800 px-3 py-1 text-sm text-neutral-400 hover:bg-neutral-800"
+            className="rounded-lg border border-line px-3 py-1 text-sm text-ink-soft transition-colors duration-150 hover:bg-ink/5 active:scale-[0.96]"
           >
             No
           </button>
@@ -585,7 +622,7 @@ function VistaPapelera({
         <button
           type="button"
           onClick={() => setConfirmarVaciar(true)}
-          className="rounded-lg border border-neutral-800 px-3 py-1.5 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+          className="rounded-lg border border-line px-3 py-1.5 text-sm text-ink-soft transition-colors duration-150 hover:bg-ink/5 hover:text-ink active:scale-[0.96]"
         >
           Vaciar papelera ({tasks.length})
         </button>
@@ -635,38 +672,70 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
 
   return (
     <div className="w-full max-w-xl">
-      {/* Conmutador tipo "segmented control": contenedor único con las
-          3 pestañas. La activa va resaltada. */}
-      <div className="flex gap-1 rounded-xl border border-neutral-800 bg-neutral-900 p-1">
-        {pestañas.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => setVista(p.id)}
-            className={`flex-1 rounded-lg py-1.5 text-sm ${
-              vista === p.id
-                ? "bg-neutral-800 text-neutral-50"
-                : "text-neutral-400 hover:text-neutral-200"
-            }`}
-          >
-            {p.etiqueta}
-          </button>
-        ))}
+      {/* UNA sola fila de navegación (corrección de estructura del
+          propietario: las dos barras pegadas leían como una sola familia):
+          conmutador fit-content a la izquierda + nav del período a la
+          derecha. El ancho libre del medio respira. */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex gap-1 elevada rounded-xl border border-line bg-surface p-1">
+          {pestañas.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setVista(p.id)}
+              className={`flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-150 ${
+                vista === p.id
+                  ? "bg-accent-soft text-ink"
+                  : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              {p.etiqueta}
+            </button>
+          ))}
 
-        {/* La pestaña Papelera: con contador, y SOLO si hay algo que
-            purgar. Si la papelera está vacía, no existe en la UI. */}
-        {enPapelera.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setVista("papelera")}
-            className={`flex-1 rounded-lg py-1.5 text-sm ${
-              vista === "papelera"
-                ? "bg-neutral-800 text-neutral-50"
-                : "text-neutral-400 hover:text-neutral-200"
-            }`}
-          >
-            <Trash2 size={14} className="inline" /> {enPapelera.length}
-          </button>
+          {/* La pestaña Papelera: con contador, y SOLO si hay algo que
+              purgar. Si la papelera está vacía, no existe en la UI. */}
+          {enPapelera.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setVista("papelera")}
+              className={`flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-150 ${
+                vista === "papelera"
+                  ? "bg-accent-soft text-ink"
+                  : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              <Trash2 size={14} className="inline" /> {enPapelera.length}
+            </button>
+          )}
+        </div>
+
+        {/* Nav del período: solo existe en Semana/Mes (en Hoy no hay
+            nada que navegar — la vista es fija). Flechas + etiqueta. */}
+        {(vista === "semana" || vista === "mes") && (
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              aria-label={vista === "semana" ? "Semana anterior" : "Mes anterior"}
+              onClick={() => (vista === "semana" ? moverSemana(-7) : moverMes(-1))}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft transition-colors duration-150 hover:bg-ink/5 hover:text-ink"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="text-sm font-medium text-ink-soft">
+              {vista === "semana"
+                ? `Semana del ${format(startOfWeek(ancla, { weekStartsOn: 1 }), "d MMM", { locale: es })} al ${format(addDays(startOfWeek(ancla, { weekStartsOn: 1 }), 6), "d 'de' MMM", { locale: es })}`
+                : format(ancla, "MMMM yyyy", { locale: es })}
+            </span>
+            <button
+              type="button"
+              aria-label={vista === "semana" ? "Semana siguiente" : "Mes siguiente"}
+              onClick={() => (vista === "semana" ? moverSemana(7) : moverMes(1))}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft transition-colors duration-150 hover:bg-ink/5 hover:text-ink"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         )}
       </div>
 
@@ -687,7 +756,6 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
           <VistaSemana
             tasks={activas}
             ancla={ancla}
-            onMover={moverSemana}
             onToggle={setTaskCompleted}
             onUpdate={updateTask}
             onReschedule={setTaskDueDate}
@@ -698,7 +766,6 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
           <VistaMes
             tasks={activas}
             ancla={ancla}
-            onMover={moverMes}
             onToggle={setTaskCompleted}
             onUpdate={updateTask}
             onReschedule={setTaskDueDate}
