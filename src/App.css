@@ -45,9 +45,10 @@
   --dur-fast: 140ms;  /* feedback directo: hover, press */
   --dur-base: 180ms;  /* paneles y cambios de estado */
   --dur-slow: 220ms;  /* entradas de vista y cascadas */
-  --ease-out-ui: cubic-bezier(0.2, 0, 0, 1);              /* salida nítida (UI) */
-  --ease-out-soft: cubic-bezier(0.25, 0.46, 0.45, 0.94);  /* entradas suaves */
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);       /* pop con rebote */
+  --ease-out-ui: cubic-bezier(0.2, 0, 0, 1);               /* salida nítida (UI) */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);         /* entradas suaves (expo-out de transitions.dev) */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);        /* pop con rebote */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);           /* salidas/std (deja rápido) */
 }
 
 /* Neon noche — oscuro quieto, no neutro */
@@ -181,24 +182,23 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform var(--dur-fast) var(--ease-out-ui);
 }
+/* Hover y presión usan la propiedad `scale` (no `transform`) para no
+   pisarse con el scale del icono de adentro; la presión base la aporta
+   la regla universal de botones. */
 .ts-check:hover {
-  transform: scale(1.08);
-}
-.ts-check:active {
-  transform: scale(0.92);
+  scale: 1.08;
 }
 /* El "pop" del check es una TRANSICIÓN, no un keyframe: el icono vive en
    0.94 y al completar salta a 1 con curva de resorte. Así se puede
    interrumpir a mitad de camino (destildar revierte suave) y el gesto
    queda del lado del compositor. */
 .ts-check svg {
-  transform: scale(0.94);
-  transition: transform var(--dur-slow) var(--ease-spring);
+  scale: 0.94;
+  transition: scale var(--dur-slow) var(--ease-spring);
 }
 .ts-check.completed svg {
-  transform: scale(1);
+  scale: 1;
 }
 
 .ch-ring {
@@ -235,7 +235,7 @@ body {
    corta que la entrada — la regla de oro del exit. */
 .panel-saliendo {
   transform-origin: top;
-  animation: saliendo var(--dur-fast) var(--ease-out-ui) forwards;
+  animation: saliendo var(--dur-fast) var(--ease-standard) forwards;
 }
 
 /* Píldora deslizante del conmutador: una sola pastilla viaja entre
@@ -283,6 +283,31 @@ body {
   background: color-mix(in oklab, var(--accent) 7%, var(--surface));
 }
 
+/* ---------------- Presión de botones (universal) ---------------- */
+
+/* TODOS los botones de la app comparten UN lenguaje de presión: se hunden
+   a scale(0.96) al hacer click, con una transición corta e interrumpible
+   (scale/transform son del compositor). El :not() da la especificidad
+   justa para ganarle a las utilidades de Tailwind sin !important, así
+   ningún botón queda sin feedback. */
+button:not([data-presion="off"]) {
+  /* Cada propiedad con su curva: el scale lleva resorte (la liberación
+     del click rebota suave, feedback táctil "vivo"); los colores van con
+     la curva nítida de UI. Nada de `transition: all`. */
+  transition:
+    scale var(--dur-fast) var(--ease-spring),
+    color var(--dur-fast) var(--ease-out-ui),
+    background-color var(--dur-fast) var(--ease-out-ui),
+    border-color var(--dur-fast) var(--ease-out-ui),
+    opacity var(--dur-fast) var(--ease-out-ui),
+    box-shadow var(--dur-fast) var(--ease-out-ui);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+button:not([data-presion="off"]):active {
+  scale: 0.96;
+}
+
 /* ---------------- Foco ---------------- */
 
 button:focus-visible,
@@ -313,25 +338,32 @@ input:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ambiente-vivo,
-  .punto-respirando,
-  .entrada-cascada > *,
-  .vista-animada,
-  .panel-animada,
-  .panel-saliendo,
-  .contador-pulso,
-  .ts-check,
-  .ts-check svg,
-  .ch-mark,
-  .pestana-pill,
-  .tarea-fila {
+  /* La supresión se aplica SOLO si la app no está forzando movimiento.
+     Windows suele traer las animaciones apagadas; el interruptor de la
+     cabecera agrega `.forzar-movimiento` al <html> y la app anima igual.
+     Quien de verdad no quiere movimiento apaga el interruptor. */
+  html:not(.forzar-movimiento) *,
+  html:not(.forzar-movimiento) *::before,
+  html:not(.forzar-movimiento) *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html:not(.forzar-movimiento) .ambiente-vivo,
+  html:not(.forzar-movimiento) .punto-respirando,
+  html:not(.forzar-movimiento) .entrada-cascada > *,
+  html:not(.forzar-movimiento) .vista-animada,
+  html:not(.forzar-movimiento) .panel-animada,
+  html:not(.forzar-movimiento) .panel-saliendo,
+  html:not(.forzar-movimiento) .contador-pulso,
+  html:not(.forzar-movimiento) .ts-check,
+  html:not(.forzar-movimiento) .ts-check svg,
+  html:not(.forzar-movimiento) .ch-mark,
+  html:not(.forzar-movimiento) .pestana-pill,
+  html:not(.forzar-movimiento) .tarea-fila {
     animation: none !important;
     transition: none !important;
     transform: none !important;
-  }
-  /* El check con reduced-motion no debe quedar en 0.94: se neutraliza el
-     transform de reposo del icono (el estado ya se comunica por color). */
-  .ts-check svg {
-    transform: scale(1) !important;
+    scale: 1 !important;
   }
 }

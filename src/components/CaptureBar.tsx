@@ -89,7 +89,7 @@ export function CaptureBar() {
           <button
             type="submit"
             aria-label="Crear tarea"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink transition-all duration-150 hover:scale-105 active:scale-90"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink hover:scale-105"
           >
             <Plus size={18} strokeWidth={2.5} />
           </button>
@@ -111,7 +111,7 @@ export function CaptureBar() {
               ? "Capturar para hoy — abre el picker de semana"
               : `Capturando para ${format(captureDate, "EEE d MMM", { locale: es })}`
           }
-          className={`chip group relative inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-all duration-150 ${
+          className={`chip group relative inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm font-medium ${
             showDatePicker
               ? "border-transparent bg-accent-soft text-ink shadow-[0_0_0_1px_var(--accent)]"
               : "border-line text-ink-soft hover:border-accent hover:bg-accent-soft/60 hover:text-ink hover:shadow-[0_0_0_1px_var(--accent)]"
@@ -140,7 +140,7 @@ export function CaptureBar() {
             setShowPriority(!showPriority);
             if (showPriority) setPriority(null); // al cerrar: media
           }}
-          className={`chip group relative inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-all duration-150 ${
+          className={`chip group relative inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm font-medium ${
             showPriority
               ? "border-transparent bg-accent-soft text-ink shadow-[0_0_0_1px_var(--accent)]"
               : "border-line text-ink-soft hover:border-accent hover:bg-accent-soft/60 hover:text-ink hover:shadow-[0_0_0_1px_var(--accent)]"

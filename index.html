@@ -15,6 +15,13 @@
           ? guardado === "dark"
           : !window.matchMedia("(prefers-color-scheme: light)").matches;
         if (oscuro) document.documentElement.classList.add("dark");
+
+        /* Movimiento: por defecto la app ANIMA aunque el sistema pida
+           "reduced motion" (Windows suele traer las animaciones apagadas).
+           El interruptor en la cabecera guarda "off" para desactivarlas. */
+        if (localStorage.getItem("relief-movimiento") !== "off") {
+          document.documentElement.classList.add("forzar-movimiento");
+        }
       } catch (e) {}
     </script>
   </head>

@@ -8,6 +8,7 @@ import "./App.css";
 import { CaptureBar } from "./components/CaptureBar";
 import { TaskList } from "./components/TaskList";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { ToggleMovimiento } from "./components/ToggleMovimiento";
 import { useTasksStore } from "./lib/store";
 
 function App() {
@@ -34,7 +35,10 @@ function App() {
               {format(hoy, "EEEE, d 'de' MMMM", { locale: es })}
             </p>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            <ToggleMovimiento />
+            <ThemeToggle />
+          </div>
         </header>
 
         <div className="mt-4">
