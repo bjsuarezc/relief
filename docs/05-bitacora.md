@@ -393,6 +393,32 @@ estado y la historia antes de continuar.
   pestañas, pulso del contador al completar.
 - Commits: `e998ee9` (HIGH), `a1ca87b` (MED).
 
+### Sesión 5 — motion suave, las 5 pendientes implementadas
+
+- El propietario pidió las 5 pendientes del audit con "mientras más smooth
+  mejor". Implementado:
+  1. Hover del check 1.15 → 1.08 (menos agresivo).
+  2. Pop del check **interrumpible**: se dejó de usar keyframe; el icono
+     vive en scale(0.94) y transiciona a 1 con curva de resorte —
+     destildar a mitad revierte suave.
+  3. **Salida animada de paneles**: hook `usePresencia`
+     (src/lib/usePresencia.ts) que retiene el montaje ~140ms mientras corre
+     `panel-saliendo`; CSS no puede animar lo que React desmonta.
+  4. **Píldora deslizante** en el conmutador: un solo objeto viaja entre
+     pestañas (translateX + width medidos con refs/useLayoutEffect, re-medidos
+     en resize); se eliminó el fondo por-pestaña.
+  5. **Pulso del contador** "n/m": el span se re-monta con key = conteo y
+     late una vez al cambiar (la micro-victoria se siente).
+- Hallazgos propios al VER la app (no solo código): encabezados de día en
+  Mes sin `sutil` (incoherente con Semana) y copy "del 7 sep al 13 de sep"
+  → corregidos ("del 7 al 13 de sep").
+- Método de verificación nuevo: mock del puente Tauri
+  (`window.__TAURI_INTERNALS__.invoke`) inyectado con `initScript` vía
+  chrome-devtools MCP → la app completa se renderiza en el navegador y se
+  puede auditar/interactuar con capturas propias (antes el error de
+  `invoke` ocultaba la lista).
+- Commit: `6da2973`.
+
 ### Estado / siguiente paso
 
 - ✅ Motion auditado y corregido (HIGH+MED); verificado con captura propia.
