@@ -121,16 +121,21 @@ body {
   animation: caer 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
+/* Las secciones entran en cascada (solo al cambiar de vista: la key de la
+   vista NO incluye el período, así navegar semanas/meses es instantáneo).
+   Paso corto (30ms) y duración contenida: la cascada se percibe, no se
+   espera. Después del 7º, delay fijo (no acumula más). */
 .entrada-cascada > * {
-  animation: aparecer 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+  animation: aparecer 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
 }
 .entrada-cascada > *:nth-child(1) { animation-delay: 0ms; }
-.entrada-cascada > *:nth-child(2) { animation-delay: 45ms; }
-.entrada-cascada > *:nth-child(3) { animation-delay: 90ms; }
-.entrada-cascada > *:nth-child(4) { animation-delay: 135ms; }
-.entrada-cascada > *:nth-child(5) { animation-delay: 180ms; }
-.entrada-cascada > *:nth-child(6) { animation-delay: 225ms; }
-.entrada-cascada > *:nth-child(7) { animation-delay: 270ms; }
+.entrada-cascada > *:nth-child(2) { animation-delay: 30ms; }
+.entrada-cascada > *:nth-child(3) { animation-delay: 60ms; }
+.entrada-cascada > *:nth-child(4) { animation-delay: 90ms; }
+.entrada-cascada > *:nth-child(5) { animation-delay: 120ms; }
+.entrada-cascada > *:nth-child(6) { animation-delay: 150ms; }
+.entrada-cascada > *:nth-child(7) { animation-delay: 180ms; }
+.entrada-cascada > *:nth-child(n + 8) { animation-delay: 210ms; }
 
 
 .ambiente-vivo {
@@ -256,8 +261,11 @@ input:focus-visible {
   .vista-animada,
   .panel-animada,
   .ts-check,
-  .ch-mark {
+  .ts-check.completed svg,
+  .ch-mark,
+  .tarea-fila {
     animation: none !important;
     transition: none !important;
+    transform: none !important;
   }
 }

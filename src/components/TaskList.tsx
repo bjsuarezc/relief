@@ -733,10 +733,11 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
         )}
       </div>
 
-      {/* Transición smooth (pedida por el propietario): la "key" cambia con
-          cada vista/ancla → React re-monta este <div> → la animación CSS
-          .vista-animada se dispara otra vez. Cambiar key = animación. */}
-      <div key={`${vista}-${ancla.toISOString()}`} className="vista-animada mt-6">
+      {/* Transición al cambiar de VISTA (no de período): la key lleva solo
+          la vista → navegar semanas/meses actualiza en el instante (sin
+          re-animar, que era ruido en una acción frecuente); cambiar de
+          pestaña sí re-monta y dispara la animación. */}
+      <div key={vista} className="vista-animada mt-6">
         {vista === "hoy" && (
           <VistaHoy
             tasks={activas}
