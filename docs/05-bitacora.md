@@ -365,16 +365,37 @@ estado y la historia antes de continuar.
   artefacto de Chrome headless (sin IPC Tauri), NO existe en la ventana real.
 - Commit: `b521177`.
 
+### Sesión 5 — auditoría de movimiento (improve-animations)
+
+- Se usó por fin la skill `improve-animations` (instalada y nunca corrida).
+  Método: recon → auditoría por categorías → vetado → corrección de los
+  HIGH/MED → presentación del resto al propietario.
+- Recon: CSS puro (sin librería de motion); 6 keyframes y 10 clases en
+  App.css + transiciones inline de Tailwind; 8 duraciones y 4 curvas
+  hardcodeadas; frecuencia: check/hover/navegación = altísima.
+- Corregidos:
+  - HIGH a11y: `check-pop` NO se suprimía con `prefers-reduced-motion`
+    (la animación vive en `.ts-check.completed svg`, el bloque apuntaba a
+    `.ts-check`). Agregado + `.tarea-fila` y `transform: none`.
+  - HIGH propósito/frecuencia: la cascada se REPETÍA en cada navegación
+    (flechas semana/mes) retrasando el contenido y duplicándose con el
+    fade. Ahora la key de la vista es solo `vista` (navegar es
+    instantáneo; cambiar de pestaña sí anima) y los delays bajaron a 30ms.
+  - MED cohesión: tokens de movimiento (`--dur-fast/base/slow`,
+    `--ease-out-ui/out-soft/spring`) — una sola fuente de verdad.
+  - MED fisicalidad: `transform-origin: top` en `.panel-animada` (antes el
+    panel se "inflaba" desde el centro en vez de desplegarse).
+  - MED performance: sin transición de `box-shadow` en `.tarea-fila`.
+  - MED duración: el dibujo del check bajó de ~380ms a ~220ms, manteniendo
+    el trazo (es el momento firma del producto).
+- Pendientes presentados (LOW + oportunidades): hover del check 1.15→1.08,
+  check-pop interrumpible, animaciones de salida, indicador deslizante de
+  pestañas, pulso del contador al completar.
+- Commits: `e998ee9` (HIGH), `a1ca87b` (MED).
+
 ### Estado / siguiente paso
 
-- ✅ Visual pulido y verificado con capturas propias.
+- ✅ Motion auditado y corregido (HIGH+MED); verificado con captura propia.
 - ⏭️ Para "lista para publicar": instalador (`npm run tauri build` → .exe/.msi),
   aceleradores de teclado (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub,
   ícono/branding propio de la app.
-  created/completed/reopened/rescheduled/updated/trashed/restored.
-- ⏭️ Siguiente (candidatos a decidir con el propietario):
-  1. Aceleradores de teclado del MVP (Sesión 1: Ctrl+N / Enter / Ctrl+D —
-     toda acción también por click).
-  2. Empaquetado/instalador para uso diario del propietario.
-  3. Repo en GitHub (diferido desde Sesión 1).
-  4. Pulido visual guiado por más dogfooding.
