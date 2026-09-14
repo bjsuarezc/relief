@@ -452,6 +452,40 @@ estado y la historia antes de continuar.
   + `claseForzar: true` → todos los botones con `0.14s` y resorte.
 - Commit: `1968cd0`.
 
+### Sesión 7 — rediseño editorial retro-moderno
+
+- Brief del propietario (aplicado a Relief, manteniendo estructura y
+  funcionalidad intactas): estética de tinta sobre papel, editorial
+  retro-moderna, minimalista, con trazo ilustrado.
+- Paleta (fiel al brief): canvas crema `#F7F4EE`, superficie `#efe9df`,
+  tinta `#1a1a1a`, cobalto `#1b49b6` como acento interactivo. **Sin
+  sombras difusas**: `--sombra: none` y toda la jerarquía pasa a trazos
+  (bordes de 1px). Modo oscuro reinterpretado como "tinta nocturna"
+  (`#14161b` + cobalto claro) para no romper el toggle existente.
+- Tipografía (fuentes locales vía fontsource, sin depender de internet):
+  - **Fraunces Variable** (display): wordmark y encabezados de grupo.
+  - **Inter Variable** (cuerpo).
+  - **Caveat Variable** (manuscrita): fechas y detalles secundarios
+    ("jue 10 sep", "borrada…", "semana del 7 al 13", dateline).
+- Componentes: radios moderados (8px chips/pills/botón +, 12px tarjetas),
+  botón primario en cobalto sólido, chips y pestañas con trazo de tinta
+  (activo en cobalto suave), check dibujado en cobalto.
+- Ilustraciones de línea a una sola tinta (SVG a mano) para los dos estados
+  vacíos: hoja con casilla marcada y lápiz (vista Hoy); papelera.
+- Prioridad: "Alta" pasa a cobalto semibold (antes rojo) — la paleta del
+  brief no incluye rojo; el rojo queda SOLO para errores (semántica).
+- Bug encontrado verificando en vivo: al vaciar la papelera desde su propia
+  vista, la píldora del conmutador quedaba huérfana (la pestaña desaparece
+  pero la píldora conservaba posición). Corregido: sin pestaña activa, la
+  píldora se oculta.
+- Verificado con capturas propias (claro, oscuro, vacío, papelera) y con el
+  flujo real de vaciado (regresión de funcionalidad OK).
+- Nota de proceso: se rompió momentáneamente la regla de encoding usando
+  Set-Content en CaptureBar (15 líneas con mojibake); el archivo se
+  reescribió completo con la herramienta correcta. Regla vigente: nunca
+  Set-Content.
+- Commit: `97cc12d`.
+
 ### Estado / siguiente paso
 - ⏭️ Para "lista para publicar": instalador (`npm run tauri build` → .exe/.msi),
   aceleradores de teclado (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub,
