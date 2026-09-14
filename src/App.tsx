@@ -31,7 +31,7 @@ function App() {
             <h1 className="wordmark text-ink">
               relief<span className="text-accent">.</span>
             </h1>
-            <p className="mt-2 text-sm text-ink-faint">
+            <p className="mano mt-1 text-ink-faint">
               {format(hoy, "EEEE, d 'de' MMMM", { locale: es })}
             </p>
           </div>

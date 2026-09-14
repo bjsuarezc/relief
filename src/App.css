@@ -1,11 +1,12 @@
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/caveat";
 @import "tailwindcss";
 
 /* ============================================================
-   Relief — el sistema visual "Alivio".
-   Todo vive en un sistema de tokens. Los temas comparten
-   formato (misma estructura, colores y jerarquía), y la
-   variación claro/oscuro componen el matiz global.
+   Relief — sistema visual "editorial retro-moderno".
+   Tinta sobre papel: crema cálido, trazos de tinta, cobalto.
+   Plano (sin sombras difusas): todo se define con bordes.
    ============================================================ */
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -13,7 +14,6 @@
 @theme inline {
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-ink: var(--ink);
@@ -21,74 +21,79 @@
   --color-ink-faint: var(--ink-faint);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
-  --color-accent-strong: var(--accent-strong);
   --color-accent-ink: var(--accent-ink);
+  /* Familias tipográficas como utilidades (font-display / font-mano) */
+  --font-sans: var(--fuente-cuerpo);
+  --font-display: var(--fuente-display);
+  --font-mano: var(--fuente-mano);
 }
 
-/* Light — blanco platea verdoso — sin otra cosa erguida. */
+/* ---------- Papel (claro) — la identidad principal ---------- */
 :root {
-  --canvas: oklch(0.955 0.008 158);
-  --surface: oklch(0.99 0.002 158);
-  --surface-2: oklch(0.96 0.002 158);
-  --line: oklch(0.89 0.01 158);
-  --line-strong: oklch(0.8 0.016 158);
-  --ink: oklch(0.2 0.008 158);
-  --ink-soft: oklch(0.48 0.016 158);
-  --ink-faint: oklch(0.64 0.012 158);
-  --accent: oklch(0.55 0.14 155);
-  --accent-soft: oklch(0.96 0.028 155);
-  --accent-strong: oklch(0.42 0.165 155);
-  --accent-ink: oklch(0.97 0.025 155);
-  --sombra: 0 1px 2px oklch(0.16 0.01 158 / 0.08), 0 2px 8px oklch(0.16 0.01 158 / 0.06);
-  /* Movimiento: duraciones y curvas como TOKENS (una fuente de verdad).
-     Antes había 8 duraciones y 4 curvas sueltas — cohesión de movimiento. */
-  --dur-fast: 140ms;  /* feedback directo: hover, press */
-  --dur-base: 180ms;  /* paneles y cambios de estado */
-  --dur-slow: 220ms;  /* entradas de vista y cascadas */
-  --ease-out-ui: cubic-bezier(0.2, 0, 0, 1);               /* salida nítida (UI) */
-  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);         /* entradas suaves (expo-out de transitions.dev) */
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);        /* pop con rebote */
-  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);           /* salidas/std (deja rápido) */
+  --canvas: #f7f4ee;      /* crema cálido mate */
+  --surface: #efe9df;     /* tarjeta crema con contraste sutil */
+  --line: #d3c9b8;        /* trazo fino de tinta diluida */
+  --line-strong: #1a1a1a; /* tinta plena */
+  --ink: #1a1a1a;         /* negro tinta mate */
+  --ink-soft: #4c463b;
+  --ink-faint: #8a8275;
+  --accent: #1b49b6;      /* azul cobalto vibrante */
+  --accent-soft: #dde5f7;
+  --accent-ink: #f7f4ee;  /* crema sobre cobalto */
+  --sombra: none;         /* estilo plano: sin sombras difusas */
+
+  --fuente-cuerpo: "Inter Variable", "Segoe UI", system-ui, sans-serif;
+  --fuente-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
+  --fuente-mano: "Caveat Variable", "Comic Sans MS", cursive;
+
+  /* Movimiento: duraciones y curvas como tokens. */
+  --dur-fast: 140ms;
+  --dur-base: 180ms;
+  --dur-slow: 220ms;
+  --ease-out-ui: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Neon noche — oscuro quieto, no neutro */
+/* ---------- Tinta nocturna (oscuro) ---------- */
 .dark {
-  --canvas: oklch(0.15 0.018 155);
-  --surface: oklch(0.19 0.02 155);
-  --surface-2: oklch(0.24 0.02 155);
-  --line: oklch(0.27 0.03 155);
-  --line-strong: oklch(0.42 0.045 155);
-  --ink: oklch(0.94 0.008 155);
-  --ink-soft: oklch(0.7 0.012 155);
-  --ink-faint: oklch(0.53 0.012 155);
-  --accent: oklch(0.75 0.16 155);
-  --accent-soft: oklch(0.22 0.06 155);
-  --accent-strong: oklch(0.88 0.23 155);
-  --accent-ink: oklch(0.1 0.03 155);
-  --sombra: 0 1px 2px rgb(0 0 0 / 0.55), 0 2px 8px rgb(0 0 0 / 0.35);
-}
-
-
-
-
-:root {
-  --font-sans: "Inter Variable", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "Cascadia Code", "Courier New", monospace;
+  --canvas: #14161b;
+  --surface: #1c1f26;
+  --line: #333845;
+  --line-strong: #d9d2c5;
+  --ink: #f2ede4;
+  --ink-soft: #a9a393;
+  --ink-faint: #6f6a5e;
+  --accent: #7fa3f5;
+  --accent-soft: #1e2a45;
+  --accent-ink: #10131a;
+  --sombra: none;
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--fuente-cuerpo);
   font-feature-settings: "ss01", "cv01", "cv02", "cv03", "cv04";
   background-color: var(--canvas);
   color: var(--ink);
 }
 
+/* ---------------- Tipografía ---------------- */
 
-
+/* El wordmark: display de peso pesado, con la firma en cobalto. */
 .wordmark {
-  font-size: 28px;
-  font-weight: 750;
-  letter-spacing: -0.035em;
+  font-family: var(--fuente-display);
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variation-settings: "SOFT" 0, "WONK" 1;
+}
+
+/* Etiquetas secundarias: manuscrito fino (fechas, "borrada…"). */
+.mano {
+  font-family: var(--fuente-mano);
+  font-size: 1.05rem;
   line-height: 1;
 }
 
@@ -96,48 +101,48 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Plano: la jerarquía la da el trazo, no la sombra. */
 .elevada {
-  box-shadow: var(--sombra);
+  box-shadow: none;
 }
 
+/* ---------------- Animaciones ---------------- */
 
 @keyframes aparecer {
-  from { opacity: 0; transform: translateY(10px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes caer {
-  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes respirar {
-  0%, 100% { opacity: 0.4; transform: scale(0.97); }
-  50% { opacity: 0.75; transform: scale(1.05); }
+@keyframes saliendo {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-4px); }
 }
 
-@keyframes punto-respirar {
-  0%, 100% { opacity: 0.3; transform: scale(0.75); }
-  50% { opacity: 0.6; transform: scale(1.1); }
+@keyframes contador-pulso {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.16); }
+  100% { transform: scale(1); }
 }
-
 
 .vista-animada {
   animation: aparecer var(--dur-slow) var(--ease-out-soft);
 }
 
-/* Los paneles caen DESDE ARRIBA: el origen de la escala es el borde
-   superior (sin esto, el scale(0.98) crecía desde el centro y el panel
-   parecía inflarse en vez de desplegarse). */
 .panel-animada {
   transform-origin: top;
   animation: caer var(--dur-base) var(--ease-out-soft);
 }
 
-/* Las secciones entran en cascada (solo al cambiar de vista: la key de la
-   vista NO incluye el período, así navegar semanas/meses es instantáneo).
-   Paso corto (30ms) y duración contenida: la cascada se percibe, no se
-   espera. Después del 7º, delay fijo (no acumula más). */
+.panel-saliendo {
+  transform-origin: top;
+  animation: saliendo var(--dur-fast) var(--ease-standard) forwards;
+}
+
 .entrada-cascada > * {
   animation: aparecer var(--dur-slow) var(--ease-out-soft) backwards;
 }
@@ -150,49 +155,40 @@ body {
 .entrada-cascada > *:nth-child(7) { animation-delay: 180ms; }
 .entrada-cascada > *:nth-child(n + 8) { animation-delay: 210ms; }
 
-
+/* El ambiente: en un sistema plano no hay glow difuso. El bloque queda
+   (lo monta App) para no tocar la estructura, pero sin efecto. */
 .ambiente-vivo {
-  position: fixed;
-  top: 0;
+  display: none;
+}
+
+/* Píldora del conmutador: cobalto suave, un solo objeto que viaja. */
+.pestana-pill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
   left: 0;
-  right: 0;
-  height: 500px;
-  pointer-events: none;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% 0%, oklch(from var(--accent) l c h / 0.1), transparent 70%),
-    radial-gradient(ellipse 50% 40% at 20% 30%, oklch(from var(--accent) l c h / 0.05), transparent 70%);
-  animation: respirar 10s ease-in-out infinite;
-  z-index: 0;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  transition:
+    transform var(--dur-base) var(--ease-out-ui),
+    width var(--dur-base) var(--ease-out-ui);
 }
 
-.app-contenido {
-  position: relative;
-  z-index: 1;
+.contador-pulso {
+  display: inline-block;
+  animation: contador-pulso var(--dur-slow) var(--ease-spring);
 }
 
+/* ---------------- Check: tinta que se dibuja ---------------- */
 
-
-.punto-respirando {
-  animation: punto-respirar 2.2s ease-in-out infinite;
-}
-
-
-/* Check — círculo que se dibuja con la mano */
 .ts-check {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-/* Hover y presión usan la propiedad `scale` (no `transform`) para no
-   pisarse con el scale del icono de adentro; la presión base la aporta
-   la regla universal de botones. */
 .ts-check:hover {
   scale: 1.08;
 }
-/* El "pop" del check es una TRANSICIÓN, no un keyframe: el icono vive en
-   0.94 y al completar salta a 1 con curva de resorte. Así se puede
-   interrumpir a mitad de camino (destildar revierte suave) y el gesto
-   queda del lado del compositor. */
 .ts-check svg {
   scale: 0.94;
   transition: scale var(--dur-slow) var(--ease-spring);
@@ -205,7 +201,6 @@ body {
   stroke: var(--ink-faint);
   transition: stroke var(--dur-base) var(--ease-out-soft);
 }
-
 .ch-mark {
   stroke: var(--accent);
   stroke-width: 2;
@@ -213,94 +208,40 @@ body {
   stroke-linejoin: round;
   stroke-dasharray: 16;
   stroke-dashoffset: 16;
-  /* Dibujo del check: la acción más frecuente de la app — se mantiene el
-     trazo (es el momento firma) pero acotado: ~220ms total con 40ms de
-     espera, en vez de ~380ms. */
   transition: stroke-dashoffset var(--dur-base) var(--ease-out-soft) 40ms;
 }
-
 .ts-check.completed .ch-ring {
   stroke: var(--accent);
 }
 .ts-check.completed .ch-mark {
   stroke-dashoffset: 0;
 }
-@keyframes saliendo {
-  from { opacity: 1; transform: translateY(0) scale(1); }
-  to { opacity: 0; transform: translateY(-4px) scale(0.985); }
-}
-/* Salida de paneles: las layouts de CSS no animan el desmontaje de React,
-   así que el componente se mantiene montado unos ms con esta clase
-   (hook usePresencia) y recién ahí se retira. La salida es más suave y
-   corta que la entrada — la regla de oro del exit. */
-.panel-saliendo {
-  transform-origin: top;
-  animation: saliendo var(--dur-fast) var(--ease-standard) forwards;
-}
 
-/* Píldora deslizante del conmutador: una sola pastilla viaja entre
-   pestañas (transform + width) en vez de que cada una prenda y apague
-   su fondo. Movimiento continuo = se lee como un solo objeto. */
-.pestana-pill {
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 0;
-  border-radius: var(--radius-lg);
-  background: var(--accent-soft);
-  transition:
-    transform var(--dur-base) var(--ease-out-ui),
-    width var(--dur-base) var(--ease-out-ui);
-}
+/* ---------------- Filas de tarea: trazo, no sombra ---------------- */
 
-/* Pulso del contador del día: al cambiar "3/8", el número da un latido
-   corto — la micro-victoria se siente, no solo se lee. */
-@keyframes contador-pulso {
-  0% { transform: scale(1); }
-  45% { transform: scale(1.18); }
-  100% { transform: scale(1); }
-}
-.contador-pulso {
-  display: inline-block;
-  animation: contador-pulso var(--dur-slow) var(--ease-spring);
-}
-
-/* Filas de tarea: vida al hover + pincelada en las completadas.
-   Solo se transicionan transform/color/border (compositor-friendly);
-   el box-shadow NO transiciona (paint costoso por fila) — la sombra
-   estática del .elevada alcanza. */
 .tarea-fila {
   transition:
-    transform var(--dur-fast) var(--ease-out-ui),
-    border-color var(--dur-fast) var(--ease-out-ui),
-    background-color var(--dur-base) ease;
+    color var(--dur-fast) var(--ease-out-ui),
+    background-color var(--dur-base) var(--ease-out-ui),
+    border-color var(--dur-fast) var(--ease-out-ui);
 }
 .tarea-fila:hover {
-  transform: translateY(-1px);
   border-color: var(--line-strong);
 }
+/* Muro de victorias: la completada se apaga a tinta diluida. */
 .tarea-fila.completada {
-  background: color-mix(in oklab, var(--accent) 7%, var(--surface));
+  background: color-mix(in oklab, var(--surface) 70%, var(--canvas));
 }
 
-/* ---------------- Presión de botones (universal) ---------------- */
+/* ---------------- Botones: presión universal ---------------- */
 
-/* TODOS los botones de la app comparten UN lenguaje de presión: se hunden
-   a scale(0.96) al hacer click, con una transición corta e interrumpible
-   (scale/transform son del compositor). El :not() da la especificidad
-   justa para ganarle a las utilidades de Tailwind sin !important, así
-   ningún botón queda sin feedback. */
 button:not([data-presion="off"]) {
-  /* Cada propiedad con su curva: el scale lleva resorte (la liberación
-     del click rebota suave, feedback táctil "vivo"); los colores van con
-     la curva nítida de UI. Nada de `transition: all`. */
   transition:
     scale var(--dur-fast) var(--ease-spring),
     color var(--dur-fast) var(--ease-out-ui),
     background-color var(--dur-fast) var(--ease-out-ui),
     border-color var(--dur-fast) var(--ease-out-ui),
-    opacity var(--dur-fast) var(--ease-out-ui),
-    box-shadow var(--dur-fast) var(--ease-out-ui);
+    opacity var(--dur-fast) var(--ease-out-ui);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
@@ -315,20 +256,13 @@ input:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-/* El input de captura vive DENTRO del contenedor con halo: su outline
-   propio es un segundo rectángulo encimado (el que el propietario vio
-   como "feo"). El halo del contenedor es suficiente. */
 .capture-focus input:focus-visible {
   outline: none;
 }
 
-/* Captura enfocada: el campo tiene un halo que indica dónde escribes */
-
+/* Captura enfocada: se marca con tinta de cobalto (plano, sin halo). */
 .capture-focus:focus-within {
   border-color: var(--accent) !important;
-  box-shadow:
-    0 0 0 3px oklch(from var(--accent) l c h / 0.12),
-    var(--sombra);
 }
 
 .sin-transiciones *,
@@ -337,11 +271,9 @@ input:focus-visible {
   transition: none !important;
 }
 
+/* ---------------- Movimiento reducido ---------------- */
+
 @media (prefers-reduced-motion: reduce) {
-  /* La supresión se aplica SOLO si la app no está forzando movimiento.
-     Windows suele traer las animaciones apagadas; el interruptor de la
-     cabecera agrega `.forzar-movimiento` al <html> y la app anima igual.
-     Quien de verdad no quiere movimiento apaga el interruptor. */
   html:not(.forzar-movimiento) *,
   html:not(.forzar-movimiento) *::before,
   html:not(.forzar-movimiento) *::after {
@@ -349,8 +281,6 @@ input:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  html:not(.forzar-movimiento) .ambiente-vivo,
-  html:not(.forzar-movimiento) .punto-respirando,
   html:not(.forzar-movimiento) .entrada-cascada > *,
   html:not(.forzar-movimiento) .vista-animada,
   html:not(.forzar-movimiento) .panel-animada,

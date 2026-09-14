@@ -28,7 +28,7 @@ import {
   startOfWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, CircleDot, Trash2, Undo2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, Undo2 } from "lucide-react";
 import { PRIORIDADES, WeekPicker } from "./CaptureBar";
 import { useTasksStore } from "../lib/store";
 import { usePresencia } from "../lib/usePresencia";
@@ -49,12 +49,11 @@ const ETIQUETA_PRIORIDAD: Record<Priority, string> = {
   low: "Baja",
 };
 
-// Color de prioridad (decisión del propietario tras ver la captura):
-// la prioridad es METADATO, no protagonista — y "Media" es el DEFAULT,
-// por eso no lleva color (el estado por defecto no colorea nada).
-// Solo "Alta" tiene color; Media/Baja van neutras.
+// Color de prioridad (paleta editorial: tinta + cobalto). La prioridad es
+// METADATO: solo "Alta" se marca (en cobalto, el color de la atención);
+// Media/Baja quedan en tinta diluida.
 const COLOR_PRIORIDAD: Record<Priority, string> = {
-  high: "text-red-600 dark:text-red-400",
+  high: "font-semibold text-accent",
   medium: "text-ink-soft",
   low: "text-ink-soft",
 };
@@ -187,10 +186,8 @@ function TareaLinea({
         <button
           type="button"
           onClick={() => setShowPicker(!showPicker)}
-          className={`shrink-0 transition-[opacity,color] duration-150 hover:text-ink ${
-            fechaRedundante
-              ? "text-ink-soft opacity-0 group-hover:opacity-100"
-              : "text-ink-soft"
+          className={`mano shrink-0 text-ink-soft transition-[opacity,color] duration-150 hover:text-ink ${
+            fechaRedundante ? "opacity-0 group-hover:opacity-100" : ""
           }`}
         >
           {formatoFecha(task.dueDate)}
@@ -254,10 +251,10 @@ function TareaLinea({
                 onUpdate(task.id, { priority: p.valor });
                 setShowPrioridad(false);
               }}
-              className={`flex h-8 items-center rounded-full border px-3 text-sm transition-[background-color,color,scale] duration-150 active:scale-[0.96] ${
+              className={`inline-flex h-8 items-center rounded-lg border px-3 text-sm ${
                 task.priority === p.valor
                   ? "border-accent bg-accent-soft text-ink"
-                  : "border-line text-ink-soft hover:bg-ink/5"
+                  : "border-line text-ink-soft hover:border-line-strong hover:text-ink"
               }`}
             >
               {p.etiqueta}
@@ -300,8 +297,8 @@ function GrupoDia({
           mayúsculas espaciadas eran "chrome de plantilla"). Peso 600 y
           color según el grupo — sin transformación tipográfica. */}
       <h3
-        className={`mb-2 text-[13px] font-semibold ${
-          sutil ? "text-ink-faint" : "text-ink-soft"
+        className={`mb-2 font-display text-[15px] font-semibold ${
+          sutil ? "text-ink-faint" : "text-ink"
         }`}
       >
         {encabezado}
@@ -364,11 +361,53 @@ function VistaHoy({
   if (atrasadas.length + deHoy.length + sinFecha.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-10">
-        <span className="punto-respirando text-accent">
-          <CircleDot size={28} strokeWidth={1.5} />
-        </span>
-        <p className="text-sm text-ink-soft">Nada por acá — captura una tarea arriba</p>
-        <p className="text-xs text-ink-faint">Escribe y presiona Enter: se guarda al instante.</p>
+        {/* Ilustración de línea a una sola tinta (estilo grabado a mano):
+            una hoja con su casilla marcada. Sin relleno, sin sombra. */}
+        <svg
+          width="124"
+          height="92"
+          viewBox="0 0 124 92"
+          fill="none"
+          aria-hidden
+          className="text-ink-faint"
+        >
+          <path
+            d="M36 14 C 56 11.5, 86 12.5, 94 15 C 95.5 38, 94.5 66, 92.5 79 C 70 81.5, 48 82, 34 81 C 32.5 60, 33.5 33, 36 14 Z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M47 43 C 54 42, 60 42, 65 43 C 66 50, 66 56, 65 61 C 59 62, 52 62, 46 61 C 45 55, 45 48, 47 43 Z"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M49 52 L 54 58 L 63 46"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path d="M47 70 L 82 68" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          <path d="M47 75 L 70 74" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          <path d="M103 30 L 114 62" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          <path
+            d="M114 62 L 110 71 L 101 68 Z"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <p className="mano text-xl text-ink-soft">
+          Nada por acá — captura una tarea arriba
+        </p>
+        <p className="text-xs text-ink-faint">
+          Escribe y presiona Enter: se guarda al instante.
+        </p>
       </div>
     );
   }
@@ -395,7 +434,7 @@ function VistaHoy({
           {/* El encabezado de Hoy es especial (progreso del día): se
               renderiza a mano para poner el conteo en color de acento —
               el único dato "vivo" de la vista. El resto usa GrupoDia. */}
-          <h3 className="mb-2 flex items-baseline gap-1.5 text-[13px] font-medium text-ink-soft">
+          <h3 className="mb-2 flex items-baseline gap-1.5 font-display text-[15px] font-semibold text-ink">
             Hoy
             {/* La key = conteo: al cambiar, el span se re-monta y el pulso
                 se dispara una vez. La micro-victoria se SIENTE. */}
@@ -570,7 +609,32 @@ function VistaPapelera({
   const [confirmarVaciar, setConfirmarVaciar] = useState(false);
 
   if (tasks.length === 0) {
-    return <p className="text-sm text-ink-faint">La papelera está vacía</p>;
+    return (
+      <div className="flex flex-col items-center gap-3 py-10">
+        {/* Papelera dibujada a mano, una sola tinta. */}
+        <svg
+          width="96"
+          height="84"
+          viewBox="0 0 96 84"
+          fill="none"
+          aria-hidden
+          className="text-ink-faint"
+        >
+          <path d="M24 28 C 40 25.5, 60 25.5, 74 28" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M36 26 C 36.5 22.5, 40 20.5, 48 20.5 C 56 20.5, 59.5 22.5, 60 26" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          <path
+            d="M30 30 C 31 42, 33 60, 34.5 68 C 42 70, 58 70, 65.5 68 C 67 60, 69 42, 70 30"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path d="M43 40 L 43.5 60" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          <path d="M52 40 L 51.5 60" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+        </svg>
+        <p className="mano text-xl text-ink-soft">La papelera está vacía</p>
+      </div>
+    );
   }
 
   return (
@@ -583,7 +647,7 @@ function VistaPapelera({
           >
             <span className="flex-1 text-ink-soft">{task.title}</span>
             {/* Cuándo entró a la papelera (el mismo formato humano). */}
-            <span className="text-xs text-ink-faint">
+            <span className="mano shrink-0 text-ink-faint">
               borrada {formatoFecha(task.deletedAt)}
             </span>
             <button
@@ -691,7 +755,12 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
 
     const medir = () => {
       const activa = contenedor.querySelector<HTMLElement>("[data-activa='true']");
-      if (!activa) return;
+      // Si la pestaña activa ya no existe (ej: se vació la papelera desde
+      // su propia vista), la píldora se oculta en vez de quedar huérfana.
+      if (!activa) {
+        setPildoraLista(false);
+        return;
+      }
       setPildora({ izquierda: activa.offsetLeft, ancho: activa.offsetWidth });
       setPildoraLista(true);
     };
@@ -766,9 +835,9 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-sm font-medium text-ink-soft">
+            <span className="mano text-ink-soft">
               {vista === "semana"
-                ? `Semana del ${format(startOfWeek(ancla, { weekStartsOn: 1 }), "d", { locale: es })} al ${format(addDays(startOfWeek(ancla, { weekStartsOn: 1 }), 6), "d 'de' MMM", { locale: es })}`
+                ? `semana del ${format(startOfWeek(ancla, { weekStartsOn: 1 }), "d", { locale: es })} al ${format(addDays(startOfWeek(ancla, { weekStartsOn: 1 }), 6), "d 'de' MMM", { locale: es })}`
                 : format(ancla, "MMMM yyyy", { locale: es })}
             </span>
             <button
