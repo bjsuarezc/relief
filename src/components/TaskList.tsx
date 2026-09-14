@@ -1,17 +1,16 @@
-// TaskList: la lista de tareas con el conmutador de vista Hoy/Semana/Mes.
+﻿// TaskList: la lista de tareas con el conmutador de vista Hoy/Semana/Mes.
 //
-// Este componente reemplaza la lista provisional de App.tsx (paso 3).
 // Toda la lógica de agrupación es DEL LADO DEL FRONTEND (decisión ya
 // registrada: get_tasks devuelve todo y no optimizamos antes de tiempo;
 // si algún día escala, los filtros migran a Rust y la UI no cambia).
 //
 // Cada vista responde UNA pregunta (principio "una vista, una pregunta"):
-// - Hoy: "¿qué tengo que hacer hoy?" (ATRASADAS + HOY + SIN FECHA)
+// - Hoy: "¿qué tengo que hacer hoy?" (Atrasadas + Hoy + Sin fecha)
 // - Semana: "¿qué hay cada día de esta semana?" (navegable con ‹ ›)
 // - Mes: "¿qué hay en este mes?" (navegable, compacta, solo días con tareas)
 //
-// Las secciones ATRASADAS (sin estética de alarma, decisión de la Sesión 1)
-// viven SOLO en la vista Hoy: en Semana/Mes las tareas vencidas ya aparecen
+// La sección Atrasadas (sin estética de alarma, decisión de la Sesión 1)
+// vive SOLO en la vista Hoy: en Semana/Mes las tareas vencidas ya aparecen
 // naturalmente en su día correspondiente.
 
 import { useState } from "react";
@@ -29,16 +28,14 @@ import {
   startOfWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, ChevronLeft, ChevronRight, Circle, CircleDot, Trash2, Undo2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleDot, Trash2, Undo2 } from "lucide-react";
 import { PRIORIDADES, WeekPicker } from "./CaptureBar";
 import { useTasksStore } from "../lib/store";
 import type { Priority, Task, UpdateTaskInput } from "../lib/types";
 
 type Vista = "hoy" | "semana" | "mes" | "papelera";
 
-// Helpers de PRESENTACIÓN: convierten lo crudo de la BD (fechas ISO,
-// claves en inglés) en texto/color humano. Vivían en App.tsx y se
-// mudaron acá junto con la lista.
+// Helper de PRESENTACIÓN: convierte la fecha ISO de la BD en texto humano.
 function formatoFecha(iso: string | null): string {
   if (!iso) return "sin fecha";
   const fecha = parseISO(iso);
@@ -51,26 +48,23 @@ const ETIQUETA_PRIORIDAD: Record<Priority, string> = {
   low: "Baja",
 };
 
-// COLOR de prioridad (decisión del propietario tras ver la captura):
+// Color de prioridad (decisión del propietario tras ver la captura):
 // la prioridad es METADATO, no protagonista — y "Media" es el DEFAULT,
-// por eso no lleva color (el estado por defecto no colorear nada).
-// Solo "Alta" (calor de atención) tiene color; Media/Baja van neutras.
+// por eso no lleva color (el estado por defecto no colorea nada).
+// Solo "Alta" tiene color; Media/Baja van neutras.
 const COLOR_PRIORIDAD: Record<Priority, string> = {
   high: "text-red-600 dark:text-red-400",
   medium: "text-ink-soft",
   low: "text-ink-soft",
 };
 
-// TareaLinea: una fila de tarea, INTERACTIVA y editable — pero sin cromo
-// nuevo (diseño "minimalista" acordado con el propietario): los textos
-// que ya se ven SON los botones.
+// TareaLinea: una fila de tarea, INTERACTIVA y editable — los textos que
+// ya se ven SON los botones (diseño minimalista acordado con el propietario).
 // - Click en el TÍTULO → se convierte en input. Enter guarda, Esc cancela.
 // - Click en la FECHA → abre el WeekPicker debajo de la fila (reuso del
 //   de CaptureBar) para moverla a cualquier día.
 // - Click en la PRIORIDAD → mini-popover con las 3 opciones.
 // - "Mover a hoy" solo existe en Atrasadas (moverAHoy: decisión Sesión 1).
-// El hover sube ligeramente el color del texto para insinuar que es
-// clicable — insinuación, no alarma visual.
 function TareaLinea({
   task,
   onToggle,
@@ -88,8 +82,7 @@ function TareaLinea({
   moverAHoy?: boolean;
   // La fecha del grupo ya dice el día (Semana/Mes/grupo Hoy): la fila no
   // la repite en reposo — pero aparece en hover, porque sigue siendo el
-  // acceso al picker de cambio de fecha. Ocultar matando la edición sería
-  // romper el principio "los textos son los botones".
+  // acceso al picker de cambio de fecha.
   fechaRedundante?: boolean;
 }) {
   const [editandoTitulo, setEditandoTitulo] = useState(false);
@@ -124,37 +117,36 @@ function TareaLinea({
 
   return (
     <>
-          <li className="group elevada flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-sm">
-        {/* El check de completado: LA micro-victoria. Cross-fade de iconos
-            (receta de iconos contextuales sin librerías): el círculo sale
-            (escala 0.75→0.25 + fade) y el check entra (0.25→1 + fade),
-            con la curva exacta cubic-bezier(0.2,0,0,1). Además scale 0.96
-            al presionar (feedback táctil estándar, no 0.90 exagerado). */}
+      <li
+        className={`tarea-fila group elevada flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 text-sm ${
+          task.completed ? "completada" : ""
+        }`}
+      >
+        {/* El check: círculo SVG personalizado. Al completar, el borde se
+            enciende en acento y la marca se DIBUJA (stroke-dashoffset),
+            no solo aparece. El píxel exacto donde pasa la victoria. */}
         <button
           type="button"
           onClick={() => onToggle(task.id, !task.completed)}
           aria-label={task.completed ? "Desmarcar tarea" : "Completar tarea"}
-          className="shrink-0 transition-transform duration-150 active:scale-[0.96]"
+          className={`ts-check shrink-0 ${task.completed ? "completed" : ""}`}
         >
-          <span className="relative block h-[18px] w-[18px]">
-            <Circle
-              size={18}
-              className="absolute inset-0 text-ink-faint transition-[opacity,scale] duration-150 [transition-timing-function:cubic-bezier(0.2,0,0,1)] hover:text-ink-soft"
-              style={{ opacity: task.completed ? 0 : 1, scale: task.completed ? 0.25 : 1 }}
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle
+              cx="9"
+              cy="9"
+              r="7.5"
+              strokeWidth="1.5"
+              fill="none"
+              className="ch-ring"
             />
-            <CheckCircle2
-              key={`${task.id}-${task.completed}`}
-              size={18}
-              className={`absolute inset-0 text-accent ${task.completed ? "check-svg" : ""}`}
-              style={{
-                opacity: task.completed ? 1 : 0,
-                scale: task.completed ? 1 : 0.25,
-                transitionProperty: "opacity, scale",
-                transitionDuration: "150ms",
-                transitionTimingFunction: "cubic-bezier(0.2, 0, 0, 1)",
-              }}
+            <path
+              d="M5.6 9.3 L8 11.6 L12.6 6.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="ch-mark"
             />
-          </span>
+          </svg>
         </button>
 
         {/* Título: texto normal; al click, input editable al vuelo.
@@ -191,7 +183,9 @@ function TareaLinea({
           type="button"
           onClick={() => setShowPicker(!showPicker)}
           className={`shrink-0 transition-[opacity,color] duration-150 hover:text-ink ${
-            fechaRedundante ? "text-ink-soft opacity-0 group-hover:opacity-100" : "text-ink-soft"
+            fechaRedundante
+              ? "text-ink-soft opacity-0 group-hover:opacity-100"
+              : "text-ink-soft"
           }`}
         >
           {formatoFecha(task.dueDate)}
@@ -253,7 +247,7 @@ function TareaLinea({
                 onUpdate(task.id, { priority: p.valor });
                 setShowPrioridad(false);
               }}
-              className={`rounded-full border px-3 py-1 text-sm ${
+              className={`flex h-8 items-center rounded-full border px-3 text-sm transition-[background-color,color,scale] duration-150 active:scale-[0.96] ${
                 task.priority === p.valor
                   ? "border-accent bg-accent-soft text-ink"
                   : "border-line text-ink-soft hover:bg-ink/5"
@@ -268,7 +262,7 @@ function TareaLinea({
   );
 }
 
-// GrupoDeDia: un encabezado de día + sus tareas. Se reutiliza en las
+// GrupoDia: un encabezado de día + sus tareas. Se reutiliza en las
 // vistas Semana (7 grupos) y Mes (solo los días con tareas). El flag
 // moverAHoy pasa por acá: es la única diferencia de comportamiento del
 // grupo Atrasadas respecto a los demás (decisión Sesión 1).
@@ -305,10 +299,8 @@ function GrupoDia({
       >
         {encabezado}
       </h3>
-      {/*
-        Días sin tareas: la etiqueta del día hace toda la comunicación
-        ("está vacío"). No poner nada es la respuesta, no un guión.
-      */}
+      {/* Días sin tareas: la etiqueta del día ya dice "está vacío".
+          No poner nada es la respuesta, no un guión. */}
       {tareas.length > 0 && (
         <ul className="space-y-2">
           {tareas.map((task) => (
@@ -329,9 +321,8 @@ function GrupoDia({
   );
 }
 
-// Las tres vistas. Cada una es una función pura: tasks + ancla -> JSX.
-// Funciones puras = mismo input siempre produce el mismo output, sin
-// efectos: fáciles de entender, probar y reordenar.
+// Las vistas son funciones puras: tasks + ancla -> JSX.
+// Mismo input siempre produce el mismo output, sin efectos.
 
 function VistaHoy({
   tasks,
@@ -365,11 +356,12 @@ function VistaHoy({
 
   if (atrasadas.length + deHoy.length + sinFecha.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 py-6">
+      <div className="flex flex-col items-center gap-3 py-10">
         <span className="punto-respirando text-accent">
-          <CircleDot size={20} />
+          <CircleDot size={28} strokeWidth={1.5} />
         </span>
-        <p className="text-sm text-ink-faint">Nada por acá — captura una tarea arriba</p>
+        <p className="text-sm text-ink-soft">Nada por acá — captura una tarea arriba</p>
+        <p className="text-xs text-ink-faint">Escribe y presiona Enter: se guarda al instante.</p>
       </div>
     );
   }
@@ -379,7 +371,7 @@ function VistaHoy({
   const completadasHoy = deHoy.filter((t) => t.completed).length;
 
   return (
-    <div className="space-y-6">
+    <div className="entrada-cascada space-y-6">
       {atrasadas.length > 0 && (
         <GrupoDia
           encabezado="Atrasadas"
@@ -396,11 +388,11 @@ function VistaHoy({
           {/* El encabezado de Hoy es especial (progreso del día): se
               renderiza a mano para poner el conteo en color de acento —
               el único dato "vivo" de la vista. El resto usa GrupoDia. */}
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">
-            Hoy ·{" "}
-            <span className="text-accent">
+          <h3 className="mb-2 flex items-baseline gap-1.5 text-[13px] font-medium text-ink-soft">
+            Hoy
+            <span className="tnum text-accent">
               {completadasHoy}/{deHoy.length}
-            </span>{" "}
+            </span>
             completadas
           </h3>
           <ul className="space-y-2">
@@ -456,7 +448,7 @@ function VistaSemana({
   const dias = Array.from({ length: 7 }, (_, i) => addDays(inicio, i));
 
   return (
-    <div className="space-y-5">
+    <div className="entrada-cascada space-y-5">
       {dias.map((d) => (
         <GrupoDia
           key={d.toISOString()}
@@ -520,12 +512,18 @@ function VistaMes({
       {delMes.length === 0 ? (
         <p className="text-sm text-ink-faint">Nada en este mes</p>
       ) : (
-        <div className="space-y-5">
+        <div className="entrada-cascada space-y-5">
           {diasConTareas.map((d) => (
             <GrupoDia
               key={d.toISOString()}
-              encabezado={isToday(d) ? `Hoy · ${format(d, "EEE d MMM", { locale: es })}` : format(d, "EEE d MMM", { locale: es })}
-              tareas={delMes.filter((t) => t.dueDate && isSameDay(parseISO(t.dueDate), d))}
+              encabezado={
+                isToday(d)
+                  ? `Hoy · ${format(d, "EEE d MMM", { locale: es })}`
+                  : format(d, "EEE d MMM", { locale: es })
+              }
+              tareas={delMes.filter(
+                (t) => t.dueDate && isSameDay(parseISO(t.dueDate), d),
+              )}
               onToggle={onToggle}
               onUpdate={onUpdate}
               onReschedule={onReschedule}
@@ -568,7 +566,7 @@ function VistaPapelera({
         {tasks.map((task) => (
           <li
             key={task.id}
-            className="elevada flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-sm"
+            className="tarea-fila elevada flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 text-sm"
           >
             <span className="flex-1 text-ink-soft">{task.title}</span>
             {/* Cuándo entró a la papelera (el mismo formato humano). */}
@@ -638,19 +636,15 @@ function VistaPapelera({
 //
 // La pestaña Papelera (decisión del propietario en el paso 7):
 // - SOLO se muestra si hay algo en la papelera (cero ruido si está vacía).
-// - VistaPapelera permite restaurar, borrar una por una o vaciar todo.
 export function TaskList({ tasks }: { tasks: Task[] }) {
   const [vista, setVista] = useState<Vista>("hoy");
   const [ancla, setAncla] = useState<Date>(new Date());
-  // La acción del store entra por acá y baja como prop (onToggle) hasta
+  // Las acciones del store entran por acá y bajan como props hasta
   // cada fila. Así las vistas siguen siendo "puras" (solo reciben datos)
   // y el único punto que sabe guardar es TaskList.
   const setTaskCompleted = useTasksStore((s) => s.setTaskCompleted);
-  // Las acciones que bajan hasta cada fila: completar, corregir
-  // (título/prioridad) y reagendar (fecha / "Mover a hoy").
   const setTaskDueDate = useTasksStore((s) => s.setTaskDueDate);
   const updateTask = useTasksStore((s) => s.updateTask);
-  // Papelera: mandar/restaurar, borrar permanente (una o todas).
   const setTaskDeleted = useTasksStore((s) => s.setTaskDeleted);
   const purgeTask = useTasksStore((s) => s.purgeTask);
   const purgeAllTasks = useTasksStore((s) => s.purgeAllTasks);
@@ -671,7 +665,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
   ];
 
   return (
-    <div className="w-full max-w-xl">
+    <div className="w-full max-w-2xl">
       {/* UNA sola fila de navegación (corrección de estructura del
           propietario: las dos barras pegadas leían como una sola familia):
           conmutador fit-content a la izquierda + nav del período a la

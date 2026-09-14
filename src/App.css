@@ -1,23 +1,19 @@
+@import "@fontsource-variable/inter";
 @import "tailwindcss";
 
 /* ============================================================
-   Relief — sistema visual "sereno".
-   Tokens semánticos (roles, no colores crudos): la paleta vive
-   acá y los componentes consumen ROLES (bg-surface, text-ink…).
-   Grises tintados con el matiz del acento (hue 165-170, verde
-   salvia): no son grises puros — cohesión sutil en ambos temas.
-   Cambiar de tema = cambiar estas variables, no tocar componentes.
+   Relief — el sistema visual "Alivio".
+   Todo vive en un sistema de tokens. Los temas comparten
+   formato (misma estructura, colores y jerarquía), y la
+   variación claro/oscuro componen el matiz global.
    ============================================================ */
 
-/* Variante dark por CLASE (.dark en <html>), no por preferencia del
-   SO: el usuario elige su tema con el toggle y se persiste. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* El puente tokens → Tailwind: define las utilidades
-   bg-canvas, bg-surface, border-line, text-ink, text-accent… */
 @theme inline {
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-ink: var(--ink);
@@ -25,170 +21,243 @@
   --color-ink-faint: var(--ink-faint);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-ink: var(--accent-ink);
 }
 
-/* TEMA CLARO — v2 (corrección del propietario): canvas casi blanco y
-   neutro (el tintado se veía sucio), tinta casi negra con matiz mínimo
-   (antes era grisácea), acento con más luz y saturación (antes apagado),
-   y separación de capas con sombra sutil (la profundidad faltante). */
+/* Light — blanco platea verdoso — sin otra cosa erguida. */
 :root {
-  --canvas: oklch(0.965 0.004 158);
-  --surface: oklch(1 0 0);
-  --line: oklch(0.9 0.008 158);
-  --line-strong: oklch(0.83 0.012 158);
-  --ink: oklch(0.22 0.008 158);
-  --ink-soft: oklch(0.45 0.012 158);
-  --ink-faint: oklch(0.62 0.01 158);
-  --accent: oklch(0.58 0.115 158);
-  --accent-soft: oklch(0.95 0.03 158);
-  /* Sombra de elevación: dos capas (borde inferior difuso + contacto).
-     Solo existe en claro — en oscuro la profundidad la dan los bordes. */
-  --sombra: 0 1px 2px oklch(0.2 0.01 158 / 0.06), 0 1px 1px oklch(0.2 0.01 158 / 0.05);
+  --canvas: oklch(0.955 0.008 158);
+  --surface: oklch(0.99 0.002 158);
+  --surface-2: oklch(0.96 0.002 158);
+  --line: oklch(0.89 0.01 158);
+  --line-strong: oklch(0.8 0.016 158);
+  --ink: oklch(0.2 0.008 158);
+  --ink-soft: oklch(0.48 0.016 158);
+  --ink-faint: oklch(0.64 0.012 158);
+  --accent: oklch(0.55 0.14 155);
+  --accent-soft: oklch(0.96 0.028 155);
+  --accent-strong: oklch(0.42 0.165 155);
+  --accent-ink: oklch(0.97 0.025 155);
+  --sombra: 0 1px 2px oklch(0.16 0.01 158 / 0.08), 0 2px 8px oklch(0.16 0.01 158 / 0.06);
 }
 
-/* TEMA OSCURO: verde noche profundo (no negro-neutro), superficies
-   apenas más claras, acento aclarado para leerse en la oscuridad. */
+/* Neon noche — oscuro quieto, no neutro */
 .dark {
-  --canvas: oklch(0.215 0.012 158);
-  --surface: oklch(0.255 0.014 158);
-  --line: oklch(0.335 0.018 158);
-  --line-strong: oklch(0.42 0.02 158);
-  --ink: oklch(0.93 0.008 158);
-  --ink-soft: oklch(0.7 0.012 158);
-  --ink-faint: oklch(0.52 0.014 158);
-  --accent: oklch(0.72 0.09 158);
-  --accent-soft: oklch(0.3 0.045 158);
-  --sombra: none;
+  --canvas: oklch(0.15 0.018 155);
+  --surface: oklch(0.19 0.02 155);
+  --surface-2: oklch(0.24 0.02 155);
+  --line: oklch(0.27 0.03 155);
+  --line-strong: oklch(0.42 0.045 155);
+  --ink: oklch(0.94 0.008 155);
+  --ink-soft: oklch(0.7 0.012 155);
+  --ink-faint: oklch(0.53 0.012 155);
+  --accent: oklch(0.75 0.16 155);
+  --accent-soft: oklch(0.22 0.06 155);
+  --accent-strong: oklch(0.88 0.23 155);
+  --accent-ink: oklch(0.1 0.03 155);
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.55), 0 2px 8px rgb(0 0 0 / 0.35);
 }
 
-/* Transición de vista (pedida por el propietario: "smooth al navegar").
-   Cada vez que cambia la vista/conmutador, el contenedor se re-monta
-   (React cambia la key) y CSS anima su entrada: aparece deslizando
-   levemente hacia arriba. Es CSS puro: cero dependencias nuevas. */
-@keyframes aparecer {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+
+
+
+:root {
+  --font-sans: "Inter Variable", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Code", "Courier New", monospace;
 }
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv01", "cv02", "cv03", "cv04";
+  background-color: var(--canvas);
+  color: var(--ink);
+}
+
+
+
+.wordmark {
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.elevada {
+  box-shadow: var(--sombra);
+}
+
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes caer {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes respirar {
+  0%, 100% { opacity: 0.4; transform: scale(0.97); }
+  50% { opacity: 0.75; transform: scale(1.05); }
+}
+
+@keyframes punto-respirar {
+  0%, 100% { opacity: 0.3; transform: scale(0.75); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
+
 
 .vista-animada {
-  animation: aparecer 0.18s ease-out;
+  animation: aparecer 0.24s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Alivio visual: el canvas tiene presencia viva. */
-
-/* Gradiente ambiental que respira — sutil, no distrae.
-   oscuro: un resplandor verde en el tope que se infla/absorbe.
-   claro: pasa casi desapercibido, pero lo suficiente para que el
-   papel se sienta en su lugar (no flotante en el void). */
-@keyframes respirar {
-  0%, 100% { opacity: 0.3; transform: scale(0.96); }
-  50% { opacity: 0.55; transform: scale(1.04); }
+.panel-animada {
+  animation: caer 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
+
+.entrada-cascada > * {
+  animation: aparecer 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+}
+.entrada-cascada > *:nth-child(1) { animation-delay: 0ms; }
+.entrada-cascada > *:nth-child(2) { animation-delay: 45ms; }
+.entrada-cascada > *:nth-child(3) { animation-delay: 90ms; }
+.entrada-cascada > *:nth-child(4) { animation-delay: 135ms; }
+.entrada-cascada > *:nth-child(5) { animation-delay: 180ms; }
+.entrada-cascada > *:nth-child(6) { animation-delay: 225ms; }
+.entrada-cascada > *:nth-child(7) { animation-delay: 270ms; }
+
 
 .ambiente-vivo {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 420px;
+  height: 500px;
   pointer-events: none;
-  background: radial-gradient(
-    ellipse at 50% -10%,
-    oklch(from var(--accent) l c h / 0.2) 0%,
-    transparent 70%
-  );
-  animation: respirar 8s ease-in-out infinite;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%, oklch(from var(--accent) l c h / 0.1), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 20% 30%, oklch(from var(--accent) l c h / 0.05), transparent 70%);
+  animation: respirar 10s ease-in-out infinite;
+  z-index: 0;
 }
 
-/* El punto de gracia en estados vacíos — un pulso verde que respira. */
-@keyframes punto-respirar {
-  0%, 100% { opacity: 0.28; transform: scale(0.85); }
-  50% { opacity: 0.55; transform: scale(1.1); }
+.app-contenido {
+  position: relative;
+  z-index: 1;
 }
+
+
 
 .punto-respirando {
-  animation: punto-respirar 3s ease-in-out infinite;
+  animation: punto-respirar 2.2s ease-in-out infinite;
 }
 
-/* El check: trazo de círculo + pop. El punto de máxima satisfacción. */
+
+/* Check — círculo que se dibuja con la mano */
+.ts-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.14s cubic-bezier(0.2, 0, 0, 1);
+}
+.ts-check:hover {
+  transform: scale(1.15);
+}
+.ts-check:active {
+  transform: scale(0.92);
+}
+
+.ch-ring {
+  stroke: var(--ink-faint);
+  transition: stroke 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.ch-mark {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  transition: stroke-dashoffset 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 100ms;
+}
+
+.ts-check.completed .ch-ring {
+  stroke: var(--accent);
+}
+.ts-check.completed .ch-mark {
+  stroke-dashoffset: 0;
+}
 @keyframes check-pop {
-  0% { transform: scale(0.72); transform-origin: center; }
-  55% { transform: scale(1.14); }
-  100% { transform: scale(1); transform-origin: center; }
+  0% { transform: scale(0.8); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.ts-check.completed svg {
+  animation: check-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.check-svg {
-  animation: check-pop 0.32s cubic-bezier(0.2, 0, 0.2, 1);
+/* Filas de tarea: vida al hover + pincelada en las completadas */
+.tarea-fila {
+  transition:
+    transform 150ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+.tarea-fila:hover {
+  transform: translateY(-1px);
+  border-color: var(--line-strong);
+  box-shadow: var(--sombra), 0 6px 16px oklch(from var(--accent) l c h / 0.07);
+}
+.tarea-fila.completada {
+  background: color-mix(in oklab, var(--accent) 7%, var(--surface));
 }
 
-/* El foco de la captura: halo sutil alrededor del input. */
-.capture-focus:focus-within {
-  box-shadow: 0 0 0 2px var(--accent-soft),
-    0 4px 24px oklch(from var(--accent) l c h / 0.12);
-}
+/* ---------------- Foco ---------------- */
 
-/* Reducir movimiento: ninguna de estas animaciones corre. */
-@media (prefers-reduced-motion: reduce) {
-  .ambiente-vivo,
-  .check-svg,
-  .punto-respirando {
-    animation: none;
-  }
-}
-
-/* Los paneles (picker, popover de prioridad) "caen" desde arriba:
-   entra desde -4px — dirección natural de un panel desplegable.
-   0.15s ease-out: interruptsible y discreto (motion restraint). */
-@keyframes caer {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.panel-animada {
-  animation: caer 0.15s ease-out;
-}
-
-/* Foco visible para teclado (calidad base): acento, sin anular el
-   hover — solo entra por foco de teclado (focus-visible). */
 button:focus-visible,
 input:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-
-/* Respeta la preferencia del sistema: quien pidió menos movimiento
-   no ve las animaciones de entrada (todo lo demás sigue igual). */
-@media (prefers-reduced-motion: reduce) {
-  .vista-animada,
-  .panel-animada {
-    animation: none;
-  }
+/* El input de captura vive DENTRO del contenedor con halo: su outline
+   propio es un segundo rectángulo encimado (el que el propietario vio
+   como "feo"). El halo del contenedor es suficiente. */
+.capture-focus input:focus-visible {
+  outline: none;
 }
 
-/* Superficie elevada: sombra sutil solo en tema claro (en oscuro la
-   profundidad la dan los bordes — ahí la sombra no se percibe). */
-.elevada {
-  box-shadow: var(--sombra);
+/* Captura enfocada: el campo tiene un halo que indica dónde escribes */
+
+.capture-focus:focus-within {
+  border-color: var(--accent) !important;
+  box-shadow:
+    0 0 0 3px oklch(from var(--accent) l c h / 0.12),
+    var(--sombra);
 }
 
-/* Supresión de transiciones al cambiar de tema (mejor práctica de
-   better-ui): sin esto, cada elemento transiciona su color al mismo
-   tiempo y el cambio de tema "se emborrona" en vez de snap. El toggle
-   agrega esta clase, fuerza reflow y la quita en el siguiente frame. */
 .sin-transiciones *,
 .sin-transiciones *::before,
 .sin-transiciones *::after {
   transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambiente-vivo,
+  .punto-respirando,
+  .entrada-cascada > *,
+  .vista-animada,
+  .panel-animada,
+  .ts-check,
+  .ch-mark {
+    animation: none !important;
+    transition: none !important;
+  }
 }

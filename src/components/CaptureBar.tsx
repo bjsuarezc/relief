@@ -5,7 +5,7 @@
 import { useRef, useState } from "react";
 import { addDays, format, isSameDay, startOfWeek } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flag, Plus } from "lucide-react";
 import { useTasksStore } from "../lib/store";
 import type { CreateTaskInput, Priority } from "../lib/types";
 
@@ -62,68 +62,97 @@ export function CaptureBar() {
     // <form onSubmit> : Enter dispara la creación nativamente, sin
     // listeners manuales. preventDefault evita recarga de página.
     <div className="w-full">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void submit();
-        }}
-        className="flex h-12 items-center gap-2 rounded-xl border border-line bg-surface px-4 transition-colors duration-200 focus-within:border-accent"
-      >
-        <input
-          ref={inputRef}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="¿Qué tienes que hacer?"
-          autoFocus
-          className="h-full flex-1 bg-transparent text-lg outline-none placeholder:text-ink-faint"
-        />
-        <button
-          type="submit"
-          aria-label="Crear tarea"
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-accent transition-[background-color,color,scale] duration-150 hover:bg-accent hover:text-canvas active:scale-[0.96]"
+      {/* Hero input (h-14 = 56px): cambia el flujo solo por peso.
+          bg-surface incluye la sombra; es lo único "elevado" en reposo. */}
+      <div className="capture-focus rounded-xl border border-line bg-surface elevada transition-shadow duration-200">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void submit();
+          }}
+          className="flex h-14 items-center gap-3 px-4"
         >
-          <Plus size={18} />
-        </button>
-      </form>
+          <input
+            ref={inputRef}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="¿Qué tienes que hacer?"
+            autoFocus
+            className="h-full flex-1 bg-transparent text-[15px] font-medium outline-none placeholder:text-ink-faint"
+          />
+          <button
+            type="submit"
+            aria-label="Crear tarea"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink transition-all duration-150 hover:scale-105 active:scale-90"
+          >
+            <Plus size={18} strokeWidth={2.5} />
+          </button>
+        </form>
+      </div>
 
-      {/* Fila de chips. Un chip abre/cierra su panel; solo uno abierto a la vez. */}
+      {/* Fila de chips: captura al instante ("+ fecha") o con contexto
+          ("+ prioridad"). Visualmente no son filtros — son cámaras que
+          fragan el campo de captura a placer. Uno abierto aprieta al otro. */}
       <div className="mt-3 flex items-center gap-2">
         <button
           type="button"
           onClick={() => {
-            const abrir = !showDatePicker;
-            setShowDatePicker(abrir);
-            if (abrir) setShowPriority(false);
+            setShowDatePicker(!showDatePicker);
             if (showDatePicker) setCaptureDate(today); // al cerrar: hoy
           }}
-          className={`flex h-8 items-center rounded-full border px-3 text-sm transition-[background-color,color,scale] duration-150 active:scale-[0.96] ${
+          title={
+            capturandoHoy
+              ? "Capturar para hoy — abre el picker de semana"
+              : `Capturando para ${format(captureDate, "EEE d MMM", { locale: es })}`
+          }
+          className={`chip group relative inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-all duration-150 ${
             showDatePicker
-              ? "border-accent bg-accent-soft text-ink"
-              : "border-line text-ink-soft hover:bg-ink/5"
+              ? "border-transparent bg-accent-soft text-ink shadow-[0_0_0_1px_var(--accent)]"
+              : "border-line text-ink-soft hover:border-accent hover:bg-accent-soft/60 hover:text-ink hover:shadow-[0_0_0_1px_var(--accent)]"
           }`}
         >
-          {capturandoHoy
-            ? "+ fecha"
-            : `+ fecha · ${format(captureDate, "EEE d MMM", { locale: es })}`}
+          <Plus
+            size={14}
+            strokeWidth={2}
+            className={`transition-transform duration-150 ${
+              showDatePicker ? "rotate-45" : "text-accent"
+            }`}
+          />
+          <span>
+            {capturandoHoy
+              ? "Fecha"
+              : format(captureDate, "EEE d MMM", { locale: es })}
+          </span>
+          {!capturandoHoy && (
+            <span className="h-1 w-1 rounded-full bg-accent" />
+          )}
         </button>
 
         <button
           type="button"
           onClick={() => {
-            const abrir = !showPriority;
-            setShowPriority(abrir);
-            if (abrir) setShowDatePicker(false);
+            setShowPriority(!showPriority);
             if (showPriority) setPriority(null); // al cerrar: media
           }}
-          className={`flex h-8 items-center rounded-full border px-3 text-sm transition-[background-color,color,scale] duration-150 active:scale-[0.96] ${
+          className={`chip group relative inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-all duration-150 ${
             showPriority
-              ? "border-accent bg-accent-soft text-ink"
-              : "border-line text-ink-soft hover:bg-ink/5"
+              ? "border-transparent bg-accent-soft text-ink shadow-[0_0_0_1px_var(--accent)]"
+              : "border-line text-ink-soft hover:border-accent hover:bg-accent-soft/60 hover:text-ink hover:shadow-[0_0_0_1px_var(--accent)]"
           }`}
         >
-          {priority
-            ? `+ prioridad · ${PRIORIDADES.find((p) => p.valor === priority)?.etiqueta.toLowerCase()}`
-            : "+ prioridad"}
+          <Flag
+            size={14}
+            strokeWidth={2}
+            className={`transition-colors duration-150 ${
+              showPriority ? "text-accent" : "text-line-strong group-hover:text-accent"
+            }`}
+          />
+          <span>Prioridad</span>
+          {priority && (
+            <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-current"
+              style={{ color: "currentColor" }}
+            />
+          )}
         </button>
       </div>
 
