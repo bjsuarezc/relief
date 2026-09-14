@@ -419,9 +419,40 @@ estado y la historia antes de continuar.
   `invoke` ocultaba la lista).
 - Commit: `6da2973`.
 
-### Estado / siguiente paso
+### Sesión 6 — presión de botones y la causa raíz del "no anima"
 
-- ✅ Motion auditado y corregido (HIGH+MED); verificado con captura propia.
+- Queja del propietario: "no veo animaciones smooth al presionar los botones".
+- **CAUSA RAÍZ encontrada (no era el código)**: la máquina tiene las
+  animaciones de Windows apagadas — `MinAnimate = 0` y
+  `SPI_GETCLIENTAREAANIMATION = 0` → el sistema reporta
+  `prefers-reduced-motion: reduce` → Relief (correctamente) suprimía TODO
+  el movimiento. Verificado en el navegador: `transitionDuration: 0.01ms`.
+- Solución: **interruptor de animaciones en la cabecera** (ícono Sparkles,
+  encendido por defecto) que agrega `.forzar-movimiento` al `<html>`; el
+  bloque de reduced-motion ahora se aplica con
+  `html:not(.forzar-movimiento)` — la app anima aunque el OS diga lo
+  contrario, y quien no quiera movimiento lo apaga ahí. Persiste en
+  localStorage (`relief-movimiento`) y se aplica en el script inline de
+  index.html (sin flash).
+- Lenguaje de presión universal: regla única
+  `button:not([data-presion="off"])` (especificidad justa para ganarle a
+  Tailwind sin !important) → todos los botones hunden a `scale(0.96)` con
+  **curva de resorte** (`--ease-spring`) en el scale y curva nítida en los
+  colores, 140ms, interruptible, `touch-action: manipulation`.
+- Limpieza según las skills (micro-interaction + transitions-dev):
+  - Eliminados los 2 `transition-all` que quedaban (chips) y el
+    `active:scale-90` del botón [+].
+  - `.ts-check` pasó de `transform` a la propiedad `scale` (no pisa el
+    scale del icono ni la presión global).
+  - `--ease-out-soft` actualizado a `cubic-bezier(0.22, 1, 0.36, 1)`
+    (expo-out de transitions.dev) — entradas notablemente más suaves.
+  - Nuevo token `--ease-standard` para salidas; la salida de paneles usa
+    duración corta + curva estándar ("salir es más rápido que entrar").
+- Verificación en navegador con mock del puente Tauri: `reduceActivo: true`
+  + `claseForzar: true` → todos los botones con `0.14s` y resorte.
+- Commit: `1968cd0`.
+
+### Estado / siguiente paso
 - ⏭️ Para "lista para publicar": instalador (`npm run tauri build` → .exe/.msi),
   aceleradores de teclado (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub,
   ícono/branding propio de la app.
