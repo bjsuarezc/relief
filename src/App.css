@@ -40,6 +40,14 @@
   --accent-strong: oklch(0.42 0.165 155);
   --accent-ink: oklch(0.97 0.025 155);
   --sombra: 0 1px 2px oklch(0.16 0.01 158 / 0.08), 0 2px 8px oklch(0.16 0.01 158 / 0.06);
+  /* Movimiento: duraciones y curvas como TOKENS (una fuente de verdad).
+     Antes había 8 duraciones y 4 curvas sueltas — cohesión de movimiento. */
+  --dur-fast: 140ms;  /* feedback directo: hover, press */
+  --dur-base: 180ms;  /* paneles y cambios de estado */
+  --dur-slow: 220ms;  /* entradas de vista y cascadas */
+  --ease-out-ui: cubic-bezier(0.2, 0, 0, 1);              /* salida nítida (UI) */
+  --ease-out-soft: cubic-bezier(0.25, 0.46, 0.45, 0.94);  /* entradas suaves */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);       /* pop con rebote */
 }
 
 /* Neon noche — oscuro quieto, no neutro */
@@ -114,11 +122,15 @@ body {
 
 
 .vista-animada {
-  animation: aparecer 0.24s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation: aparecer var(--dur-slow) var(--ease-out-soft);
 }
 
+/* Los paneles caen DESDE ARRIBA: el origen de la escala es el borde
+   superior (sin esto, el scale(0.98) crecía desde el centro y el panel
+   parecía inflarse en vez de desplegarse). */
 .panel-animada {
-  animation: caer 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-origin: top;
+  animation: caer var(--dur-base) var(--ease-out-soft);
 }
 
 /* Las secciones entran en cascada (solo al cambiar de vista: la key de la
@@ -126,7 +138,7 @@ body {
    Paso corto (30ms) y duración contenida: la cascada se percibe, no se
    espera. Después del 7º, delay fijo (no acumula más). */
 .entrada-cascada > * {
-  animation: aparecer 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+  animation: aparecer var(--dur-slow) var(--ease-out-soft) backwards;
 }
 .entrada-cascada > *:nth-child(1) { animation-delay: 0ms; }
 .entrada-cascada > *:nth-child(2) { animation-delay: 30ms; }
@@ -169,7 +181,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.14s cubic-bezier(0.2, 0, 0, 1);
+  transition: transform var(--dur-fast) var(--ease-out-ui);
 }
 .ts-check:hover {
   transform: scale(1.15);
@@ -180,7 +192,7 @@ body {
 
 .ch-ring {
   stroke: var(--ink-faint);
-  transition: stroke 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: stroke var(--dur-base) var(--ease-out-soft);
 }
 
 .ch-mark {
@@ -190,7 +202,10 @@ body {
   stroke-linejoin: round;
   stroke-dasharray: 16;
   stroke-dashoffset: 16;
-  transition: stroke-dashoffset 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 100ms;
+  /* Dibujo del check: la acción más frecuente de la app — se mantiene el
+     trazo (es el momento firma) pero acotado: ~220ms total con 40ms de
+     espera, en vez de ~380ms. */
+  transition: stroke-dashoffset var(--dur-base) var(--ease-out-soft) 40ms;
 }
 
 .ts-check.completed .ch-ring {
@@ -205,21 +220,22 @@ body {
   100% { transform: scale(1); }
 }
 .ts-check.completed svg {
-  animation: check-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: check-pop var(--dur-slow) var(--ease-spring);
 }
 
-/* Filas de tarea: vida al hover + pincelada en las completadas */
+/* Filas de tarea: vida al hover + pincelada en las completadas.
+   Solo se transicionan transform/color/border (compositor-friendly);
+   el box-shadow NO transiciona (paint costoso por fila) — la sombra
+   estática del .elevada alcanza. */
 .tarea-fila {
   transition:
-    transform 150ms cubic-bezier(0.2, 0, 0, 1),
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    background-color 150ms ease;
+    transform var(--dur-fast) var(--ease-out-ui),
+    border-color var(--dur-fast) var(--ease-out-ui),
+    background-color var(--dur-base) ease;
 }
 .tarea-fila:hover {
   transform: translateY(-1px);
   border-color: var(--line-strong);
-  box-shadow: var(--sombra), 0 6px 16px oklch(from var(--accent) l c h / 0.07);
 }
 .tarea-fila.completada {
   background: color-mix(in oklab, var(--accent) 7%, var(--surface));
