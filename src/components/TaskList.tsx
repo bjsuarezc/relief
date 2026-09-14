@@ -13,7 +13,7 @@
 // vive SOLO en la vista Hoy: en Semana/Mes las tareas vencidas ya aparecen
 // naturalmente en su día correspondiente.
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   addDays,
   addMonths,
@@ -31,6 +31,7 @@ import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, CircleDot, Trash2, Undo2 } from "lucide-react";
 import { PRIORIDADES, WeekPicker } from "./CaptureBar";
 import { useTasksStore } from "../lib/store";
+import { usePresencia } from "../lib/usePresencia";
 import type { Priority, Task, UpdateTaskInput } from "../lib/types";
 
 type Vista = "hoy" | "semana" | "mes" | "papelera";
@@ -114,6 +115,10 @@ function TareaLinea({
     onReschedule(task.id, format(d, "yyyy-MM-dd"));
     setShowPicker(false);
   };
+
+  // Presencia de los paneles de la fila: el cierre también se anima.
+  const panelPicker = usePresencia(showPicker);
+  const panelPrioridad = usePresencia(showPrioridad);
 
   return (
     <>
@@ -227,8 +232,8 @@ function TareaLinea({
       {/* Paneles debajo de la fila (fuera del <li> flex, a lo ancho).
           Solo uno a la vez: abrir uno cierra el otro (menos ruido).
           Caen desde arriba (panel-animada) — dirección de desplegable. */}
-      {showPicker && (
-        <div className="panel-animada mt-2">
+      {panelPicker.montado && (
+        <div className={panelPicker.saliendo ? "panel-saliendo" : "panel-animada mt-2"}>
           <WeekPicker
             selected={diaMostrado}
             onSelect={reagenda}
@@ -236,8 +241,10 @@ function TareaLinea({
           />
         </div>
       )}
-      {showPrioridad && (
-        <div className="panel-animada mt-2 elevada flex items-center gap-2 rounded-xl border border-line bg-surface p-3">
+      {panelPrioridad.montado && (
+        <div
+          className={`${panelPrioridad.saliendo ? "panel-saliendo" : "panel-animada mt-2 elevada"} flex items-center gap-2 rounded-xl border border-line bg-surface p-3`}
+        >
           <span className="text-xs text-ink-faint">Prioridad:</span>
           {PRIORIDADES.map((p) => (
             <button
@@ -390,7 +397,12 @@ function VistaHoy({
               el único dato "vivo" de la vista. El resto usa GrupoDia. */}
           <h3 className="mb-2 flex items-baseline gap-1.5 text-[13px] font-medium text-ink-soft">
             Hoy
-            <span className="tnum text-accent">
+            {/* La key = conteo: al cambiar, el span se re-monta y el pulso
+                se dispara una vez. La micro-victoria se SIENTE. */}
+            <span
+              key={completadasHoy}
+              className="contador-pulso tnum text-accent"
+            >
               {completadasHoy}/{deHoy.length}
             </span>
             completadas
@@ -529,6 +541,7 @@ function VistaMes({
               onReschedule={onReschedule}
               onDelete={onDelete}
               fechaRedundante
+              sutil={!isToday(d)}
             />
           ))}
         </div>
@@ -664,6 +677,30 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
     { id: "mes", etiqueta: "Mes" },
   ];
 
+  // Píldora deslizante: se mide la pestaña activa y la pastilla viaja
+  // hasta ella (en vez de que cada pestaña prenda/apague su propio fondo).
+  // Se re-mide al cambiar de vista, al aparecer/desaparecer la papelera y
+  // al redimensionar la ventana.
+  const contenedorPestanas = useRef<HTMLDivElement>(null);
+  const [pildora, setPildora] = useState({ izquierda: 0, ancho: 0 });
+  const [pildoraLista, setPildoraLista] = useState(false);
+
+  useLayoutEffect(() => {
+    const contenedor = contenedorPestanas.current;
+    if (!contenedor) return;
+
+    const medir = () => {
+      const activa = contenedor.querySelector<HTMLElement>("[data-activa='true']");
+      if (!activa) return;
+      setPildora({ izquierda: activa.offsetLeft, ancho: activa.offsetWidth });
+      setPildoraLista(true);
+    };
+
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, [vista, enPapelera.length]);
+
   return (
     <div className="w-full max-w-2xl">
       {/* UNA sola fila de navegación (corrección de estructura del
@@ -671,16 +708,30 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
           conmutador fit-content a la izquierda + nav del período a la
           derecha. El ancho libre del medio respira. */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex gap-1 elevada rounded-xl border border-line bg-surface p-1">
+        <div
+          ref={contenedorPestanas}
+          className="relative flex gap-1 elevada rounded-xl border border-line bg-surface p-1"
+        >
+          {/* La pastilla: un solo objeto que viaja entre pestañas. */}
+          {pildoraLista && (
+            <span
+              aria-hidden
+              className="pestana-pill"
+              style={{
+                transform: `translateX(${pildora.izquierda}px)`,
+                width: pildora.ancho,
+              }}
+            />
+          )}
+
           {pestañas.map((p) => (
             <button
               key={p.id}
               type="button"
+              data-activa={vista === p.id}
               onClick={() => setVista(p.id)}
-              className={`flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-150 ${
-                vista === p.id
-                  ? "bg-accent-soft text-ink"
-                  : "text-ink-soft hover:text-ink"
+              className={`relative z-10 flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-150 ${
+                vista === p.id ? "text-ink" : "text-ink-soft hover:text-ink"
               }`}
             >
               {p.etiqueta}
@@ -692,11 +743,10 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
           {enPapelera.length > 0 && (
             <button
               type="button"
+              data-activa={vista === "papelera"}
               onClick={() => setVista("papelera")}
-              className={`flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-150 ${
-                vista === "papelera"
-                  ? "bg-accent-soft text-ink"
-                  : "text-ink-soft hover:text-ink"
+              className={`relative z-10 flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-150 ${
+                vista === "papelera" ? "text-ink" : "text-ink-soft hover:text-ink"
               }`}
             >
               <Trash2 size={14} className="inline" /> {enPapelera.length}
@@ -718,7 +768,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
             </button>
             <span className="text-sm font-medium text-ink-soft">
               {vista === "semana"
-                ? `Semana del ${format(startOfWeek(ancla, { weekStartsOn: 1 }), "d MMM", { locale: es })} al ${format(addDays(startOfWeek(ancla, { weekStartsOn: 1 }), 6), "d 'de' MMM", { locale: es })}`
+                ? `Semana del ${format(startOfWeek(ancla, { weekStartsOn: 1 }), "d", { locale: es })} al ${format(addDays(startOfWeek(ancla, { weekStartsOn: 1 }), 6), "d 'de' MMM", { locale: es })}`
                 : format(ancla, "MMMM yyyy", { locale: es })}
             </span>
             <button

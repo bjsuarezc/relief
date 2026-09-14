@@ -184,10 +184,21 @@ body {
   transition: transform var(--dur-fast) var(--ease-out-ui);
 }
 .ts-check:hover {
-  transform: scale(1.15);
+  transform: scale(1.08);
 }
 .ts-check:active {
   transform: scale(0.92);
+}
+/* El "pop" del check es una TRANSICIÓN, no un keyframe: el icono vive en
+   0.94 y al completar salta a 1 con curva de resorte. Así se puede
+   interrumpir a mitad de camino (destildar revierte suave) y el gesto
+   queda del lado del compositor. */
+.ts-check svg {
+  transform: scale(0.94);
+  transition: transform var(--dur-slow) var(--ease-spring);
+}
+.ts-check.completed svg {
+  transform: scale(1);
 }
 
 .ch-ring {
@@ -214,13 +225,44 @@ body {
 .ts-check.completed .ch-mark {
   stroke-dashoffset: 0;
 }
-@keyframes check-pop {
-  0% { transform: scale(0.8); }
-  60% { transform: scale(1.12); }
+@keyframes saliendo {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-4px) scale(0.985); }
+}
+/* Salida de paneles: las layouts de CSS no animan el desmontaje de React,
+   así que el componente se mantiene montado unos ms con esta clase
+   (hook usePresencia) y recién ahí se retira. La salida es más suave y
+   corta que la entrada — la regla de oro del exit. */
+.panel-saliendo {
+  transform-origin: top;
+  animation: saliendo var(--dur-fast) var(--ease-out-ui) forwards;
+}
+
+/* Píldora deslizante del conmutador: una sola pastilla viaja entre
+   pestañas (transform + width) en vez de que cada una prenda y apague
+   su fondo. Movimiento continuo = se lee como un solo objeto. */
+.pestana-pill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+  transition:
+    transform var(--dur-base) var(--ease-out-ui),
+    width var(--dur-base) var(--ease-out-ui);
+}
+
+/* Pulso del contador del día: al cambiar "3/8", el número da un latido
+   corto — la micro-victoria se siente, no solo se lee. */
+@keyframes contador-pulso {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.18); }
   100% { transform: scale(1); }
 }
-.ts-check.completed svg {
-  animation: check-pop var(--dur-slow) var(--ease-spring);
+.contador-pulso {
+  display: inline-block;
+  animation: contador-pulso var(--dur-slow) var(--ease-spring);
 }
 
 /* Filas de tarea: vida al hover + pincelada en las completadas.
@@ -276,12 +318,20 @@ input:focus-visible {
   .entrada-cascada > *,
   .vista-animada,
   .panel-animada,
+  .panel-saliendo,
+  .contador-pulso,
   .ts-check,
-  .ts-check.completed svg,
+  .ts-check svg,
   .ch-mark,
+  .pestana-pill,
   .tarea-fila {
     animation: none !important;
     transition: none !important;
     transform: none !important;
+  }
+  /* El check con reduced-motion no debe quedar en 0.94: se neutraliza el
+     transform de reposo del icono (el estado ya se comunica por color). */
+  .ts-check svg {
+    transform: scale(1) !important;
   }
 }

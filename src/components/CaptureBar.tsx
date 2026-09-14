@@ -7,6 +7,7 @@ import { addDays, format, isSameDay, startOfWeek } from "date-fns";
 import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Flag, Plus } from "lucide-react";
 import { useTasksStore } from "../lib/store";
+import { usePresencia } from "../lib/usePresencia";
 import type { CreateTaskInput, Priority } from "../lib/types";
 
 // Prioridades visibles en la lógica de captura (una sola fuente de
@@ -32,6 +33,11 @@ export function CaptureBar() {
 
   const today = new Date();
   const capturandoHoy = isSameDay(captureDate, today);
+
+  // Presencia de los paneles: mantiene el montaje durante la salida para
+  // que el cierre también se anime (ver usePresencia).
+  const panelFecha = usePresencia(showDatePicker);
+  const panelPrioridad = usePresencia(showPriority);
 
   const submit = async () => {
     const trimmed = title.trim();
@@ -156,14 +162,19 @@ export function CaptureBar() {
         </button>
       </div>
 
-      {/* Panel del picker: solo visible si el chip está activo. */}
-      {showDatePicker && (
-        <WeekPicker selected={captureDate} onSelect={setCaptureDate} />
+      {/* Panel del picker: se monta/desmonta con su animación de entrada
+          y salida (panel-animada / panel-saliendo). */}
+      {panelFecha.montado && (
+        <div className={panelFecha.saliendo ? "panel-saliendo" : "panel-animada"}>
+          <WeekPicker selected={captureDate} onSelect={setCaptureDate} />
+        </div>
       )}
 
       {/* Panel de prioridad: 3 pastillas; la elegida queda resaltada. */}
-      {showPriority && (
-        <div className="panel-animada mt-3 elevada flex items-center gap-2 rounded-xl border border-line bg-surface p-3">
+      {panelPrioridad.montado && (
+        <div
+          className={`${panelPrioridad.saliendo ? "panel-saliendo" : "panel-animada"} mt-3 elevada flex items-center gap-2 rounded-xl border border-line bg-surface p-3`}
+        >
           <span className="text-xs text-ink-faint">Prioridad:</span>
           {PRIORIDADES.map((p) => (
             <button
@@ -218,7 +229,7 @@ export function WeekPicker({
           <ChevronLeft size={16} />
         </button>
         <span className="text-sm text-ink-soft">
-          Semana del {format(dias[0], "d MMM", { locale: es })} al{" "}
+          Semana del {format(dias[0], "d", { locale: es })} al{" "}
           {format(dias[6], "d 'de' MMM", { locale: es })}
         </span>
         <button
