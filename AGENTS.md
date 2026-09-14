@@ -3,6 +3,22 @@
 Instrucciones para asistentes de IA (opencode u otros) que trabajen en este
 proyecto. Léelas antes de cada sesión y aplícalas en todo momento.
 
+## Skills
+
+Las skills del agente viven a **nivel global** (`~/.config/opencode/skills/`),
+no en este repo: son capacidades genéricas (diseño, motion, tipografía,
+accesibilidad, testing, auditorías) que sirven a cualquier proyecto.
+El repo queda solo con código del producto.
+
+- Diseño: `frontend-design`, `design-taste-frontend`, `impeccable`, `better-ui`
+- Auditoría de UI: `improve-ui`, `improve`, `improve-react`, `web-design-guidelines`
+- Motion: `animate`, `improve-animations`, `micro-interaction`, `transitions-dev`, `transitions-polish`, `fixing-motion-performance`
+- Tipografía / a11y: `better-typography`, `better-accessibility`
+- Meta: `skill-creator`, `customize-opencode`, `brand-guidelines`, `webapp-testing`
+
+Skills **específicas de Relief** (si se crean) sí viven en `.opencode/skills/`
+de este repo. Tras agregar/quitar skills, opencode requiere reinicio.
+
 ## Contexto del proyecto
 
 La visión, requerimientos, casos de uso y arquitectura viven en `docs/`.

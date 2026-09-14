@@ -486,7 +486,33 @@ estado y la historia antes de continuar.
   Set-Content.
 - Commit: `97cc12d`.
 
+### Sesión 8 — arquitectura de skills (genéricas a global)
+
+- Pregunta del propietario: "¿no deberíamos cargarlas todas a nivel global?".
+  Análisis y decisión (Opción A): las skills que usamos son **capacidades
+  genéricas** (diseño, motion, tipografía, a11y, testing, auditorías), no
+  activos de Relief → viven en `~/.config/opencode/skills/` y sirven a
+  todos los proyectos. El repo de Relief queda solo con código del producto.
+- Instaladas 8 nuevas en global:
+  - **Anthropic** (clonadas del repo oficial `anthropics/skills`, con sus
+    `scripts/` y `examples/`): `webapp-testing`, `brand-guidelines`,
+    `skill-creator`.
+  - **Registro ui-skills** (CLI): `better-typography`, `better-accessibility`,
+    `improve` (shadcn), `improve-react` (millionco),
+    `fixing-motion-performance` (ibelick).
+- Migradas las 11 existentes del proyecto a global (copia con Copy-Item —
+  binaria, segura) y `git rm -r .opencode/skills` en el repo.
+- Catálogo global final: **19 skills nuestras + `contabilidad-jw` del
+  propietario = 20** (todas con SKILL.md válido).
+- AGENTS.md actualizado: documenta que las skills viven globalmente, el
+  catálogo por área, y que las skills **específicas de Relief** (si se
+  crean, ej: "convenciones Relief") sí vivirán en `.opencode/skills/`.
+- Pendientes anotados: `webapp-testing` corre con Playwright al usarse
+  (deps cuando la usemos, con visto bueno); las skills de Anthropic
+  mencionan herramientas de Claude Code en su texto — se adaptan al usarlas.
+- **Requiere reinicio de opencode** para cargar el catálogo completo.
+- Commits: `ecb030d` (migración) + el de AGENTS.md/bitácora.
+
 ### Estado / siguiente paso
-- ⏭️ Para "lista para publicar": instalador (`npm run tauri build` → .exe/.msi),
   aceleradores de teclado (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub,
   ícono/branding propio de la app.
