@@ -337,13 +337,40 @@ estado y la historia antes de continuar.
   el picker, pestañas en sentence-case. Todavía no entiendo el color
   combo el tema profesional pero se quedó.
 
+### Sesión 4 — auditoría visual con pruebas propias (2026-09-14)
+
+- Método nuevo: el propietario exigió que la auditoría la hiciera la IA
+  (no delegando verificaciones). Se tomó screenshot de la app en vivo con
+  Chrome headless contra localhost:1420 — la IA ve lo mismo que el usuario.
+- Diagnóstico real confirmado: los cambios SÍ estaban en el bundle, pero
+  (a) varios quedaban como CSS huérfano sin consumirse, (b) el check
+  dibujado tenía un bug real: .ch-mark sin stroke → la marca era invisible,
+  (c) el outline:focus-visible del input encimaba un segundo rectángulo
+  sobre el halo del contenedor (el "rectángulo feo" que reportó el propietario).
+- Corregido y verificado:
+  - ch-mark con stroke/w2/linecap/linejoin + check-pop spring al completar.
+  - Filas: clase tarea-fila (hover: lift -1px + borde + sombra con brillo
+    de acento; completada: pincelada de acento al 7%).
+  - Stagger (entrada-cascada) conectado en las 3 vistas.
+  - Contenedor de captura único: capture-focus input → outline:none.
+  - Empty state con 2 líneas (acción + guía) y punto que respira más grande.
+  - Layout ensanchado max-w-xl → max-w-2xl.
+- Tipografía Inter Variable instalada vía @fontsource-variable/inter con
+  features OpenType (ss01, cv01-cv04).
+- Lección de encoding crítica: PowerShell Set-Content corrompió 93 líneas
+  de comentarios UTF-8 (mojibake doble-encoding). TaskList.tsx y App.tsx
+  reescritos completos con Write tool (UTF-8 limpio). REGRA: nunca escribir
+  archivos con Set-Content en este proyecto — usar Write/Edit.
+- Error rojo "Cannot read properties of undefined (reading 'invoke')":
+  artefacto de Chrome headless (sin IPC Tauri), NO existe en la ventana real.
+- Commit: `b521177`.
+
 ### Estado / siguiente paso
 
-- ✅ Rediseño completo aplicado: Relief vive. Eventos completos:
-  created/completed/reopened/rescheduled/updated/trashed/restored.
-- ⏭️ Final pendiente: teclas de acceso rápido (Sesión 1) y el instalador
-  para uso diario. Versiones tan políticamente fructíferas generan
-  sentido de lo que falta es más fácil.
+- ✅ Visual pulido y verificado con capturas propias.
+- ⏭️ Para "lista para publicar": instalador (`npm run tauri build` → .exe/.msi),
+  aceleradores de teclado (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub,
+  ícono/branding propio de la app.
   created/completed/reopened/rescheduled/updated/trashed/restored.
 - ⏭️ Siguiente (candidatos a decidir con el propietario):
   1. Aceleradores de teclado del MVP (Sesión 1: Ctrl+N / Enter / Ctrl+D —
