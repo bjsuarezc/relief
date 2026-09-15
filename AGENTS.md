@@ -19,13 +19,49 @@ El repo queda solo con código del producto.
 - **Frontend (CSS/rendimiento)**: `tailwind-token-consolidation`, `prefer-container-queries`, `performance`
 - **Testing**: `javascript-testing-patterns`, `rust-testing`, `browser-testing-with-devtools`
 - **Datos / IA v2 / docs**: `chart-visualization`, `claude-api`, `doc-coauthoring`
-- Meta: `skill-creator`, `customize-opencode`, `brand-guidelines`, `webapp-testing`, `find-skills`
+- Meta: `skill-creator`, `customize-opencode`, `webapp-testing`, `find-skills`
 
 Para descubrir e instalar skills nuevas del ecosistema: `find-skills`
 (consulta el leaderboard de skills.sh y luego `npx skills find <query>`).
 
 Skills **específicas de Relief** (si se crean) sí viven en `.opencode/skills/`
 de este repo. Tras agregar/quitar skills, opencode requiere reinicio.
+
+### Cuándo usar qué (mapa de routing)
+
+Varias skills se solapan en tema: el mapa evita cargar la equivocada.
+Regla general: **una por intención**, la más específica primero.
+
+| Intención | Skill | Por qué esa |
+|---|---|---|
+| Diseñar o rediseñar una superficie | `taste-skill` | La más completa (85 KB): lee el brief → sistema → directivas |
+| Pulir un detalle visual puntual | `better-ui` / `frontend-design` | Alcance chico, sin re-planificar la dirección |
+| Explorar variantes para decidir viendo | `variant` | Devuelve versiones con selector, no una propuesta |
+| Auditar la UI con evidencia | `improve-ui` | Exige contrato + runtime + corrección única por hallazgo |
+| Criticar una pantalla/URL/captura | `design-review` | Severidades + fix concreto por hallazgo |
+| Revisar un cambio o diff | `interface-review` | Entrada = el cambio, no la pantalla completa |
+| Auditar el repo entero (seguridad, DX, deuda) | `improve` | Es el único que cubre Rust, SQLite y seguridad |
+| Auditar React | `improve-react` | Usa el scan de React Doctor como evidencia |
+| Construir motion (criterio) | `animate` | Decide en orden: ¿debe animar? ¿qué curva? |
+| Motion CSS puro / `@starting-style` | `micro-interaction` | Trae el camino sin librerías (nuestro stack) |
+| Snippets de transición listos | `transitions-dev` | Patrones drop-in para panels/dropdowns/listas |
+| Refinar motion existente | `transitions-polish` | Calibra contra la escala de tokens de movimiento |
+| Auditar motion del repo | `improve-animations` | Read-only → planes priorizados |
+| Motion con stutter | `fixing-motion-performance` | Layout thrashing, propiedades del compositor |
+| Tipografía / color / layout / copy / a11y | `better-*` | Cinco ejes distintos, ninguno solapa |
+| Desarrollo Tauri | `tauri-v2` | Capabilities, comandos, ventana |
+| Empaquetar la app | `tauri-build` | Firma y artefactos de distribución |
+| Rust idiomático / tests Rust | `rust-best-practices` / `rust-testing` | Calidad vs tests |
+| Performance React | `vercel-react-best-practices` | Reglas de Vercel Engineering |
+| Tests JS/TS / UI en navegador | `javascript-testing-patterns` / `webapp-testing` / `browser-testing-with-devtools` | Patrones vs Playwright vs inspección DevTools |
+| Tokens Tailwind / container queries / perf web | `tailwind-token-consolidation` / `prefer-container-queries` / `performance` | Cada uno, su eje |
+| Gráficos / docs largos / capa IA v2 | `chart-visualization` / `doc-coauthoring` / `claude-api` | Dominios de la v2 |
+| Crear o descubrir skills | `skill-creator` / `find-skills` | Autoría vs búsqueda en el ecosistema |
+
+**Nota de mantenimiento**: no borrar skills por solapamiento de descripción sin
+leer el contenido — varias se diferencian en el *proceso*, no en el tema
+(lección de la sesión 17: `taste-skill` parecía un subconjunto de `impeccable`
+y resultó la más completa del catálogo).
 
 ## Contexto del proyecto
 
