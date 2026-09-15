@@ -126,7 +126,7 @@ function TareaLinea({
   return (
     <>
       <li
-        className={`tarea-fila group elevada flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 text-sm ${
+        className={`tarea-fila group flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 text-sm ${
           task.completed ? "completada" : ""
         }`}
       >
@@ -244,7 +244,7 @@ function TareaLinea({
       )}
       {panelPrioridad.montado && (
         <div
-          className={`${panelPrioridad.saliendo ? "panel-saliendo" : "panel-animada mt-2"} mt-2 elevada flex items-center gap-2 rounded-xl border border-line bg-surface p-3`}
+          className={`${panelPrioridad.saliendo ? "panel-saliendo" : "panel-animada mt-2"} mt-2 flex items-center gap-2 rounded-xl border border-line bg-surface p-3`}
         >
           <span className="text-xs text-ink-faint">Prioridad:</span>
           {PRIORIDADES.map((p) => (
@@ -515,7 +515,7 @@ function VistaSemana({
   const dias = Array.from({ length: 7 }, (_, i) => addDays(inicio, i));
 
   return (
-    <div className="entrada-cascada space-y-5">
+    <div className="entrada-cascada space-y-6">
       {dias.map((d) => (
         <GrupoDia
           key={d.toISOString()}
@@ -577,9 +577,9 @@ function VistaMes({
   return (
     <div>
       {delMes.length === 0 ? (
-        <p className="text-sm text-ink-faint">Nada en este mes</p>
+        <p className="text-sm text-ink-faint">No hay nada este mes</p>
       ) : (
-        <div className="entrada-cascada space-y-5">
+        <div className="entrada-cascada space-y-6">
           {diasConTareas.map((d) => (
             <GrupoDia
               key={d.toISOString()}
@@ -703,7 +703,9 @@ function VistaPapelera({
       {confirmarVaciar ? (
         <div className="flex items-center gap-2">
           <span className="text-sm text-ink-soft">
-            ¿Vaciar la papelera? ({tasks.length} tarea(s) se borrarán para siempre)
+            {tasks.length === 1
+              ? "¿Vaciar la papelera? Se borrará 1 tarea para siempre."
+              : `¿Vaciar la papelera? Se borrarán ${tasks.length} tareas para siempre.`}
           </span>
           <button
             type="button"
@@ -811,7 +813,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
       <div className="flex items-center justify-between gap-3">
         <div
           ref={contenedorPestanas}
-          className="relative flex gap-1 elevada rounded-xl border border-line bg-surface p-1"
+          className="relative flex gap-1 rounded-xl border border-line bg-surface p-1"
         >
           {/* La pastilla: un solo objeto que viaja entre pestañas. */}
           {pildoraLista && (

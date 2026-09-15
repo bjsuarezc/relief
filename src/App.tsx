@@ -22,8 +22,6 @@ function App() {
 
   return (
     <main className="relative flex min-h-screen flex-col items-center bg-canvas px-6 pb-16 pt-16 text-ink">
-      <div className="ambiente-vivo" />
-
       <div className="relative z-10 flex w-full max-w-2xl flex-col">
         {/* Hero editorial — el encabezado que deja respirar. */}
         <header className="mb-3 flex items-end justify-between">

@@ -40,7 +40,6 @@
   --accent: #1f4291;      /* azul tinta (más profundo y apagado que el "web blue") */
   --accent-soft: #dde2ee; /* tinte de selección apagado */
   --accent-ink: #f6f1e6;  /* papel sobre tinta azul */
-  --sombra: none;         /* estilo plano: sin sombras difusas */
 
   --fuente-cuerpo: "Inter Variable", "Segoe UI", system-ui, sans-serif;
   --fuente-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
@@ -68,7 +67,6 @@
   --accent: #6e8fe0;
   --accent-soft: #1e2a45;
   --accent-ink: #10131a;
-  --sombra: none;
 }
 
 body {
@@ -114,11 +112,6 @@ body {
 
 .tnum {
   font-variant-numeric: tabular-nums;
-}
-
-/* Plano: la jerarquía la da el trazo, no la sombra. */
-.elevada {
-  box-shadow: none;
 }
 
 /* ---------------- Animaciones ---------------- */
@@ -170,13 +163,7 @@ body {
 .entrada-cascada > *:nth-child(7) { animation-delay: 180ms; }
 .entrada-cascada > *:nth-child(n + 8) { animation-delay: 210ms; }
 
-/* El ambiente: en un sistema plano no hay glow difuso. El bloque queda
-   (lo monta App) para no tocar la estructura, pero sin efecto. */
-.ambiente-vivo {
-  display: none;
-}
-
-/* Píldora del conmutador: cobalto suave, un solo objeto que viaja. */
+/* Píldora del conmutador: azul suave, un solo objeto que viaja. */
 .pestana-pill {
   position: absolute;
   top: 4px;

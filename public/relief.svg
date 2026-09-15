@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Marca de Relief: la "r." del wordmark, en la paleta editorial
+       (papel crema, tinta, punto azul). Sirve de favicon y de base
+       para los íconos de la app. -->
+  <rect width="64" height="64" rx="14" fill="#f6f1e6" />
+  <text
+    x="29"
+    y="49"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="46"
+    font-weight="700"
+    fill="#1a1a1a"
+    text-anchor="middle"
+  >r</text>
+  <circle cx="47" cy="44" r="5.5" fill="#1f4291" />
+</svg>
