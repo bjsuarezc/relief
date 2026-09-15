@@ -634,9 +634,37 @@ estado y la historia antes de continuar.
   antes de retornar** (el borrow no puede sobrevivir a la función).
 - Commit: `09c05d2`.
 
+### Sesión 13 — revisión de diseño con skills (design-review + better-colors)
+
+- Se usó la skill `design-review` sobre la UI actual (evidencia: capturas de
+  `dev-mock.html` + medición real de contraste, no impresiones).
+- **Nota de privacidad**: se omitió el ping anónimo de telemetría que trae la
+  skill (envía datos a un servicio externo; va contra el criterio de
+  privacidad del propietario y no aporta a la revisión).
+- Hallazgos y correcciones:
+  1. 🔴 **`--ink-faint` fallaba WCAG AA** (3.03–3.37:1) y se usa en texto
+     real: fecha del encabezado, encabezados de día en Semana/Mes,
+     "borrada…", placeholder y "Prioridad:". Fix: `#8a8275` → **`#6a6353`**
+     (5.29:1 sobre papel, 4.76:1 sobre tarjeta); en oscuro `#6f6a5e` →
+     **`#8f8877`** (4.68:1).
+  2. 🟠 **El borde del campo de captura no cumplía 3:1** para límites de
+     control (1.50:1). Fix: token nuevo `--line-input` (`#8a8275` claro /
+     `#6f6a5e` oscuro) → 3.37:1 / 3.06:1. Los bordes de tarjeta quedan
+     sutiles a propósito (decorativos, no delimitan controles).
+  3. 🟡 **Etiquetas de 10px en mayúsculas espaciadas** eran ilegibles.
+     Fix: 11px con tracking 0.14em.
+  4. 🟡 **Áreas táctiles de 32px** (h-8) — insuficientes para la v2 móvil.
+     Fix: `@media (pointer: coarse) { min-height/width: 44px }` (crece el
+     área de toque sin cambiar el layout de escritorio).
+- Verificación: script de contraste propio antes/después (todos los pares
+  ≥4.5 en texto, ≥3:1 en límites de control) + captura confirmando que la
+  estética editorial se mantiene.
+- Commit: `7364dcd`.
+
 ### Estado / siguiente paso
 
 - ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.
+- ✅ Revisión de diseño aplicada: contraste AA y límites de control 3:1.
 - ⏭️ Pendientes para "lista para publicar": instalador
   (`npm run tauri build` → .exe/.msi), aceleradores de teclado
   (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub, ícono/branding.
