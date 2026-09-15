@@ -913,6 +913,24 @@ estado y la historia antes de continuar.
 - Estado: **Fase 2 pendiente — el propietario compara en vivo** y elige.
   Fase 3: productionizar la ganadora y borrar el resto.
 
+### Sesión 21 (cont.) — decisión v1 + productionización
+
+- El propietario eligió **v1** y pidió pulirla (la de 0.3s era casi
+  imperceptible).
+- Productionización (`5c44f18`):
+  1. Duración 0.3s → **0.42s** (210ms por fase): se lee la coreografía
+     sin volverse lenta.
+  2. Fuera v2, spring-baseline, `?variante=`, `VARIANTE_PILDORA` y el CSS
+     `.pestana-pill-ondula`: la ganadora es la única implementación.
+  3. Guard honesto de reduced motion: `useReducedMotion()` + estado del
+     interruptor propio. Si el sistema pide reducir Y la app no fuerza
+     movimiento, la píldora aparece en su lugar sin keyframes (MotionConfig
+     anula transforms, pero el `width` se anima directo y había que
+     cortarlo a mano).
+- Verificado: `npm run build` OK, `tsc --noEmit` limpio, ciclo de layout
+  estable (Δ=0). El movimiento en vivo lo juzga el propietario (HMR ya lo
+  sirve en su ventana).
+
 ### Estado / siguiente paso
 
 - ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.
@@ -929,8 +947,8 @@ estado y la historia antes de continuar.
 - ⏳ **PoC de Motion a revisión del propietario**: si aprueba, extender a
   paneles y transición de vistas; Rive / rough.js / View Transitions
   quedan aplazados con su disparador (ver Sesión 20).
-- ⏳ **Serpiente a revisión**: comparar `?variante=spring|v1|v2` en el
-  navegador y elegir (ver Sesión 21).
+- ✅ **Serpiente elegida y productionizada (v1 a 0.42s)** con guard de
+  reduced motion; v2 y variantes eliminadas.
 - ⏭️ Pendientes para "lista para publicar": instalador
   (`npm run tauri build` → .exe/.msi), aceleradores de teclado
   (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub.
