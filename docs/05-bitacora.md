@@ -710,12 +710,42 @@ estado y la historia antes de continuar.
 - Verificado con capturas propias en claro y oscuro.
 - Commit: `b5bc4d9`.
 
+### Sesión 16 — pasada editorial profunda (tipografía y composición)
+
+- Crítica del propietario: la pasada anterior "solo cambió la forma de las
+  tareas, nada más". Correcto: el resto seguía con lenguaje de kit de UI.
+  Esta vez se cambiaron **tipografía y composición**, no solo formas:
+  1. **El contenido va en serif**: los títulos de tarea (y el texto de la
+     captura) usan Fraunces con su **eje óptico en tamaño de lectura**
+     (`opsz 20`) — la lista se lee como un documento escrito, no como filas
+     de app. La interfaz (botones, etiquetas, fechas) sigue en Inter: dos
+     voces, cada una con su trabajo.
+  2. **La captura es un RENGLÓN, no una caja**: línea de tinta abajo, texto
+     escrito encima, y el botón de crear es un **punto azul** que repite el
+     punto del wordmark. Sin caja, sin fondo, sin radio.
+  3. **Acciones de tinta**: los chips ("+ Fecha", "Prioridad") dejaron de ser
+     píldoras con borde → texto subrayado, como anotaciones al pie.
+  4. **Pestañas de texto subrayado**: se fue el "segmented control" con
+     píldora; el subrayado del activo es un **trazo a mano que viaja**
+     (misma firma que la regla del wordmark). Se conserva la animación.
+  5. **Masthead compuesto**: wordmark a 52px con su regla, fecha como
+     anotación alineada a la base, y línea de tinta separando cabecera del
+     cuerpo (composición de diario, no barra de app).
+  6. **Ajustes al pie**: tema y movimiento bajaron al pie del documento:
+     son ajustes del documento, no del día.
+- Áreas de toque: la regla de 44px en punteros gruesos excluye las acciones
+  de tinta (crecen en padding vertical sin mover el subrayado).
+- Verificado con capturas propias en claro y oscuro.
+- Commit: `eec19c2`.
+
 ### Estado / siguiente paso
 
 - ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.
 - ✅ Revisión de diseño aplicada: contraste AA y límites de control 3:1.
 - ✅ Código muerto fuera, assets limpios e **íconos propios** (escritorio + móvil).
-- ✅ Pasada orgánica: renglones, grano, trazos a mano (adiós feel de IA).
+- ✅ Pasada orgánica (renglones, grano, trazos a mano) y **editorial profunda**
+  (serif en el contenido, captura-renglón, pestañas y acciones de tinta,
+  masthead compuesto, ajustes al pie).
 - ⏭️ Pendientes para "lista para publicar": instalador
   (`npm run tauri build` → .exe/.msi), aceleradores de teclado
   (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub.
