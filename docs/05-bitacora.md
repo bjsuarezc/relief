@@ -765,6 +765,30 @@ estado y la historia antes de continuar.
      *no borrar skills por solapamiento de descripción sin leer el contenido*.
 - Commit: `5ca6987`.
 
+### Sesión 18 — minimalismo y navegación horizontal
+
+- Pedido del propietario: app "mucho más minimalista y sencilla", animaciones
+  **horizontales** al cambiar de vista, y fuera el subrayado de ancho completo
+  y el de la palabra "relief".
+- Cambios:
+  1. **Fuera las reglas de ancho completo**: la línea bajo el masthead, la del
+     pie y la que cerraba la lista por arriba. Quedan solo las líneas *entre*
+     renglones (que son lo que hace legible la lista).
+  2. **Fuera la regla del wordmark** (`::after`): queda solo el wordmark con
+     su punto azul como única firma.
+  3. **Animación horizontal al cambiar de vista**: la vista nueva entra
+     desplazándose desde el lado hacia el que viajas — derecha al avanzar
+     (Hoy → Semana → Mes), izquierda al volver. Implementado con
+     `ORDEN_VISTAS` (posición en la línea de tiempo) + `cambiarVista()` como
+     único punto de cambio, y dos keyframes (`entrar-derecha` /
+     `entrar-izquierda`). Reemplaza al fade vertical anterior.
+  4. **Botones con borde → acciones de tinta**: "Mover a hoy", "Restaurar",
+     "Vaciar papelera" y el "No" de la confirmación perdieron borde y fondo;
+     ahora son texto subrayado (el "Vaciar" se pone rojo al hover).
+- Verificado: build OK, clases de animación presentes en el bundle, capturas
+  en claro/oscuro sin regresiones.
+- Commit: `8ab19dd`.
+
 ### Estado / siguiente paso
 
 - ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.
@@ -774,6 +798,8 @@ estado y la historia antes de continuar.
   (serif en el contenido, captura-renglón, pestañas y acciones de tinta,
   masthead compuesto, ajustes al pie).
 - ✅ Catálogo de skills podado (40) con **mapa de routing** en AGENTS.md.
+- ✅ Minimalismo (sin reglas de ancho completo) y navegación **horizontal**
+  entre vistas según la dirección.
 - ⏭️ Pendientes para "lista para publicar": instalador
   (`npm run tauri build` → .exe/.msi), aceleradores de teclado
   (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub.
