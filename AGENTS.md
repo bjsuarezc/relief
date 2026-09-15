@@ -14,7 +14,7 @@ El repo queda solo con código del producto.
 - Auditoría de UI: `improve-ui`, `improve`, `improve-react`, `web-design-guidelines`
 - Motion: `animate`, `improve-animations`, `micro-interaction`, `transitions-dev`, `transitions-polish`, `fixing-motion-performance`
 - Tipografía / a11y: `better-typography`, `better-accessibility`
-- Meta: `skill-creator`, `customize-opencode`, `brand-guidelines`, `webapp-testing`
+- Meta: `skill-creator`, `customize-opencode`, `brand-guidelines`, `webapp-testing`, `find-skills`
 
 Skills **específicas de Relief** (si se crean) sí viven en `.opencode/skills/`
 de este repo. Tras agregar/quitar skills, opencode requiere reinicio.
