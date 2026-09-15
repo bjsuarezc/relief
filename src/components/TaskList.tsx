@@ -49,11 +49,11 @@ const ETIQUETA_PRIORIDAD: Record<Priority, string> = {
   low: "Baja",
 };
 
-// Color de prioridad (paleta editorial: tinta + cobalto). La prioridad es
-// METADATO: solo "Alta" se marca (en cobalto, el color de la atención);
-// Media/Baja quedan en tinta diluida.
+// Color de prioridad (paleta editorial: tinta + azul tinta). La prioridad
+// es METADATO: "Alta" se marca en TINTA PLENA (no en el azul, que queda
+// reservado para lo interactivo/seleccionado); Media/Baja en tinta diluida.
 const COLOR_PRIORIDAD: Record<Priority, string> = {
-  high: "font-semibold text-accent",
+  high: "font-semibold text-ink",
   medium: "text-ink-soft",
   low: "text-ink-soft",
 };

@@ -28,16 +28,16 @@
 
 /* ---------- Papel (claro) — la identidad principal ---------- */
 :root {
-  --canvas: #f7f4ee;      /* crema cálido mate */
-  --surface: #efe9df;     /* tarjeta crema con contraste sutil */
-  --line: #d3c9b8;        /* trazo fino de tinta diluida */
+  --canvas: #f6f1e6;      /* papel cálido (más amarillento, tipo referencia) */
+  --surface: #ede5d6;     /* tarjeta crema con contraste real */
+  --line: #d1c6b2;        /* trazo fino de tinta diluida */
   --line-strong: #1a1a1a; /* tinta plena */
   --ink: #1a1a1a;         /* negro tinta mate */
   --ink-soft: #4c463b;
   --ink-faint: #8a8275;
-  --accent: #1b49b6;      /* azul cobalto vibrante */
-  --accent-soft: #dde5f7;
-  --accent-ink: #f7f4ee;  /* crema sobre cobalto */
+  --accent: #1f4291;      /* azul tinta (más profundo y apagado que el "web blue") */
+  --accent-soft: #dde2ee; /* tinte de selección apagado */
+  --accent-ink: #f6f1e6;  /* papel sobre tinta azul */
   --sombra: none;         /* estilo plano: sin sombras difusas */
 
   --fuente-cuerpo: "Inter Variable", "Segoe UI", system-ui, sans-serif;
@@ -62,7 +62,7 @@
   --ink: #f2ede4;
   --ink-soft: #a9a393;
   --ink-faint: #6f6a5e;
-  --accent: #7fa3f5;
+  --accent: #6e8fe0;
   --accent-soft: #1e2a45;
   --accent-ink: #10131a;
   --sombra: none;
