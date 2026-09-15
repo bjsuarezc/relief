@@ -738,6 +738,33 @@ estado y la historia antes de continuar.
 - Verificado con capturas propias en claro y oscuro.
 - Commit: `eec19c2`.
 
+### Sesión 17 — poda de skills y mapa de routing
+
+- El propietario preguntó qué skills eran redundantes. Primera recomendación
+  (juzgando por descripciones): borrar 5. **El propietario preguntó el porqué
+  y la evidencia lo desmintió**:
+  - `taste-skill` pesa **85 KB** (la más grande del catálogo) y cubre brief
+    inference, dials, map al design system y guardrails — `impeccable`
+    (11.6 KB) es un *router* cuyas `reference/*.md` **no se descargaron**.
+    Sugerir borrarla fue un error.
+  - `improve` (repo completo: seguridad, perf, tests, DX) **no** duplica a
+    `improve-ui` (solo superficie) ni a `improve-react` (solo React): es el
+    único que audita Rust, SQLite y seguridad.
+  - En las auditorías web el criterio estaba invertido: la que sobra es la
+    chica (`web-design-guidelines`, 1.2 KB), no la grande
+    (`web-quality-audit`, 10.2 KB).
+- Lección de método registrada: **el costo de tener skills no es contexto**
+  (se cargan on demand), es la **ambigüedad de routing**. La solución
+  correcta no es podar capacidades sino documentar cuándo usar cada una.
+- Acciones:
+  1. **Eliminada solo `brand-guidelines`**: su contenido son las guías de
+     marca de Anthropic (colores y tipos de ellos) — inaplicable a Relief.
+     Catálogo: 41 → 40.
+  2. **Mapa de routing en AGENTS.md**: tabla "cuándo usar qué" por intención
+     (diseño, auditoría, motion, testing, stack, v2) + nota de mantenimiento:
+     *no borrar skills por solapamiento de descripción sin leer el contenido*.
+- Commit: `5ca6987`.
+
 ### Estado / siguiente paso
 
 - ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.
@@ -746,6 +773,7 @@ estado y la historia antes de continuar.
 - ✅ Pasada orgánica (renglones, grano, trazos a mano) y **editorial profunda**
   (serif en el contenido, captura-renglón, pestañas y acciones de tinta,
   masthead compuesto, ajustes al pie).
+- ✅ Catálogo de skills podado (40) con **mapa de routing** en AGENTS.md.
 - ⏭️ Pendientes para "lista para publicar": instalador
   (`npm run tauri build` → .exe/.msi), aceleradores de teclado
   (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub.
