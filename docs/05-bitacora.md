@@ -806,7 +806,27 @@ estado y la historia antes de continuar.
   reservado siempre, haya barra o no.
 - Verificación DESPUÉS: 1 tarea → `X=149`; 25 tareas → `X=149` → el
   contenido ya no se mueve ✓.
-- Commit: `6b0a3ff`.
+- **Segunda ronda** (el propietario reportó que "el tamaño" seguía
+  cambiando al presionar Hoy/Semana/Mes, y que no había razón para ver
+  días vacíos):
+  - Nuevo diagnóstico en el harness (`?ciclo=1`): presiona
+    Hoy → Semana → Mes → Hoy muestreando cada 16ms (posición del
+    wordmark, overflow horizontal, scrollTop). Resultado a 1000×700 y
+    1000×1100: el layout horizontal YA estaba estable (x fijo, sin
+    overflow). Lección: la verificación anterior se hizo a 1100 de alto;
+    la ventana real es 700 — siempre hay scrollbar, el fix del canal
+    aplica siempre.
+  - **Causa real del "cambio de tamaño"**: Semana renderizaba 7
+    encabezados de día aunque estuvieran vacíos → la vista crecía/decrecía
+    drasticamente al navegar, además de mostrar días sin información.
+  - **Fix**: `VistaSemana` ahora filtra a los días con tareas (mismo
+    criterio que Mes desde su origen) y muestra "No hay nada esta
+    semana" si la semana está vacía. `GrupoDia` no renderiza grupos
+    vacíos (guard defensivo). Con esto el tamaño de la vista depende de
+    las tareas reales, no del calendario.
+  - Verificado: Semana con tareas en 2 días → solo 2 encabezados;
+    semana y mes vacíos → mensaje; ciclo completo sin movimiento.
+- Commits: `6b0a3ff` (canal de scroll) + el de días vacíos.
 
 ### Estado / siguiente paso
 
@@ -819,7 +839,8 @@ estado y la historia antes de continuar.
 - ✅ Catálogo de skills podado (40) con **mapa de routing** en AGENTS.md.
 - ✅ Minimalismo (sin reglas de ancho completo) y navegación **horizontal**
   entre vistas según la dirección.
-- ✅ Layout estable entre vistas: canal de scroll reservado (se corría 7px).
+- ✅ Layout estable entre vistas: canal de scroll reservado (se corría 7px)
+  y Semana sin días vacíos (el tamaño de la vista ya no salta).
 - ⏭️ Pendientes para "lista para publicar": instalador
   (`npm run tauri build` → .exe/.msi), aceleradores de teclado
   (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub.
