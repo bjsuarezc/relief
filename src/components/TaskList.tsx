@@ -190,7 +190,7 @@ function TareaLinea({
         <button
           type="button"
           onClick={() => setShowPicker(!showPicker)}
-          className={`mano shrink-0 text-ink-soft transition-[opacity,color] duration-[140ms] hover:text-ink ${
+          className={`etiqueta shrink-0 text-ink-soft transition-[opacity,color] duration-[140ms] hover:text-ink ${
             fechaRedundante ? "opacity-0 group-hover:opacity-100" : ""
           }`}
         >
@@ -363,53 +363,66 @@ function VistaHoy({
 
   if (atrasadas.length + deHoy.length + sinFecha.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 py-10">
-        {/* Ilustración de línea a una sola tinta (estilo grabado a mano):
-            una hoja con su casilla marcada. Sin relleno, sin sombra. */}
+      <div className="flex flex-col items-center gap-4 py-12">
+        {/* La mascota: un gato con su taza, dibujado a mano en tinta
+            cobalto (una sola tinta, trazo suelto, sin relleno) — el
+            "no hay nada que hacer, respirá" del sistema editorial. */}
         <svg
-          width="124"
-          height="92"
-          viewBox="0 0 124 92"
+          width="200"
+          height="140"
+          viewBox="0 0 200 140"
           fill="none"
           aria-hidden
-          className="text-ink-faint"
+          className="text-accent"
         >
+          {/* cabeza */}
           <path
-            d="M36 14 C 56 11.5, 86 12.5, 94 15 C 95.5 38, 94.5 66, 92.5 79 C 70 81.5, 48 82, 34 81 C 32.5 60, 33.5 33, 36 14 Z"
+            d="M56 46 C56 33, 63 26, 72 26 C81 26, 88 33, 88 46 C88 56, 81 62, 72 62 C63 62, 56 56, 56 46 Z"
             stroke="currentColor"
-            strokeWidth="1.6"
+            strokeWidth="2.4"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
+          {/* orejas */}
+          <path d="M58 34 L52 20 L66 28" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M86 34 L92 20 L78 28" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          {/* ojos cerrados (contento) */}
+          <path d="M62 45 C64 48, 67 48, 69 45" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M75 45 C77 48, 80 48, 82 45" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          {/* hocico y bigotes */}
+          <path d="M69 52 C71 54, 73 54, 75 52" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M54 52 L44 50" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M54 56 L44 57" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          {/* cuerpo sentado */}
           <path
-            d="M47 43 C 54 42, 60 42, 65 43 C 66 50, 66 56, 65 61 C 59 62, 52 62, 46 61 C 45 55, 45 48, 47 43 Z"
+            d="M62 60 C44 66, 32 84, 34 100 C36 114, 54 122, 80 122 C104 122, 124 114, 126 100 C128 84, 116 68, 98 62"
             stroke="currentColor"
-            strokeWidth="1.4"
+            strokeWidth="2.4"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
+          {/* cola enroscada */}
           <path
-            d="M49 52 L 54 58 L 63 46"
+            d="M126 108 C146 104, 160 112, 156 124 C153 133, 140 133, 136 126"
             stroke="currentColor"
-            strokeWidth="1.6"
+            strokeWidth="2.2"
             strokeLinecap="round"
-            strokeLinejoin="round"
           />
-          <path d="M47 70 L 82 68" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          <path d="M47 75 L 70 74" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          <path d="M103 30 L 114 62" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-          <path
-            d="M114 62 L 110 71 L 101 68 Z"
-            stroke="currentColor"
-            strokeWidth="1.3"
-            strokeLinejoin="round"
-          />
+          {/* patas */}
+          <path d="M52 118 C56 125, 64 125, 68 120" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M92 120 C96 125, 104 125, 108 120" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          {/* la taza (con una línea de líquido) + vapor */}
+          <path d="M110 88 L136 88 L134 108 L112 108 Z" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M136 92 C144 92, 144 104, 135 104" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M112 95 L134 95" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M118 80 C120 74, 116 72, 118 66" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M126 80 C128 74, 124 72, 126 66" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          {/* suelo */}
+          <path d="M28 126 C70 130, 130 130, 164 124" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
-        <p className="mano text-xl text-ink-soft">
-          Nada por acá — captura una tarea arriba
-        </p>
-        <p className="text-xs text-ink-faint">
-          Escribe y presiona Enter: se guarda al instante.
+        <p className="etiqueta text-ink-faint">nada por acá</p>
+        <p className="text-sm text-ink-soft">
+          Captura una tarea arriba y empieza a tachar.
         </p>
       </div>
     );
@@ -613,39 +626,43 @@ function VistaPapelera({
 
   if (tasks.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 py-10">
-        {/* Papelera dibujada a mano, una sola tinta. */}
+      <div className="flex flex-col items-center gap-4 py-12">
+        {/* La papelera dibujada a mano, en cobalto (misma familia que la
+            mascota): una sola tinta, trazo suelto. */}
         <svg
-          width="96"
-          height="84"
+          width="120"
+          height="104"
           viewBox="0 0 96 84"
           fill="none"
           aria-hidden
-          className="text-ink-faint"
+          className="text-accent"
         >
           <path
             d="M24 28 C 40 25.5, 60 25.5, 74 28"
             stroke="currentColor"
-            strokeWidth="1.6"
+            strokeWidth="2.2"
             strokeLinecap="round"
           />
           <path
             d="M36 26 C 36.5 22.5, 40 20.5, 48 20.5 C 56 20.5, 59.5 22.5, 60 26"
             stroke="currentColor"
-            strokeWidth="1.4"
+            strokeWidth="2"
             strokeLinecap="round"
           />
           <path
             d="M30 30 C 31 42, 33 60, 34.5 68 C 42 70, 58 70, 65.5 68 C 67 60, 69 42, 70 30"
             stroke="currentColor"
-            strokeWidth="1.6"
+            strokeWidth="2.4"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <path d="M43 40 L 43.5 60" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          <path d="M52 40 L 51.5 60" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          <path d="M43 40 L 43.5 60" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M52 40 L 51.5 60" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
-        <p className="mano text-xl text-ink-soft">La papelera está vacía</p>
+        <p className="etiqueta text-ink-faint">la papelera está vacía</p>
+        <p className="text-sm text-ink-soft">
+          Lo que borres queda acá hasta que lo elimines para siempre.
+        </p>
       </div>
     );
   }
@@ -660,7 +677,7 @@ function VistaPapelera({
           >
             <span className="flex-1 text-ink-soft">{task.title}</span>
             {/* Cuándo entró a la papelera (el mismo formato humano). */}
-            <span className="mano shrink-0 text-ink-faint">
+            <span className="etiqueta shrink-0 text-ink-faint">
               borrada {formatoFecha(task.deletedAt)}
             </span>
             <button
@@ -850,7 +867,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="mano text-ink-soft">
+            <span className="etiqueta text-ink-soft">
               {vista === "semana"
                 ? `semana del ${format(startOfWeek(ancla, { weekStartsOn: 1 }), "d", { locale: es })} al ${format(addDays(startOfWeek(ancla, { weekStartsOn: 1 }), 6), "d 'de' MMM", { locale: es })}`
                 : format(ancla, "MMMM yyyy", { locale: es })}

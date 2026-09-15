@@ -1,6 +1,5 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/fraunces";
-@import "@fontsource-variable/caveat";
 @import "tailwindcss";
 
 /* ============================================================
@@ -22,10 +21,9 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
-  /* Familias tipográficas como utilidades (font-display / font-mano) */
+  /* Familias tipográficas como utilidades (font-display) */
   --font-sans: var(--fuente-cuerpo);
   --font-display: var(--fuente-display);
-  --font-mano: var(--fuente-mano);
 }
 
 /* ---------- Papel (claro) — la identidad principal ---------- */
@@ -44,7 +42,6 @@
 
   --fuente-cuerpo: "Inter Variable", "Segoe UI", system-ui, sans-serif;
   --fuente-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
-  --fuente-mano: "Caveat Variable", "Comic Sans MS", cursive;
 
   /* Movimiento: duraciones y curvas como tokens. */
   --dur-fast: 140ms;
@@ -80,20 +77,34 @@ body {
 
 /* ---------------- Tipografía ---------------- */
 
-/* El wordmark: display de peso pesado, con la firma en cobalto. */
+/* El wordmark: display ULTRA-gordo (el "Miette" de la referencia), con la
+   firma en cobalto y una regla corta debajo — detalle editorial de bistro. */
 .wordmark {
   font-family: var(--fuente-display);
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  font-variation-settings: "SOFT" 0, "WONK" 1;
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  font-variation-settings: "SOFT" 0, "WONK" 1, "opsz" 144;
+  display: inline-block;
+  position: relative;
+}
+.wordmark::after {
+  content: "";
+  display: block;
+  width: 0.62em;
+  height: 3px;
+  margin-top: 6px;
+  background: currentColor;
 }
 
-/* Etiquetas secundarias: manuscrito fino (fechas, "borrada…"). */
-.mano {
-  font-family: var(--fuente-mano);
-  font-size: 1.05rem;
+/* Etiquetas secundarias: MAYÚSCULAS espaciadas (la firma editorial de las
+   referencias: "CAFÉ ET TARTES", "COUNTRY CLUB"). Reemplaza la manuscrita. */
+.etiqueta {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 10px;
+  font-weight: 500;
   line-height: 1;
 }
 

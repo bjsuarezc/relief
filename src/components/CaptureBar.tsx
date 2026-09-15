@@ -213,7 +213,7 @@ export function WeekPicker({
           <ChevronLeft size={16} />
         </button>
         {/* El período en manuscrita: detalle editorial secundario. */}
-        <span className="mano text-ink-soft">
+        <span className="etiqueta text-ink-soft">
           semana del {format(dias[0], "d", { locale: es })} al{" "}
           {format(dias[6], "d 'de' MMM", { locale: es })}
         </span>

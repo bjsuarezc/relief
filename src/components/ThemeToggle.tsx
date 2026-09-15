@@ -18,11 +18,8 @@ type Tema = "light" | "dark";
 
 export function ThemeToggle() {
   const [tema, setTema] = useState<Tema>(() => {
-    const guardado = localStorage.getItem("relief-tema");
-    if (guardado === "light" || guardado === "dark") return guardado;
-    return window.matchMedia("(prefers-color-scheme: light)").matches
-      ? "light"
-      : "dark";
+    // Claro por defecto (la identidad "papel"); oscuro solo si se eligió.
+    return localStorage.getItem("relief-tema") === "dark" ? "dark" : "light";
   });
 
   useEffect(() => {
