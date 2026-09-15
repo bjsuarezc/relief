@@ -36,6 +36,15 @@ import type { Priority, Task, UpdateTaskInput } from "../lib/types";
 
 type Vista = "hoy" | "semana" | "mes" | "papelera";
 
+// Orden de las vistas en la "línea de tiempo" de la app: sirve para saber
+// hacia dónde viaja el usuario y, con eso, de qué lado entra la animación.
+const ORDEN_VISTAS: Record<Vista, number> = {
+  hoy: 0,
+  semana: 1,
+  mes: 2,
+  papelera: 3,
+};
+
 // Helper de PRESENTACIÓN: convierte la fecha ISO de la BD en texto humano.
 function formatoFecha(iso: string | null): string {
   if (!iso) return "sin fecha";
@@ -212,7 +221,7 @@ function TareaLinea({
           <button
             type="button"
             onClick={() => onReschedule(task.id, format(new Date(), "yyyy-MM-dd"))}
-            className="shrink-0 rounded-lg border border-line-strong px-2 py-1 text-xs text-ink hover:bg-ink/5 active:scale-[0.96]"
+            className="accion-tinta shrink-0 border-b border-line pb-0.5 text-xs text-ink-soft transition-colors duration-[140ms] hover:border-line-strong hover:text-ink"
           >
             Mover a hoy
           </button>
@@ -684,7 +693,7 @@ function VistaPapelera({
             <button
               type="button"
               onClick={() => onRestaurar(task.id)}
-              className="shrink-0 rounded-lg border border-line-strong px-2 py-1 text-xs text-ink hover:bg-ink/5 active:scale-[0.96]"
+              className="accion-tinta shrink-0 border-b border-line pb-0.5 text-xs text-ink-soft transition-colors duration-[140ms] hover:border-line-strong hover:text-ink"
             >
               <Undo2 size={13} className="inline" /> Restaurar
             </button>
@@ -721,7 +730,7 @@ function VistaPapelera({
           <button
             type="button"
             onClick={() => setConfirmarVaciar(false)}
-            className="rounded-lg border border-line px-3 py-1 text-sm text-ink-soft hover:bg-ink/5 active:scale-[0.96]"
+            className="accion-tinta border-b border-line pb-0.5 text-sm text-ink-soft transition-colors duration-[140ms] hover:border-line-strong hover:text-ink"
           >
             No
           </button>
@@ -730,7 +739,7 @@ function VistaPapelera({
         <button
           type="button"
           onClick={() => setConfirmarVaciar(true)}
-          className="rounded-lg border border-line px-3 py-1.5 text-sm text-ink-soft hover:bg-ink/5 hover:text-ink active:scale-[0.96]"
+          className="accion-tinta border-b border-line pb-0.5 text-sm text-ink-soft transition-colors duration-[140ms] hover:border-red-800 hover:text-red-600 dark:hover:text-red-400"
         >
           Vaciar papelera ({tasks.length})
         </button>
@@ -748,6 +757,17 @@ function VistaPapelera({
 // - SOLO se muestra si hay algo en la papelera (cero ruido si está vacía).
 export function TaskList({ tasks }: { tasks: Task[] }) {
   const [vista, setVista] = useState<Vista>("hoy");
+  // Dirección del último cambio de vista: define de qué lado entra la nueva.
+  const [direccion, setDireccion] = useState<"derecha" | "izquierda">("derecha");
+
+  // cambiarVista: único punto que cambia de pestaña. Compara posiciones en la
+  // línea de tiempo para decidir la dirección (avanzar = entra por la derecha;
+  // volver = por la izquierda).
+  const cambiarVista = (nueva: Vista) => {
+    if (nueva === vista) return;
+    setDireccion(ORDEN_VISTAS[nueva] > ORDEN_VISTAS[vista] ? "derecha" : "izquierda");
+    setVista(nueva);
+  };
   const [ancla, setAncla] = useState<Date>(new Date());
   // Las acciones del store entran por acá y bajan como props hasta
   // cada fila. Así las vistas siguen siendo "puras" (solo reciben datos)
@@ -833,7 +853,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
               key={p.id}
               type="button"
               data-activa={vista === p.id}
-              onClick={() => setVista(p.id)}
+              onClick={() => cambiarVista(p.id)}
               className={`relative z-10 text-sm transition-colors duration-[140ms] ${
                 vista === p.id
                   ? "font-semibold text-ink"
@@ -850,7 +870,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
             <button
               type="button"
               data-activa={vista === "papelera"}
-              onClick={() => setVista("papelera")}
+              onClick={() => cambiarVista("papelera")}
               className={`relative z-10 text-sm transition-colors duration-[140ms] ${
                 vista === "papelera"
                   ? "font-semibold text-ink"
@@ -895,7 +915,10 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
           la vista → navegar semanas/meses actualiza en el instante (sin
           re-animar, que era ruido en una acción frecuente); cambiar de
           pestaña sí re-monta y dispara la animación. */}
-      <div key={vista} className="vista-animada mt-6">
+      <div
+        key={vista}
+        className={`${direccion === "derecha" ? "vista-entra-derecha" : "vista-entra-izquierda"} mt-6`}
+      >
         {vista === "hoy" && (
           <VistaHoy
             tasks={activas}

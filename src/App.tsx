@@ -24,9 +24,9 @@ function App() {
     <main className="grano relative flex min-h-screen flex-col items-center bg-canvas px-6 pb-16 pt-16 text-ink">
       <div className="relative z-10 flex w-full max-w-2xl flex-col">
         {/* Masthead: el wordmark manda y la fecha es una anotación alineada
-            a su base — composición de diario, no barra de app. Los ajustes
-            (tema, movimiento) viven al pie: son del documento, no del día. */}
-        <header className="mb-12 flex items-baseline justify-between gap-6 border-b border-line pb-2">
+            a su base. SIN línea de ancho completo (pedido del propietario:
+            menos caja). Los ajustes viven al pie. */}
+        <header className="mb-12 flex items-baseline justify-between gap-6">
           <h1 className="wordmark text-ink">
             relief<span className="text-accent">.</span>
           </h1>
@@ -42,7 +42,7 @@ function App() {
 
         {!loading && !error && <TaskList tasks={tasks} />}
 
-        <footer className="mt-20 flex items-center justify-end gap-1 border-t border-line pt-3">
+        <footer className="mt-20 flex items-center justify-end gap-1">
           <ToggleMovimiento />
           <ThemeToggle />
         </footer>

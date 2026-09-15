@@ -79,7 +79,7 @@ body {
 /* ---------------- Tipografía ---------------- */
 
 /* El wordmark: display ULTRA-gordo (el "Miette" de la referencia), con la
-   firma en azul y una regla corta a mano debajo. */
+   firma en azul. Sin regla debajo: la pediste fuera — menos es más. */
 .wordmark {
   font-family: var(--fuente-display);
   font-size: 52px;
@@ -88,21 +88,6 @@ body {
   line-height: 0.85;
   font-variation-settings: "SOFT" 0, "WONK" 1, "opsz" 144;
   display: inline-block;
-  position: relative;
-}
-.wordmark::after {
-  content: "";
-  display: block;
-  width: 118px;
-  height: 5px;
-  margin-top: 5px;
-  /* Regla a mano alzada (path SVG irregular) en vez de una barra recta:
-     el trazo vibra apenas, como dibujado con marcador. */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='5'%3E%3Cpath d='M1 3 C 22 1.2, 44 4.2, 66 2.4 C 86 0.8, 104 3.6, 117 2.2' stroke='%231a1a1a' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-}
-.dark .wordmark::after {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='5'%3E%3Cpath d='M1 3 C 22 1.2, 44 4.2, 66 2.4 C 86 0.8, 104 3.6, 117 2.2' stroke='%23f2ede4' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
 /* Etiquetas secundarias: MAYÚSCULAS espaciadas (la firma editorial de las
@@ -190,6 +175,25 @@ body {
 
 .vista-animada {
   animation: aparecer var(--dur-slow) var(--ease-out-soft);
+}
+
+/* Cambio de vista HORIZONTAL (pedido del propietario): la vista nueva entra
+   desplazándose desde el lado hacia el que viajas — derecha si avanzas
+   (Hoy → Semana → Mes), izquierda si vuelves. Es la dirección del gesto
+   la que comunica "me moví dentro de la línea de tiempo". */
+@keyframes entrar-derecha {
+  from { opacity: 0; transform: translateX(26px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes entrar-izquierda {
+  from { opacity: 0; transform: translateX(-26px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.vista-entra-derecha {
+  animation: entrar-derecha var(--dur-base) var(--ease-out-soft);
+}
+.vista-entra-izquierda {
+  animation: entrar-izquierda var(--dur-base) var(--ease-out-soft);
 }
 
 .panel-animada {
@@ -289,11 +293,8 @@ body {
     background-color var(--dur-fast) var(--ease-out-ui),
     border-color var(--dur-fast) var(--ease-out-ui);
 }
-/* El primer renglón abre la lista con su línea: el bloque se lee como una
-   tabla de papel, con principio y fin. */
-.tarea-fila:first-child {
-  border-top: 1px solid var(--line);
-}
+/* El primer renglón NO lleva línea arriba: la lista se abre sin cerrar el
+   bloque (menos caja, más aire — pedido de minimalismo del propietario). */
 .tarea-fila:hover {
   border-bottom-color: var(--line-strong);
   background: color-mix(in oklab, var(--ink) 4%, transparent);
@@ -374,6 +375,8 @@ input.ts-editar:focus-visible {
   }
   html:not(.forzar-movimiento) .entrada-cascada > *,
   html:not(.forzar-movimiento) .vista-animada,
+  html:not(.forzar-movimiento) .vista-entra-derecha,
+  html:not(.forzar-movimiento) .vista-entra-izquierda,
   html:not(.forzar-movimiento) .panel-animada,
   html:not(.forzar-movimiento) .panel-saliendo,
   html:not(.forzar-movimiento) .contador-pulso,
