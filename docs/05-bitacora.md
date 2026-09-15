@@ -607,7 +607,39 @@ estado y la historia antes de continuar.
   (`--virtual-time-budget` para que asienten las animaciones).
 - Regla operativa: **no matar/relanzar `relief.exe`** para verificar.
 
+### Sesión 12 — calidad y primeros tests (proyecto pasa de 0 a 21 tests)
+
+- Punto de partida del análisis: el proyecto tenía **cero tests y cero
+  linting**. Se instalaron skills de testing/calidad (sesión anterior).
+- **Clippy: cero warnings** (ya venía limpio) — verificado con
+  `cargo clippy --all-targets`, incluidos los tests.
+- **Refactor de testabilidad** (patrón enseñable): la lógica de cada caso
+  de uso se extrajo a funciones que reciben `&Connection`
+  (`crear_tarea`, `completar_tarea`, `mover_tarea`, `actualizar_tarea`,
+  `marcar_borrada`, `purgar_tarea`, `vaciar_papelera`, `listar_tareas`).
+  Los `#[tauri::command]` quedaron como **envoltorios finos** (lock + delegar).
+  Es inversión de dependencia: la lógica no depende del framework → testeable.
+  - Bonus: se eliminó la repetición del `query_row` (4 copias) con
+    `leer_tarea`, y el INSERT del log con `registrar_evento`.
+  - `db::crear_esquema` se separó de `init_db` para que los tests levanten
+    una BD **en memoria** con exactamente el mismo esquema que la app.
+- **21 tests** (`cargo test`, todos verdes) que cubren los 8 comandos:
+  validaciones del borde (título vacío/largo, prioridad, fecha imposible),
+  idempotencia (completar/mover/papelera dos veces = un solo evento),
+  eventos correctos por acción (`created`, `completed`, `reopened`,
+  `rescheduled` con {de,a}, `updated` por campo, `trashed`, `restored`),
+  purga sin rastro en el log, vaciado selectivo y listado sin filtros.
+- Error de compilación aprendido: `stmt does not live long enough` — el
+  iterador de `query_map` presta el statement; hay que **recoger en un Vec
+  antes de retornar** (el borrow no puede sobrevivir a la función).
+- Commit: `09c05d2`.
+
 ### Estado / siguiente paso
-- ⏭️ Para "lista para publicar": instalador (`npm run tauri build` → .exe/.msi),
-  aceleradores de teclado (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub,
-  ícono/branding propio de la app.
+
+- ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.
+- ⏭️ Pendientes para "lista para publicar": instalador
+  (`npm run tauri build` → .exe/.msi), aceleradores de teclado
+  (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub, ícono/branding.
+- ⏭️ Calidad pendiente: ESLint/Prettier en el frontend (requiere aprobar
+  dependencias de desarrollo), tests de los componentes React,
+  CI en GitHub Actions (lint + tests + build).
