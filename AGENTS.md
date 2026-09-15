@@ -14,7 +14,13 @@ El repo queda solo con código del producto.
 - Auditoría de UI: `improve-ui`, `improve`, `improve-react`, `web-design-guidelines`
 - Motion: `animate`, `improve-animations`, `micro-interaction`, `transitions-dev`, `transitions-polish`, `fixing-motion-performance`
 - Tipografía / a11y: `better-typography`, `better-accessibility`
+- **Stack (Tauri / Rust / React)**: `tauri-v2`, `tauri-build`, `rust-best-practices`, `vercel-react-best-practices`
+- **Testing**: `javascript-testing-patterns`, `rust-testing`, `browser-testing-with-devtools`
+- **Datos / IA v2 / docs**: `chart-visualization`, `claude-api`, `doc-coauthoring`
 - Meta: `skill-creator`, `customize-opencode`, `brand-guidelines`, `webapp-testing`, `find-skills`
+
+Para descubrir e instalar skills nuevas del ecosistema: `find-skills`
+(consulta el leaderboard de skills.sh y luego `npx skills find <query>`).
 
 Skills **específicas de Relief** (si se crean) sí viven en `.opencode/skills/`
 de este repo. Tras agregar/quitar skills, opencode requiere reinicio.
