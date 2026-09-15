@@ -828,6 +828,60 @@ estado y la historia antes de continuar.
     semana y mes vacíos → mensaje; ciclo completo sin movimiento.
 - Commits: `6b0a3ff` (canal de scroll) + el de días vacíos.
 
+### Sesión 20 — Motion: decisión, PoC y las que no se instalaron
+
+- El propietario preguntó qué tecnologías mejorarían visuales/animaciones.
+  Presenté 4 con trade-offs honestos: **Motion** (resortes, animación de
+  layout, AnimatePresence, interrupción), **View Transitions API** (nativa,
+  0 KB, pero se solapa con Motion), **Rive/Lottie** (requiere dibujar el
+  asset en su editor — inversión de diseño, el runtime solo no hace nada)
+  y **rough.js** (genera trazos a mano; sin sitio de uso hoy sería peso
+  muerto). Aclaración de concepto registrada: la app es de escritorio y
+  móvil, pero su *pincel* es el motor web del sistema (WebView2 /
+  WKWebView / System WebView) — por eso la tecnología web aplica directo.
+- El propietario pidió inicialmente "las 4"; tras la aclaración de que dos
+  no son instalables como paquetes y una quedaría inerte, decidió:
+  **solo Motion + PoC**. Las otras tres quedan documentadas con su
+  disparador (Rive: cuando exista el .riv del gato; rough.js: nuevo
+  elemento dibujado; View Transitions: solo si una superficie lo pide y
+  no choque con Motion).
+- Ajuste honesto del alcance del PoC: "tachar" no reordena la lista (las
+  filas no se mueven al completar), así que el superpower se demuestra
+  donde sí ocurre: **una fila que se va** (a papelera o reubicada de día)
+  sale con fade+slide y las hermanas se deslizan a su lugar.
+- Implementación:
+  1. `motion` instalada (+129 KB raw, ~41 KB gzip en el bundle).
+  2. `lib/movimiento.ts`: el estado del interruptor de animaciones sube a
+     un mini store Zustand compartido (antes era useState local del botón;
+     `MotionConfig` necesita leerlo).
+  3. `<MotionConfig reducedMotion>` en App con paridad de reglas: activo →
+     "never" (equivale a `.forzar-movimiento`), inactivo → "user".
+  4. Píldora de pestañas → `motion.span` con spring (500/40). El ancho se
+     anima directo (no con scale) para no estirar el trazo ondulado del
+     SVG; a 6px de alto el costo es despreciable.
+  5. Filas → `motion.li` con `layout="position"` + `AnimatePresence
+     mode="popLayout"` en las tres listas (Hoy, GrupoDia, Papelera):
+     exit = fade + slide a la izquierda (160ms), enter = fade (solo filas
+     agregadas a un grupo ya montado; la primera carga la salta
+     `initial={false}` para no duplicar la cascada).
+  6. CSS: fuera la `transition` de `.pestana-pill` (dos motores sobre el
+     mismo transform pelearían) y fuera del bloque reduced-motion (lo
+     resuelve MotionConfig, no el `!important` del CSS — que habría
+     clavado la píldora en x=0).
+- Harness: el mock de `invoke` ahora implementa TODOS los comandos con
+  mutación en memoria — la app es completamente funcional en el navegador
+  (crear, tachar, reubicar, papelera) para probar animaciones sin Tauri.
+- **Lección de verificación**: Chrome headless con `--virtual-time-budget`
+  no produce frames → el frameloop de Motion (rAF) no corre → las
+  animaciones quedan congeladas a mitad de camino en los dumps. El
+  headless sirve para verificar ESTRUCTURA (filas renderizadas, píldora
+  posicionada, ciclo sin regresión de layout: Δ=0 en todo) pero no el
+  movimiento mismo — ese lo juzga el propietario en la app viva.
+- Estado: **PoC a la espera de revisión del propietario** (HMR ya la
+  sirve en la ventana abierta). Si aprueba: extender a los paneles
+  (AnimatePresence reemplazando `usePresencia`) y a la transición entre
+  vistas (con interrupción elegante). Commit: `b4395cb`.
+
 ### Estado / siguiente paso
 
 - ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.
@@ -841,6 +895,9 @@ estado y la historia antes de continuar.
   entre vistas según la dirección.
 - ✅ Layout estable entre vistas: canal de scroll reservado (se corría 7px)
   y Semana sin días vacíos (el tamaño de la vista ya no salta).
+- ⏳ **PoC de Motion a revisión del propietario**: si aprueba, extender a
+  paneles y transición de vistas; Rive / rough.js / View Transitions
+  quedan aplazados con su disparador (ver Sesión 20).
 - ⏭️ Pendientes para "lista para publicar": instalador
   (`npm run tauri build` → .exe/.msi), aceleradores de teclado
   (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub.
