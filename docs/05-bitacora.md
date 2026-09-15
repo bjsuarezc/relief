@@ -882,6 +882,37 @@ estado y la historia antes de continuar.
   (AnimatePresence reemplazando `usePresencia`) y a la transición entre
   vistas (con interrupción elegante). Commit: `b4395cb`.
 
+### Sesión 21 — píldora serpiente (fase exploratoria)
+
+- Al propietario le gustó la inercia de resorte de la píldora y pidió un
+  efecto más "movimiento de serpiente" entre Hoy/Semana/Mes.
+- Aprobado el plan: V1 (estirón) + V2 (estirón + ondulación) con selector
+  para decidir viendo, intensidad sutil, sin rebote.
+- Implementación (`27cfcc7`):
+  1. `PildoraSerpiente` (TaskList.tsx) con 3 estrategias: `spring`
+     (bloque rígido, la aprobada — baseline), `v1` (cabeza-llega-primera:
+     el borde que lidera viaja en la fase 1 con el origen anclado y el
+     cuerpo extendido `distancia + ancho`, la cola alcanza en la fase 2;
+     espejo exacto al viajar a la izquierda; 0.3s total, 150ms por fase)
+     y `v2` (v1 + el trazo fluye: `backgroundPositionX` animada en la
+     dirección del viaje).
+  2. Estado de medición ampliado a actual + anterior (la coreografía
+     necesita de dónde partió; la primera medición pone anterior = actual
+     para no arrastrar desde x=0).
+  3. CSS `.pestana-pill-ondula`: tile ondulado de 44×6
+     PERFECTAMENTE repetible (el SVG suelto no cerraba el ciclo:
+     arrancaba en y=3 y terminaba en y≈2.2) en claro y oscuro, tamaño
+     fijo + repeat-x (el trazo no se deforma con el estirón; fluye).
+  4. Selección con `?variante=spring|v1|v2` leído SOLO en el harness: la
+     app real de Tauri (sin query) sigue en `spring` hasta la decisión.
+- Verificado en headless: las 3 variantes renderizan sin crash
+  (píldora posicionada, filas con opacity 1), ciclo de layout estable
+  (Δ=0). El movimiento en sí solo se juzga en navegador vivo — headless
+  congela Motion sin frames (la píldora queda a mitad de viaje en los
+  dumps: artefacto conocido, no bug).
+- Estado: **Fase 2 pendiente — el propietario compara en vivo** y elige.
+  Fase 3: productionizar la ganadora y borrar el resto.
+
 ### Estado / siguiente paso
 
 - ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.
@@ -898,6 +929,8 @@ estado y la historia antes de continuar.
 - ⏳ **PoC de Motion a revisión del propietario**: si aprueba, extender a
   paneles y transición de vistas; Rive / rough.js / View Transitions
   quedan aplazados con su disparador (ver Sesión 20).
+- ⏳ **Serpiente a revisión**: comparar `?variante=spring|v1|v2` en el
+  navegador y elegir (ver Sesión 21).
 - ⏭️ Pendientes para "lista para publicar": instalador
   (`npm run tauri build` → .exe/.msi), aceleradores de teclado
   (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub.
