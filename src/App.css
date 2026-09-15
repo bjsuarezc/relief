@@ -93,10 +93,16 @@ body {
 .wordmark::after {
   content: "";
   display: block;
-  width: 0.62em;
-  height: 3px;
-  margin-top: 6px;
-  background: currentColor;
+  width: 118px;
+  height: 5px;
+  margin-top: 5px;
+  /* Regla a mano alzada (path SVG irregular) en vez de una barra recta:
+     el trazo vibra apenas, como dibujado con marcador. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='5'%3E%3Cpath d='M1 3 C 22 1.2, 44 4.2, 66 2.4 C 86 0.8, 104 3.6, 117 2.2' stroke='%231a1a1a' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+}
+.dark .wordmark::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='5'%3E%3Cpath d='M1 3 C 22 1.2, 44 4.2, 66 2.4 C 86 0.8, 104 3.6, 117 2.2' stroke='%23f2ede4' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
 /* Etiquetas secundarias: MAYÚSCULAS espaciadas (la firma editorial de las
@@ -112,6 +118,30 @@ body {
 
 .tnum {
   font-variant-numeric: tabular-nums;
+}
+
+/* Grano de papel: textura real sobre el color plano. Sin esto, el "papel"
+   es un hex y el ojo lo lee como pantalla. SVG de ruido embebido (sin
+   assets ni requests) a opacidad mínima. */
+.grano::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.dark .grano::before {
+  opacity: 0.06;
+  mix-blend-mode: screen;
+}
+
+/* Caja "cortada a mano": radios apenas distintos por esquina. La
+   irregularidad mínima es lo que separa un objeto dibujado de un div. */
+.caja-tinta {
+  border-radius: 14px 12px 15px 11px;
 }
 
 /* ---------------- Animaciones ---------------- */
@@ -169,7 +199,8 @@ body {
   top: 4px;
   bottom: 4px;
   left: 0;
-  border-radius: 8px;
+  /* Radios levemente distintos: la píldora también está "recortada a mano". */
+  border-radius: 9px 7px 8px 9px;
   background: var(--accent-soft);
   transition:
     transform var(--dur-base) var(--ease-out-ui),
@@ -221,18 +252,29 @@ body {
 
 /* ---------------- Filas de tarea: trazo, no sombra ---------------- */
 
+/* ---------------- Filas de tarea: renglones, no tarjetas ----------------
+   El sistema anterior (una tarjeta idéntica por fila, con el mismo radio y
+   borde que todo lo demás) es el "kit SaaS": el tell más reconocible de
+   diseño generado. Ahora la lista se lee como papel rayado: renglones
+   separados por una línea de tinta. */
 .tarea-fila {
+  border-bottom: 1px solid var(--line);
   transition:
-    color var(--dur-fast) var(--ease-out-ui),
-    background-color var(--dur-base) var(--ease-out-ui),
+    background-color var(--dur-fast) var(--ease-out-ui),
     border-color var(--dur-fast) var(--ease-out-ui);
 }
-.tarea-fila:hover {
-  border-color: var(--line-strong);
+/* El primer renglón abre la lista con su línea: el bloque se lee como una
+   tabla de papel, con principio y fin. */
+.tarea-fila:first-child {
+  border-top: 1px solid var(--line);
 }
-/* Muro de victorias: la completada se apaga a tinta diluida. */
+.tarea-fila:hover {
+  border-bottom-color: var(--line-strong);
+  background: color-mix(in oklab, var(--ink) 4%, transparent);
+}
+/* Muro de victorias: la completada se apaga con un lavado de tinta. */
 .tarea-fila.completada {
-  background: color-mix(in oklab, var(--surface) 70%, var(--canvas));
+  background: color-mix(in oklab, var(--ink) 3%, transparent);
 }
 
 /* ---------------- Botones: presión universal ---------------- */

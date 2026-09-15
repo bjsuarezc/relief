@@ -126,7 +126,7 @@ function TareaLinea({
   return (
     <>
       <li
-        className={`tarea-fila group flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 text-sm ${
+        className={`tarea-fila group flex items-center gap-3 px-1 py-3 text-sm ${
           task.completed ? "completada" : ""
         }`}
       >
@@ -140,10 +140,11 @@ function TareaLinea({
           className={`ts-check shrink-0 ${task.completed ? "completed" : ""}`}
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <circle
-              cx="9"
-              cy="9"
-              r="7.5"
+            {/* El círculo es un TRAZO A MANO (path con vibración), no un
+                <circle> perfecto: es el elemento que más se toca, y la
+                imperfección es lo que lo hace sentir dibujado. */}
+            <path
+              d="M9 1.6 C 13.2 1.4, 16.6 4.6, 16.5 8.9 C 16.4 13.1, 13.4 16.5, 9.1 16.4 C 5 16.3, 1.6 13.3, 1.7 9.1 C 1.8 4.9, 4.9 1.7, 9 1.6 Z"
               strokeWidth="1.5"
               fill="none"
               className="ch-ring"
@@ -190,7 +191,7 @@ function TareaLinea({
         <button
           type="button"
           onClick={() => setShowPicker(!showPicker)}
-          className={`etiqueta shrink-0 text-ink-soft transition-[opacity,color] duration-[140ms] hover:text-ink ${
+          className={`shrink-0 text-xs text-ink-soft transition-[opacity,color] duration-[140ms] hover:text-ink ${
             fechaRedundante ? "opacity-0 group-hover:opacity-100" : ""
           }`}
         >
@@ -244,7 +245,7 @@ function TareaLinea({
       )}
       {panelPrioridad.montado && (
         <div
-          className={`${panelPrioridad.saliendo ? "panel-saliendo" : "panel-animada mt-2"} mt-2 flex items-center gap-2 rounded-xl border border-line bg-surface p-3`}
+          className={`${panelPrioridad.saliendo ? "panel-saliendo" : "panel-animada mt-2"} caja-tinta mt-2 flex items-center gap-2 rounded-xl border border-line bg-surface p-3`}
         >
           <span className="text-xs text-ink-faint">Prioridad:</span>
           {PRIORIDADES.map((p) => (
@@ -309,7 +310,7 @@ function GrupoDia({
       {/* Días sin tareas: la etiqueta del día ya dice "está vacío".
           No poner nada es la respuesta, no un guión. */}
       {tareas.length > 0 && (
-        <ul className="space-y-2">
+        <ul>
           {tareas.map((task) => (
             <TareaLinea
               key={task.id}
@@ -462,7 +463,7 @@ function VistaHoy({
             </span>
             completadas
           </h3>
-          <ul className="space-y-2">
+          <ul>
             {deHoy.map((task) => (
               <TareaLinea
                 key={task.id}
@@ -669,15 +670,15 @@ function VistaPapelera({
 
   return (
     <div className="space-y-4">
-      <ul className="space-y-2">
+      <ul>
         {tasks.map((task) => (
           <li
             key={task.id}
-            className="tarea-fila flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 text-sm"
+            className="tarea-fila flex items-center gap-3 px-1 py-3 text-sm"
           >
             <span className="flex-1 text-ink-soft">{task.title}</span>
             {/* Cuándo entró a la papelera (el mismo formato humano). */}
-            <span className="etiqueta shrink-0 text-ink-faint">
+            <span className="text-xs text-ink-faint">
               borrada {formatoFecha(task.deletedAt)}
             </span>
             <button
@@ -813,7 +814,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
       <div className="flex items-center justify-between gap-3">
         <div
           ref={contenedorPestanas}
-          className="relative flex gap-1 rounded-xl border border-line bg-surface p-1"
+          className="caja-tinta relative flex gap-1 rounded-xl border border-line bg-surface p-1"
         >
           {/* La pastilla: un solo objeto que viaja entre pestañas. */}
           {pildoraLista && (

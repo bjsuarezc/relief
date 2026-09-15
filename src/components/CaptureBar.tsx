@@ -65,7 +65,7 @@ export function CaptureBar() {
   return (
     // <form onSubmit>: Enter dispara la creación nativamente.
     <div className="w-full">
-      <div className="capture-focus rounded-xl border border-line-input bg-surface transition-colors duration-200">
+      <div className="capture-focus caja-tinta rounded-xl border border-line-input bg-surface transition-colors duration-200">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -157,7 +157,7 @@ export function CaptureBar() {
 
       {panelPrioridad.montado && (
         <div
-          className={`${panelPrioridad.saliendo ? "panel-saliendo" : "panel-animada mt-3"} mt-3 flex items-center gap-2 rounded-xl border border-line bg-surface p-3`}
+          className={`${panelPrioridad.saliendo ? "panel-saliendo" : "panel-animada mt-3"} caja-tinta mt-3 flex items-center gap-2 rounded-xl border border-line bg-surface p-3`}
         >
           <span className="text-xs text-ink-faint">Prioridad:</span>
           {PRIORIDADES.map((p) => (
@@ -202,7 +202,7 @@ export function WeekPicker({
   const dias = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
-    <div className="panel-animada mt-3 rounded-xl border border-line bg-surface p-3">
+    <div className="panel-animada caja-tinta mt-3 rounded-xl border border-line bg-surface p-3">
       <div className="mb-2 flex items-center justify-between">
         <button
           type="button"
