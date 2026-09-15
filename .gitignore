@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Harness de desarrollo (mock del puente Tauri, no va al repo)
+dev-mock.html

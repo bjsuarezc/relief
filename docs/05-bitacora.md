@@ -577,6 +577,36 @@ estado y la historia antes de continuar.
   caps) y captura aislada de la mascota y la papelera (HTML temporal).
 - Commit: `0285259`.
 
+### Sesión 11 — afinado de paleta
+
+- El propietario preguntó si la paleta era la mejor. Evaluación honesta:
+  sólida pero con 3 desvíos respecto a las referencias de `Inspiracion/`.
+- Cambios aplicados:
+  - `--canvas` `#f7f4ee` → **`#f6f1e6`** (papel más cálido/amarillento,
+    como la referencia "Stay Cool").
+  - `--surface` `#efe9df` → **`#ede5d6`** (contraste real con el papel:
+    antes las tarjetas dependían solo del borde).
+  - `--accent` `#1b49b6` → **`#1f4291`** (azul TINTA: más profundo y
+    apagado; el anterior leía como "azul web"/link).
+  - `--accent-soft` `#dde5f7` → **`#dde2ee`** (tinte de selección apagado).
+  - `--line` `#d3c9b8` → **`#d1c6b2`** (coherente con el papel nuevo).
+  - Dark: accent `#7fa3f5` → **`#6e8fe0`** (menos neón).
+  - **Prioridad Alta pasa de azul a TINTA PLENA** (`font-semibold text-ink`):
+    el azul queda reservado para lo interactivo/seleccionado.
+- Commit: `eff11b6`.
+
+### Flujo de trabajo acordado: verificar en el navegador, no abrir/cerrar la app
+
+- El propietario pidió dejar de abrir y cerrar la app durante el proceso.
+- Nuevo método: **Vite sirve la app con recarga en caliente** → la ventana
+  de la app se actualiza sola; la verificación se hace en el navegador.
+- Para ver la app COMPLETA (con datos) sin el puente Tauri se agregó un
+  harness local **`dev-mock.html`** (en `.gitignore`, no va al repo): la
+  misma app + un mock de `invoke` con datos de ejemplo. Params:
+  `?tema=dark` y `?vacio=1`. Capturas con Chrome headless
+  (`--virtual-time-budget` para que asienten las animaciones).
+- Regla operativa: **no matar/relanzar `relief.exe`** para verificar.
+
 ### Estado / siguiente paso
 - ⏭️ Para "lista para publicar": instalador (`npm run tauri build` → .exe/.msi),
   aceleradores de teclado (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub,
