@@ -14,6 +14,7 @@
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
   --color-line: var(--line);
+  --color-line-input: var(--line-input);
   --color-line-strong: var(--line-strong);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
@@ -30,11 +31,12 @@
 :root {
   --canvas: #f6f1e6;      /* papel cálido (más amarillento, tipo referencia) */
   --surface: #ede5d6;     /* tarjeta crema con contraste real */
-  --line: #d1c6b2;        /* trazo fino de tinta diluida */
+  --line: #d1c6b2;        /* trazo decorativo (tarjetas): sutil a propósito */
+  --line-input: #8a8275;  /* trazo de CONTROL (campo de captura): 3:1 sobre el papel (WCAG 1.4.11) */
   --line-strong: #1a1a1a; /* tinta plena */
   --ink: #1a1a1a;         /* negro tinta mate */
   --ink-soft: #4c463b;
-  --ink-faint: #8a8275;
+  --ink-faint: #6a6353;   /* texto atenuado: 5.3:1 sobre papel (AA en 10-11px) */
   --accent: #1f4291;      /* azul tinta (más profundo y apagado que el "web blue") */
   --accent-soft: #dde2ee; /* tinte de selección apagado */
   --accent-ink: #f6f1e6;  /* papel sobre tinta azul */
@@ -58,10 +60,11 @@
   --canvas: #14161b;
   --surface: #1c1f26;
   --line: #333845;
+  --line-input: #6f6a5e;
   --line-strong: #d9d2c5;
   --ink: #f2ede4;
   --ink-soft: #a9a393;
-  --ink-faint: #6f6a5e;
+  --ink-faint: #8f8877;   /* 4.7:1 sobre la tarjeta nocturna */
   --accent: #6e8fe0;
   --accent-soft: #1e2a45;
   --accent-ink: #10131a;
@@ -99,11 +102,12 @@ body {
 }
 
 /* Etiquetas secundarias: MAYÚSCULAS espaciadas (la firma editorial de las
-   referencias: "CAFÉ ET TARTES", "COUNTRY CLUB"). Reemplaza la manuscrita. */
+   referencias: "CAFÉ ET TARTES", "COUNTRY CLUB"). Reemplaza la manuscrita.
+   11px (no 10): en mayúsculas espaciadas 10px se vuelve ilegible. */
 .etiqueta {
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 10px;
+  letter-spacing: 0.14em;
+  font-size: 11px;
   font-weight: 500;
   line-height: 1;
 }
@@ -258,6 +262,16 @@ button:not([data-presion="off"]) {
 }
 button:not([data-presion="off"]):active {
   scale: 0.96;
+}
+
+/* En pantallas táctiles (v2 móvil) el área de toque crece a 44px sin
+   cambiar el layout de escritorio: la altura visual sigue siendo h-8,
+   pero el elemento gana padding vertical invisible al ojo. */
+@media (pointer: coarse) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 /* ---------------- Foco ---------------- */

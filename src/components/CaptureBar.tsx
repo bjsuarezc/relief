@@ -65,7 +65,7 @@ export function CaptureBar() {
   return (
     // <form onSubmit>: Enter dispara la creación nativamente.
     <div className="w-full">
-      <div className="capture-focus rounded-xl border border-line bg-surface transition-colors duration-200">
+      <div className="capture-focus rounded-xl border border-line-input bg-surface transition-colors duration-200">
         <form
           onSubmit={(e) => {
             e.preventDefault();
