@@ -661,13 +661,37 @@ estado y la historia antes de continuar.
   estética editorial se mantiene.
 - Commit: `7364dcd`.
 
+### Sesión 14 — segunda pasada de correcciones con las skills de frontend
+
+- Con las skills nuevas (`tailwind-token-consolidation`, `better-writing`,
+  `better-layout`, `performance`) se corrigieron hallazgos del código real:
+  1. **Código muerto eliminado**: `.ambiente-vivo` (el glow quedó en
+     `display:none` tras el rediseño plano), `.elevada` + token `--sombra`
+     (no-op desde el sistema sin sombras) y sus referencias en componentes.
+  2. **Assets del scaffold eliminados**: `public/vite.svg` (¡era el
+     favicon!), `public/tauri.svg`, `src/assets/react.svg` — se
+     empaquetaban en el binario sin uso.
+  3. **Favicon propio**: `public/relief.svg` (la marca "r." en la paleta).
+  4. **Íconos reales de la app** (pendiente de "publicar", resuelto): se
+     generó un PNG 1024×1024 desde la marca (render con Chrome headless) y
+     `npm run tauri icon` produjo **escritorio (ico/icns/png) y móvil
+     (Android mipmaps + iOS)** — adiós al ícono por defecto de Tauri.
+  5. **Copy**: `"{n} tarea(s) se borrarán"` (plural lazy) → singular/plural
+     reales; "Nada en este mes" → **"No hay nada este mes"**.
+  6. **Ritmo de espaciado**: los contenedores de vista mezclaban
+     `space-y-5`/`space-y-6` → unificados a `space-y-6` (8px entre filas,
+     24px entre grupos: dos ritmos, cada uno con propósito).
+- Verificado: build OK, captura propia de la app sin regresiones visuales.
+- Commit: `97899f6`.
+
 ### Estado / siguiente paso
 
 - ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.
 - ✅ Revisión de diseño aplicada: contraste AA y límites de control 3:1.
+- ✅ Código muerto fuera, assets limpios e **íconos propios** (escritorio + móvil).
 - ⏭️ Pendientes para "lista para publicar": instalador
   (`npm run tauri build` → .exe/.msi), aceleradores de teclado
-  (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub, ícono/branding.
+  (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub.
 - ⏭️ Calidad pendiente: ESLint/Prettier en el frontend (requiere aprobar
   dependencias de desarrollo), tests de los componentes React,
   CI en GitHub Actions (lint + tests + build).
