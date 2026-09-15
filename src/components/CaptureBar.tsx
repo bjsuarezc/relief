@@ -65,13 +65,16 @@ export function CaptureBar() {
   return (
     // <form onSubmit>: Enter dispara la creación nativamente.
     <div className="w-full">
-      <div className="capture-focus caja-tinta rounded-xl border border-line-input bg-surface transition-colors duration-200">
+      {/* La captura es un RENGLÓN de papel, no una caja: una línea de tinta
+          abajo, el texto escrito encima y el botón como el punto azul del
+          wordmark. El foco marca la línea en azul. */}
+      <div className="capture-focus border-b-2 border-line-input transition-colors duration-200">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             void submit();
           }}
-          className="flex h-14 items-center gap-3 px-4"
+          className="flex h-14 items-center gap-3"
         >
           <input
             ref={inputRef}
@@ -79,20 +82,21 @@ export function CaptureBar() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="¿Qué tienes que hacer?"
             autoFocus
-            className="h-full flex-1 bg-transparent text-[15px] font-medium outline-none placeholder:text-ink-faint"
+            className="entrada-papel h-full flex-1 bg-transparent outline-none placeholder:font-sans placeholder:text-[15px] placeholder:font-normal placeholder:text-ink-faint"
           />
           <button
             type="submit"
             aria-label="Crear tarea"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-ink hover:opacity-90"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink hover:opacity-90"
           >
-            <Plus size={18} strokeWidth={2.5} />
+            <Plus size={16} strokeWidth={2.5} />
           </button>
         </form>
       </div>
 
-      {/* Chips: captura al instante (fecha) o con contexto (prioridad). */}
-      <div className="mt-3 flex items-center gap-2">
+      {/* Acciones de tinta: texto subrayado (no píldoras). Es el lenguaje
+          del papel — se leen como anotaciones al pie del renglón. */}
+      <div className="mt-4 flex items-center gap-6">
         <button
           type="button"
           onClick={() => {
@@ -106,17 +110,17 @@ export function CaptureBar() {
               ? "Capturar para hoy — abre el picker de semana"
               : `Capturando para ${format(captureDate, "EEE d MMM", { locale: es })}`
           }
-          className={`chip relative inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium ${
+          className={`accion-tinta relative inline-flex items-center gap-1.5 border-b pb-0.5 text-sm transition-colors duration-[140ms] ${
             showDatePicker
-              ? "border-accent bg-accent-soft text-ink"
+              ? "border-accent text-accent"
               : "border-line text-ink-soft hover:border-line-strong hover:text-ink"
           }`}
         >
           <Plus
-            size={14}
+            size={13}
             strokeWidth={2}
             className={`transition-transform duration-[140ms] ${
-              showDatePicker ? "rotate-45" : "text-accent"
+              showDatePicker ? "rotate-45" : ""
             }`}
           />
           <span>
@@ -134,16 +138,16 @@ export function CaptureBar() {
             if (abrir) setShowDatePicker(false);
             if (showPriority) setPriority(null);
           }}
-          className={`chip inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium ${
+          className={`accion-tinta inline-flex items-center gap-1.5 border-b pb-0.5 text-sm transition-colors duration-[140ms] ${
             showPriority
-              ? "border-accent bg-accent-soft text-ink"
+              ? "border-accent text-accent"
               : "border-line text-ink-soft hover:border-line-strong hover:text-ink"
           }`}
         >
           <Flag
-            size={14}
+            size={13}
             strokeWidth={2}
-            className={showPriority ? "text-accent" : "text-ink-faint"}
+            className={showPriority ? "text-accent" : ""}
           />
           <span>Prioridad</span>
         </button>

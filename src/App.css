@@ -79,13 +79,13 @@ body {
 /* ---------------- Tipografía ---------------- */
 
 /* El wordmark: display ULTRA-gordo (el "Miette" de la referencia), con la
-   firma en cobalto y una regla corta debajo — detalle editorial de bistro. */
+   firma en azul y una regla corta a mano debajo. */
 .wordmark {
   font-family: var(--fuente-display);
-  font-size: 40px;
+  font-size: 52px;
   font-weight: 900;
-  letter-spacing: -0.045em;
-  line-height: 0.9;
+  letter-spacing: -0.05em;
+  line-height: 0.85;
   font-variation-settings: "SOFT" 0, "WONK" 1, "opsz" 144;
   display: inline-block;
   position: relative;
@@ -118,6 +118,27 @@ body {
 
 .tnum {
   font-variant-numeric: tabular-nums;
+}
+
+/* El CONTENIDO va en la serif, no en la fuente de UI: es lo que convierte
+   la lista en un documento escrito. Fraunces tiene eje óptico (opsz): a
+   tamaño de lectura se comporta como una serif de texto y no como un
+   display. La interfaz (botones, etiquetas) sigue en Inter. */
+.titulo-tarea,
+.entrada-papel {
+  font-family: var(--fuente-display);
+  font-variation-settings: "opsz" 20, "SOFT" 0, "WONK" 1;
+  font-weight: 550;
+  letter-spacing: -0.012em;
+}
+
+.titulo-tarea {
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.entrada-papel {
+  font-size: 19px;
 }
 
 /* Grano de papel: textura real sobre el color plano. Sin esto, el "papel"
@@ -193,18 +214,23 @@ body {
 .entrada-cascada > *:nth-child(7) { animation-delay: 180ms; }
 .entrada-cascada > *:nth-child(n + 8) { animation-delay: 210ms; }
 
-/* Píldora del conmutador: azul suave, un solo objeto que viaja. */
+/* Píldora del conmutador: ahora es un SUBRAYADO A MANO que viaja entre
+   pestañas (el mismo trazo del wordmark). El "segmented control" con
+   fondo de píldora es lenguaje de kit de UI; el subrayado es de papel. */
 .pestana-pill {
   position: absolute;
-  top: 4px;
-  bottom: 4px;
+  bottom: -7px;
   left: 0;
-  /* Radios levemente distintos: la píldora también está "recortada a mano". */
-  border-radius: 9px 7px 8px 9px;
-  background: var(--accent-soft);
+  height: 6px;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='5'%3E%3Cpath d='M1 3 C 22 1.2, 44 4.2, 66 2.4 C 86 0.8, 104 3.6, 117 2.2' stroke='%231f4291' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   transition:
     transform var(--dur-base) var(--ease-out-ui),
     width var(--dur-base) var(--ease-out-ui);
+}
+.dark .pestana-pill {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='5'%3E%3Cpath d='M1 3 C 22 1.2, 44 4.2, 66 2.4 C 86 0.8, 104 3.6, 117 2.2' stroke='%236e8fe0' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
 .contador-pulso {
@@ -297,9 +323,14 @@ button:not([data-presion="off"]):active {
    cambiar el layout de escritorio: la altura visual sigue siendo h-8,
    pero el elemento gana padding vertical invisible al ojo. */
 @media (pointer: coarse) {
-  button {
+  button:not(.accion-tinta) {
     min-height: 44px;
     min-width: 44px;
+  }
+  /* Las acciones de tinta (texto subrayado) crecen en alto de toque sin
+     mover el subrayado del texto. */
+  .accion-tinta {
+    padding-block: 12px 14px;
   }
 }
 

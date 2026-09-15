@@ -177,7 +177,7 @@ function TareaLinea({
         ) : (
           <span
             onClick={empezarEditar}
-            className={`flex-1 cursor-text transition-colors duration-[140ms] hover:text-ink-soft ${
+            className={`titulo-tarea flex-1 cursor-text transition-colors duration-[140ms] hover:text-ink-soft ${
               task.completed ? "text-ink-faint line-through" : ""
             }`}
           >
@@ -814,9 +814,9 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
       <div className="flex items-center justify-between gap-3">
         <div
           ref={contenedorPestanas}
-          className="caja-tinta relative flex gap-1 rounded-xl border border-line bg-surface p-1"
+          className="relative flex gap-5"
         >
-          {/* La pastilla: un solo objeto que viaja entre pestañas. */}
+          {/* La pastilla es ahora un subrayado a mano que viaja. */}
           {pildoraLista && (
             <span
               aria-hidden
@@ -834,8 +834,10 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
               type="button"
               data-activa={vista === p.id}
               onClick={() => setVista(p.id)}
-              className={`relative z-10 flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-[140ms] ${
-                vista === p.id ? "text-ink" : "text-ink-soft hover:text-ink"
+              className={`relative z-10 text-sm transition-colors duration-[140ms] ${
+                vista === p.id
+                  ? "font-semibold text-ink"
+                  : "text-ink-soft hover:text-ink"
               }`}
             >
               {p.etiqueta}
@@ -849,11 +851,13 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
               type="button"
               data-activa={vista === "papelera"}
               onClick={() => setVista("papelera")}
-              className={`relative z-10 flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-[140ms] ${
-                vista === "papelera" ? "text-ink" : "text-ink-soft hover:text-ink"
+              className={`relative z-10 text-sm transition-colors duration-[140ms] ${
+                vista === "papelera"
+                  ? "font-semibold text-ink"
+                  : "text-ink-soft hover:text-ink"
               }`}
             >
-              <Trash2 size={14} className="inline" /> {enPapelera.length}
+              <Trash2 size={13} className="inline" /> {enPapelera.length}
             </button>
           )}
         </div>
