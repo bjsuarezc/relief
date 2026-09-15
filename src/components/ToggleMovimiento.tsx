@@ -38,7 +38,7 @@ export function ToggleMovimiento() {
       aria-pressed={encendido}
       aria-label={encendido ? "Desactivar animaciones" : "Activar animaciones"}
       title={encendido ? "Animaciones activadas" : "Animaciones desactivadas"}
-      className={`rounded-lg p-2 transition-colors duration-150 hover:bg-ink/5 ${
+      className={`rounded-lg p-2 transition-colors duration-[140ms] hover:bg-ink/5 ${
         encendido ? "text-accent" : "text-ink-soft hover:text-ink"
       }`}
     >

@@ -95,9 +95,13 @@ function TareaLinea({
   );
 
   // El input arranca con el título actual como borrador (no desde vacío).
+  // Regla "un panel a la vez": empezar a editar cierra los paneles abiertos
+  // de la fila (antes coexistían edición + popover = ruido doble).
   const empezarEditar = () => {
     setBorradorTitulo(task.title);
     setEditandoTitulo(true);
+    setShowPrioridad(false);
+    setShowPicker(false);
   };
 
   const guardarTitulo = () => {
@@ -127,7 +131,7 @@ function TareaLinea({
         }`}
       >
         {/* El check: círculo SVG personalizado. Al completar, el borde se
-            enciende en acento y la marca se DIBUJA (stroke-dashoffset),
+            enciende en cobalto y la marca se DIBUJA (stroke-dashoffset),
             no solo aparece. El píxel exacto donde pasa la victoria. */}
         <button
           type="button"
@@ -167,12 +171,12 @@ function TareaLinea({
               if (e.key === "Escape") setEditandoTitulo(false);
             }}
             aria-label="Editar título"
-            className="flex-1 rounded-md border border-accent bg-canvas px-2 py-1 text-sm text-ink outline-none"
+            className="ts-editar flex-1 rounded-lg border border-accent bg-canvas px-2 py-1 text-sm text-ink outline-none"
           />
         ) : (
           <span
             onClick={empezarEditar}
-            className={`flex-1 cursor-text transition-colors duration-150 hover:text-ink-soft ${
+            className={`flex-1 cursor-text transition-colors duration-[140ms] hover:text-ink-soft ${
               task.completed ? "text-ink-faint line-through" : ""
             }`}
           >
@@ -182,11 +186,11 @@ function TareaLinea({
 
         {/* Fecha: clicable → picker. Si el encabezado del grupo YA dice
             el día (fechaRedundante), solo aparece al pasar el mouse —
-            mismo patrón que la papelera (hover). */}
+            mismo patrón que la papelera (hover). En manuscrita. */}
         <button
           type="button"
           onClick={() => setShowPicker(!showPicker)}
-          className={`mano shrink-0 text-ink-soft transition-[opacity,color] duration-150 hover:text-ink ${
+          className={`mano shrink-0 text-ink-soft transition-[opacity,color] duration-[140ms] hover:text-ink ${
             fechaRedundante ? "opacity-0 group-hover:opacity-100" : ""
           }`}
         >
@@ -197,7 +201,7 @@ function TareaLinea({
         <button
           type="button"
           onClick={() => setShowPrioridad(!showPrioridad)}
-          className={`shrink-0 transition-colors duration-150 hover:text-ink-soft ${COLOR_PRIORIDAD[task.priority]}`}
+          className={`shrink-0 transition-colors duration-[140ms] hover:text-ink-soft ${COLOR_PRIORIDAD[task.priority]}`}
         >
           {ETIQUETA_PRIORIDAD[task.priority]}
         </button>
@@ -207,7 +211,7 @@ function TareaLinea({
           <button
             type="button"
             onClick={() => onReschedule(task.id, format(new Date(), "yyyy-MM-dd"))}
-            className="shrink-0 rounded-lg border border-line-strong px-2 py-1 text-xs text-ink transition-colors duration-150 hover:bg-ink/5 active:scale-[0.96]"
+            className="shrink-0 rounded-lg border border-line-strong px-2 py-1 text-xs text-ink hover:bg-ink/5 active:scale-[0.96]"
           >
             Mover a hoy
           </button>
@@ -220,7 +224,7 @@ function TareaLinea({
           type="button"
           onClick={() => onDelete(task.id)}
           aria-label="Mandar a la papelera"
-          className="shrink-0 text-ink-faint opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500"
+          className="shrink-0 text-ink-faint opacity-0 transition-opacity duration-[140ms] group-hover:opacity-100 hover:text-red-600 dark:hover:text-red-400"
         >
           <Trash2 size={15} />
         </button>
@@ -240,7 +244,7 @@ function TareaLinea({
       )}
       {panelPrioridad.montado && (
         <div
-          className={`${panelPrioridad.saliendo ? "panel-saliendo" : "panel-animada mt-2 elevada"} flex items-center gap-2 rounded-xl border border-line bg-surface p-3`}
+          className={`${panelPrioridad.saliendo ? "panel-saliendo" : "panel-animada mt-2"} mt-2 elevada flex items-center gap-2 rounded-xl border border-line bg-surface p-3`}
         >
           <span className="text-xs text-ink-faint">Prioridad:</span>
           {PRIORIDADES.map((p) => (
@@ -293,9 +297,8 @@ function GrupoDia({
 }) {
   return (
     <section>
-      {/* Encabezado en sentence case (corrección del propietario: las
-          mayúsculas espaciadas eran "chrome de plantilla"). Peso 600 y
-          color según el grupo — sin transformación tipográfica. */}
+      {/* Encabezado en Fraunces (display del sistema editorial), sin
+          mayúsculas espaciadas (eran "chrome de plantilla"). */}
       <h3
         className={`mb-2 font-display text-[15px] font-semibold ${
           sutil ? "text-ink-faint" : "text-ink"
@@ -432,8 +435,8 @@ function VistaHoy({
       {deHoy.length > 0 && (
         <section>
           {/* El encabezado de Hoy es especial (progreso del día): se
-              renderiza a mano para poner el conteo en color de acento —
-              el único dato "vivo" de la vista. El resto usa GrupoDia. */}
+              renderiza a mano para poner el conteo en cobalto — el único
+              dato "vivo" de la vista. El resto usa GrupoDia. */}
           <h3 className="mb-2 flex items-baseline gap-1.5 font-display text-[15px] font-semibold text-ink">
             Hoy
             {/* La key = conteo: al cambiar, el span se re-monta y el pulso
@@ -620,8 +623,18 @@ function VistaPapelera({
           aria-hidden
           className="text-ink-faint"
         >
-          <path d="M24 28 C 40 25.5, 60 25.5, 74 28" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          <path d="M36 26 C 36.5 22.5, 40 20.5, 48 20.5 C 56 20.5, 59.5 22.5, 60 26" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          <path
+            d="M24 28 C 40 25.5, 60 25.5, 74 28"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+          <path
+            d="M36 26 C 36.5 22.5, 40 20.5, 48 20.5 C 56 20.5, 59.5 22.5, 60 26"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
           <path
             d="M30 30 C 31 42, 33 60, 34.5 68 C 42 70, 58 70, 65.5 68 C 67 60, 69 42, 70 30"
             stroke="currentColor"
@@ -643,7 +656,7 @@ function VistaPapelera({
         {tasks.map((task) => (
           <li
             key={task.id}
-            className="tarea-fila elevada flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 text-sm"
+            className="tarea-fila flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3.5 text-sm"
           >
             <span className="flex-1 text-ink-soft">{task.title}</span>
             {/* Cuándo entró a la papelera (el mismo formato humano). */}
@@ -653,7 +666,7 @@ function VistaPapelera({
             <button
               type="button"
               onClick={() => onRestaurar(task.id)}
-              className="shrink-0 rounded-lg border border-line-strong px-2 py-1 text-xs text-ink transition-colors duration-150 hover:bg-ink/5 active:scale-[0.96]"
+              className="shrink-0 rounded-lg border border-line-strong px-2 py-1 text-xs text-ink hover:bg-ink/5 active:scale-[0.96]"
             >
               <Undo2 size={13} className="inline" /> Restaurar
             </button>
@@ -661,7 +674,7 @@ function VistaPapelera({
               type="button"
               onClick={() => onPurgar(task.id)}
               aria-label="Borrar permanentemente"
-              className="shrink-0 rounded-lg border border-line p-1.5 text-ink-soft transition-colors duration-150 hover:border-red-900 hover:text-red-500 active:scale-[0.96]"
+              className="shrink-0 rounded-lg border border-line p-1.5 text-ink-soft hover:border-red-900 hover:text-red-500 active:scale-[0.96]"
             >
               <Trash2 size={14} />
             </button>
@@ -688,7 +701,7 @@ function VistaPapelera({
           <button
             type="button"
             onClick={() => setConfirmarVaciar(false)}
-            className="rounded-lg border border-line px-3 py-1 text-sm text-ink-soft transition-colors duration-150 hover:bg-ink/5 active:scale-[0.96]"
+            className="rounded-lg border border-line px-3 py-1 text-sm text-ink-soft hover:bg-ink/5 active:scale-[0.96]"
           >
             No
           </button>
@@ -697,7 +710,7 @@ function VistaPapelera({
         <button
           type="button"
           onClick={() => setConfirmarVaciar(true)}
-          className="rounded-lg border border-line px-3 py-1.5 text-sm text-ink-soft transition-colors duration-150 hover:bg-ink/5 hover:text-ink active:scale-[0.96]"
+          className="rounded-lg border border-line px-3 py-1.5 text-sm text-ink-soft hover:bg-ink/5 hover:text-ink active:scale-[0.96]"
         >
           Vaciar papelera ({tasks.length})
         </button>
@@ -754,7 +767,9 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
     if (!contenedor) return;
 
     const medir = () => {
-      const activa = contenedor.querySelector<HTMLElement>("[data-activa='true']");
+      const activa = contenedor.querySelector<HTMLElement>(
+        "[data-activa='true']",
+      );
       // Si la pestaña activa ya no existe (ej: se vació la papelera desde
       // su propia vista), la píldora se oculta en vez de quedar huérfana.
       if (!activa) {
@@ -799,7 +814,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
               type="button"
               data-activa={vista === p.id}
               onClick={() => setVista(p.id)}
-              className={`relative z-10 flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-150 ${
+              className={`relative z-10 flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-[140ms] ${
                 vista === p.id ? "text-ink" : "text-ink-soft hover:text-ink"
               }`}
             >
@@ -814,7 +829,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
               type="button"
               data-activa={vista === "papelera"}
               onClick={() => setVista("papelera")}
-              className={`relative z-10 flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-150 ${
+              className={`relative z-10 flex h-8 items-center justify-center rounded-lg px-3 text-sm transition-colors duration-[140ms] ${
                 vista === "papelera" ? "text-ink" : "text-ink-soft hover:text-ink"
               }`}
             >
@@ -831,7 +846,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
               type="button"
               aria-label={vista === "semana" ? "Semana anterior" : "Mes anterior"}
               onClick={() => (vista === "semana" ? moverSemana(-7) : moverMes(-1))}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft transition-colors duration-150 hover:bg-ink/5 hover:text-ink"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft transition-colors duration-[140ms] hover:bg-ink/5 hover:text-ink"
             >
               <ChevronLeft size={16} />
             </button>
@@ -844,7 +859,7 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
               type="button"
               aria-label={vista === "semana" ? "Semana siguiente" : "Mes siguiente"}
               onClick={() => (vista === "semana" ? moverSemana(7) : moverMes(1))}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft transition-colors duration-150 hover:bg-ink/5 hover:text-ink"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft transition-colors duration-[140ms] hover:bg-ink/5 hover:text-ink"
             >
               <ChevronRight size={16} />
             </button>

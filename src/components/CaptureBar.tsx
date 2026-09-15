@@ -115,7 +115,7 @@ export function CaptureBar() {
           <Plus
             size={14}
             strokeWidth={2}
-            className={`transition-transform duration-150 ${
+            className={`transition-transform duration-[140ms] ${
               showDatePicker ? "rotate-45" : "text-accent"
             }`}
           />

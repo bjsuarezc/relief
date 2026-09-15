@@ -41,14 +41,14 @@ export function ThemeToggle() {
       type="button"
       onClick={() => setTema(tema === "dark" ? "light" : "dark")}
       aria-label={tema === "dark" ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
-      className="rounded-lg p-2 text-ink-soft transition-colors duration-150 hover:bg-ink/5 hover:text-ink active:scale-[0.96]"
+      className="rounded-lg p-2 text-ink-soft transition-colors duration-[140ms] hover:bg-ink/5 hover:text-ink active:scale-[0.96]"
     >
       {/* Cross-fade de iconos (ambos en el DOM, sin librerías):
           la luna sale y el sol entra con la misma curva exacta. */}
       <span className="relative block h-5 w-5">
         <Sun
           size={17}
-          className="absolute inset-0 transition-[opacity,transform] duration-150 [transition-timing-function:cubic-bezier(0.2,0,0,1)]"
+          className="absolute inset-0 transition-[opacity,transform] duration-[140ms] [transition-timing-function:cubic-bezier(0.2,0,0,1)]"
           style={{
             opacity: tema === "light" ? 1 : 0,
             transform: `scale(${tema === "light" ? 1 : 0.75})`,
@@ -56,7 +56,7 @@ export function ThemeToggle() {
         />
         <Moon
           size={17}
-          className="absolute inset-0 transition-[opacity,transform] duration-150 [transition-timing-function:cubic-bezier(0.2,0,0,1)]"
+          className="absolute inset-0 transition-[opacity,transform] duration-[140ms] [transition-timing-function:cubic-bezier(0.2,0,0,1)]"
           style={{
             opacity: tema === "dark" ? 1 : 0,
             transform: `scale(${tema === "dark" ? 1 : 0.75})`,

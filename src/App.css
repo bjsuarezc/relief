@@ -259,6 +259,12 @@ input:focus-visible {
 .capture-focus input:focus-visible {
   outline: none;
 }
+/* La edición de título vive dentro de la fila: su borde de cobalto es el
+   indicador de foco; el outline global sería un segundo contorno (el
+   mismo defecto que ya corregimos en la captura). */
+input.ts-editar:focus-visible {
+  outline: none;
+}
 
 /* Captura enfocada: se marca con tinta de cobalto (plano, sin halo). */
 .capture-focus:focus-within {
