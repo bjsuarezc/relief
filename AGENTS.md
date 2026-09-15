@@ -11,10 +11,12 @@ accesibilidad, testing, auditorías) que sirven a cualquier proyecto.
 El repo queda solo con código del producto.
 
 - Diseño: `frontend-design`, `design-taste-frontend`, `impeccable`, `better-ui`
-- Auditoría de UI: `improve-ui`, `improve`, `improve-react`, `web-design-guidelines`
+- Auditoría de UI: `improve-ui`, `improve`, `improve-react`, `web-design-guidelines`, `design-review`, `interface-review`, `web-quality-audit`
 - Motion: `animate`, `improve-animations`, `micro-interaction`, `transitions-dev`, `transitions-polish`, `fixing-motion-performance`
-- Tipografía / a11y: `better-typography`, `better-accessibility`
+- Tipografía / a11y / copy: `better-typography`, `better-accessibility`, `better-writing`, `better-layout`, `better-colors`
+- Exploración de diseño: `variant` (variantes con selector para decidir viendo)
 - **Stack (Tauri / Rust / React)**: `tauri-v2`, `tauri-build`, `rust-best-practices`, `vercel-react-best-practices`
+- **Frontend (CSS/rendimiento)**: `tailwind-token-consolidation`, `prefer-container-queries`, `performance`
 - **Testing**: `javascript-testing-patterns`, `rust-testing`, `browser-testing-with-devtools`
 - **Datos / IA v2 / docs**: `chart-visualization`, `claude-api`, `doc-coauthoring`
 - Meta: `skill-creator`, `customize-opencode`, `brand-guidelines`, `webapp-testing`, `find-skills`
