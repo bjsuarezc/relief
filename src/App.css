@@ -76,6 +76,15 @@ body {
   color: var(--ink);
 }
 
+/* Reserva SIEMPRE el espacio de la barra de scroll. Sin esto, cuando el
+   contenido pasa de corto a largo (Hoy con pocas tareas → Semana/Mes con
+   muchas) aparece la barra, se angosta el ancho disponible y TODO el
+   contenido centrado se corre unos píxeles ("la pantalla se mueve", medido:
+   X=156 sin barra vs X=149 con barra). Con el canal reservado, no se mueve. */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* ---------------- Tipografía ---------------- */
 
 /* El wordmark: display ULTRA-gordo (el "Miette" de la referencia), con la
