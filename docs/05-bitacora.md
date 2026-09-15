@@ -789,6 +789,25 @@ estado y la historia antes de continuar.
   en claro/oscuro sin regresiones.
 - Commit: `8ab19dd`.
 
+### Sesión 19 — el "movimiento innecesario" entre vistas (bug de layout)
+
+- Reporte del propietario: al cambiar de vista (Hoy/Semana/Mes) "la pantalla
+  se mueve innecesariamente".
+- **Diagnóstico medido, no supuesto**: al harness local (`dev-mock.html`,
+  gitignored) se le agregó un badge de diagnóstico que imprime la posición X
+  del wordmark, el ancho disponible y si hay scrollbar, más un parámetro
+  `?tareas=N` para simular pantallas cortas (Hoy) y largas (Semana/Mes).
+  - Medición ANTES: 1 tarea → `X=156 scroll=false`; 25 tareas →
+    `X=149 scroll=true`.
+  - **Causa**: al crecer el contenido aparece la barra de scroll, se angosta
+    el ancho disponible y todo el contenido centrado se corre **7px**. Es el
+    clásico *scrollbar jump*.
+- **Fix**: `html { scrollbar-gutter: stable }` — el canal de la barra queda
+  reservado siempre, haya barra o no.
+- Verificación DESPUÉS: 1 tarea → `X=149`; 25 tareas → `X=149` → el
+  contenido ya no se mueve ✓.
+- Commit: `6b0a3ff`.
+
 ### Estado / siguiente paso
 
 - ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.
@@ -800,6 +819,7 @@ estado y la historia antes de continuar.
 - ✅ Catálogo de skills podado (40) con **mapa de routing** en AGENTS.md.
 - ✅ Minimalismo (sin reglas de ancho completo) y navegación **horizontal**
   entre vistas según la dirección.
+- ✅ Layout estable entre vistas: canal de scroll reservado (se corría 7px).
 - ⏭️ Pendientes para "lista para publicar": instalador
   (`npm run tauri build` → .exe/.msi), aceleradores de teclado
   (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub.
