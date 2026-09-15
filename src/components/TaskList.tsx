@@ -6,7 +6,7 @@
 //
 // Cada vista responde UNA pregunta (principio "una vista, una pregunta"):
 // - Hoy: "¿qué tengo que hacer hoy?" (Atrasadas + Hoy + Sin fecha)
-// - Semana: "¿qué hay cada día de esta semana?" (navegable con ‹ ›)
+// - Semana: "¿qué hay esta semana?" (navegable con ‹ ›, solo días con tareas)
 // - Mes: "¿qué hay en este mes?" (navegable, compacta, solo días con tareas)
 //
 // La sección Atrasadas (sin estética de alarma, decisión de la Sesión 1)
@@ -305,6 +305,9 @@ function GrupoDia({
   fechaRedundante?: boolean;
   sutil?: boolean;
 }) {
+  // Días sin tareas: NO se muestran (decisión del propietario — ver
+  // VistaSemana). Este guard es defensivo: las vistas ya filtran.
+  if (tareas.length === 0) return null;
   return (
     <section>
       {/* Encabezado en Fraunces (display del sistema editorial), sin
@@ -316,24 +319,20 @@ function GrupoDia({
       >
         {encabezado}
       </h3>
-      {/* Días sin tareas: la etiqueta del día ya dice "está vacío".
-          No poner nada es la respuesta, no un guión. */}
-      {tareas.length > 0 && (
-        <ul>
-          {tareas.map((task) => (
-            <TareaLinea
-              key={task.id}
-              task={task}
-              onToggle={onToggle}
-              onUpdate={onUpdate}
-              onReschedule={onReschedule}
-              onDelete={onDelete}
-              moverAHoy={moverAHoy}
-              fechaRedundante={fechaRedundante}
-            />
-          ))}
-        </ul>
-      )}
+      <ul>
+        {tareas.map((task) => (
+          <TareaLinea
+            key={task.id}
+            task={task}
+            onToggle={onToggle}
+            onUpdate={onUpdate}
+            onReschedule={onReschedule}
+            onDelete={onDelete}
+            moverAHoy={moverAHoy}
+            fechaRedundante={fechaRedundante}
+          />
+        ))}
+      </ul>
     </section>
   );
 }
@@ -524,9 +523,21 @@ function VistaSemana({
   const inicio = startOfWeek(ancla, { weekStartsOn: 1 });
   const dias = Array.from({ length: 7 }, (_, i) => addDays(inicio, i));
 
+  // SOLO los días con tareas (decisión del propietario): una semana con
+  // 4 días vacíos no es información, es una pared de encabezados vacíos
+  // que además cambia el tamaño de la vista al navegar. Mismo criterio
+  // que la vista Mes desde su origen.
+  const diasConTareas = dias.filter((d) =>
+    tasks.some((t) => t.dueDate && isSameDay(parseISO(t.dueDate), d)),
+  );
+
+  if (diasConTareas.length === 0) {
+    return <p className="text-sm text-ink-faint">No hay nada esta semana</p>;
+  }
+
   return (
     <div className="entrada-cascada space-y-6">
-      {dias.map((d) => (
+      {diasConTareas.map((d) => (
         <GrupoDia
           key={d.toISOString()}
           encabezado={
