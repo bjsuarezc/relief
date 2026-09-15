@@ -230,6 +230,9 @@ html {
 /* Píldora del conmutador: ahora es un SUBRAYADO A MANO que viaja entre
    pestañas (el mismo trazo del wordmark). El "segmented control" con
    fondo de píldora es lenguaje de kit de UI; el subrayado es de papel. */
+/* La pastilla viaja con Motion (spring, Sesión 20): sin transition acá —
+   dos motores sobre el mismo transform pelearían. El reduced-motion lo
+   resuelve MotionConfig (App.tsx), no el bloque de acá abajo. */
 .pestana-pill {
   position: absolute;
   bottom: -7px;
@@ -238,9 +241,6 @@ html {
   background-repeat: no-repeat;
   background-size: 100% 100%;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='5'%3E%3Cpath d='M1 3 C 22 1.2, 44 4.2, 66 2.4 C 86 0.8, 104 3.6, 117 2.2' stroke='%231f4291' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  transition:
-    transform var(--dur-base) var(--ease-out-ui),
-    width var(--dur-base) var(--ease-out-ui);
 }
 .dark .pestana-pill {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='5'%3E%3Cpath d='M1 3 C 22 1.2, 44 4.2, 66 2.4 C 86 0.8, 104 3.6, 117 2.2' stroke='%236e8fe0' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -392,7 +392,6 @@ input.ts-editar:focus-visible {
   html:not(.forzar-movimiento) .ts-check,
   html:not(.forzar-movimiento) .ts-check svg,
   html:not(.forzar-movimiento) .ch-mark,
-  html:not(.forzar-movimiento) .pestana-pill,
   html:not(.forzar-movimiento) .tarea-fila {
     animation: none !important;
     transition: none !important;

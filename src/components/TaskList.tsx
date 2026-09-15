@@ -28,6 +28,7 @@ import {
   startOfWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
+import { AnimatePresence, motion } from "motion/react";
 import { ChevronLeft, ChevronRight, Trash2, Undo2 } from "lucide-react";
 import { PRIORIDADES, WeekPicker } from "./CaptureBar";
 import { useTasksStore } from "../lib/store";
@@ -134,7 +135,24 @@ function TareaLinea({
 
   return (
     <>
-      <li
+      {/* motion.li (PoC de Motion, Sesión 20): la fila participa del
+          ciclo de presencia de la lista. exit = la fila se va deslizando
+          a la izquierda mientras se desvanece (se la "retira del renglón");
+          layout="position" = las filas hermanas se deslizan a su nuevo
+          lugar cuando una se va (animación de layout: transform, no
+          reflow). El enter (opacity) solo aplica a filas agregadas a un
+          grupo ya montado: la primera carga la salta initial={false} del
+          AnimatePresence (la cascada del grupo ya la cubre). */}
+      <motion.li
+        layout="position"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0, x: -16 }}
+        transition={{
+          opacity: { duration: 0.18, ease: "easeOut" },
+          x: { duration: 0.16, ease: "easeIn" },
+          layout: { type: "spring", stiffness: 500, damping: 40 },
+        }}
         className={`tarea-fila group flex items-center gap-3 px-1 py-3 text-sm ${
           task.completed ? "completada" : ""
         }`}
@@ -238,7 +256,7 @@ function TareaLinea({
         >
           <Trash2 size={15} />
         </button>
-      </li>
+      </motion.li>
 
       {/* Paneles debajo de la fila (fuera del <li> flex, a lo ancho).
           Solo uno a la vez: abrir uno cierra el otro (menos ruido).
@@ -320,18 +338,26 @@ function GrupoDia({
         {encabezado}
       </h3>
       <ul>
-        {tareas.map((task) => (
-          <TareaLinea
-            key={task.id}
-            task={task}
-            onToggle={onToggle}
-            onUpdate={onUpdate}
-            onReschedule={onReschedule}
-            onDelete={onDelete}
-            moverAHoy={moverAHoy}
-            fechaRedundante={fechaRedundante}
-          />
-        ))}
+        {/* AnimatePresence (PoC Motion): cuando una tarea se manda a la
+            papelera o se reubica de día, la fila NO desaparece de golpe:
+            ejecuta su exit (fade + slide) y las hermanas se acomodan con
+            layout="position". mode="popLayout": la que se va no retiene
+            espacio mientras sale. initial={false}: la primera carga no
+            re-anima (la cascada del grupo ya la cubre). */}
+        <AnimatePresence initial={false} mode="popLayout">
+          {tareas.map((task) => (
+            <TareaLinea
+              key={task.id}
+              task={task}
+              onToggle={onToggle}
+              onUpdate={onUpdate}
+              onReschedule={onReschedule}
+              onDelete={onDelete}
+              moverAHoy={moverAHoy}
+              fechaRedundante={fechaRedundante}
+            />
+          ))}
+        </AnimatePresence>
       </ul>
     </section>
   );
@@ -472,17 +498,20 @@ function VistaHoy({
             completadas
           </h3>
           <ul>
-            {deHoy.map((task) => (
-              <TareaLinea
-                key={task.id}
-                task={task}
-                onToggle={onToggle}
-                onUpdate={onUpdate}
-                onReschedule={onReschedule}
-                onDelete={onDelete}
-                fechaRedundante
-              />
-            ))}
+            {/* Mismo contrato de presencia que GrupoDia (ver allá). */}
+            <AnimatePresence initial={false} mode="popLayout">
+              {deHoy.map((task) => (
+                <TareaLinea
+                  key={task.id}
+                  task={task}
+                  onToggle={onToggle}
+                  onUpdate={onUpdate}
+                  onReschedule={onReschedule}
+                  onDelete={onDelete}
+                  fechaRedundante
+                />
+              ))}
+            </AnimatePresence>
           </ul>
         </section>
       )}
@@ -691,11 +720,25 @@ function VistaPapelera({
   return (
     <div className="space-y-4">
       <ul>
-        {tasks.map((task) => (
-          <li
-            key={task.id}
-            className="tarea-fila flex items-center gap-3 px-1 py-3 text-sm"
-          >
+        {/* Filas de la papelera: mismas reglas de presencia que las listas
+            activas — restaurar/purgar una fila la retira con fade+slide y
+            las demás se deslizan a su lugar (layout). "Vaciar papelera"
+            dispara el exit de todas a la vez. */}
+        <AnimatePresence initial={false} mode="popLayout">
+          {tasks.map((task) => (
+            <motion.li
+              key={task.id}
+              layout="position"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{
+                opacity: { duration: 0.18, ease: "easeOut" },
+                x: { duration: 0.16, ease: "easeIn" },
+                layout: { type: "spring", stiffness: 500, damping: 40 },
+              }}
+              className="tarea-fila flex items-center gap-3 px-1 py-3 text-sm"
+            >
             <span className="flex-1 text-ink-soft">{task.title}</span>
             {/* Cuándo entró a la papelera (el mismo formato humano). */}
             <span className="text-xs text-ink-faint">
@@ -716,8 +759,9 @@ function VistaPapelera({
             >
               <Trash2 size={14} />
             </button>
-          </li>
+          </motion.li>
         ))}
+      </AnimatePresence>
       </ul>
 
       {/* Vaciar todo: dos pasos (click → confirmación inline → click). */}
@@ -847,15 +891,19 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
           ref={contenedorPestanas}
           className="relative flex gap-5"
         >
-          {/* La pastilla es ahora un subrayado a mano que viaja. */}
+          {/* La pastilla es un subrayado a mano que viaja. Desde la PoC de
+              Motion (Sesión 20) viaja con FÍSICA DE RESORTE (spring): tiene
+              inercia real en vez de una curva cubic-bezier fingida. El
+              ancho se anima directo (no con scale) para no estirar el
+              trazo ondulado del SVG de fondo — es un elemento de 6px de
+              alto, el costo de pintarlo es despreciable. */}
           {pildoraLista && (
-            <span
+            <motion.span
               aria-hidden
               className="pestana-pill"
-              style={{
-                transform: `translateX(${pildora.izquierda}px)`,
-                width: pildora.ancho,
-              }}
+              initial={false}
+              animate={{ x: pildora.izquierda, width: pildora.ancho }}
+              transition={{ type: "spring", stiffness: 500, damping: 40 }}
             />
           )}
 
