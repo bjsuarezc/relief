@@ -546,9 +546,38 @@ estado y la historia antes de continuar.
   limpio, y el stash de seguridad se descartó tras verificar.
 - Commits: `8d61115` (fixes de auditoría).
 
-### Estado / siguiente paso
+### Sesión 10 — identidad editorial reforzada (con las referencias del propietario)
 
-- ✅ Auditoría visual 93/100 con hallazgos corregidos y verificados.
+- El propietario reportó "no veo mejoras visuales significativas". Dos
+  causas reales encontradas:
+  1. **La app abría en modo oscuro** (el tema oscuro del rediseño es
+     sutil: tinta nocturna vs el verde viejo se parecen a primera vista).
+     Fix: el tema por defecto pasa a ser **claro** (la identidad "papel");
+     el oscuro se recuerda solo si el usuario lo elige. Antes dependía de
+     la preferencia del sistema (su Windows reporta oscuro).
+  2. **Faltaba lo que definen sus referencias** (`Inspiracion/`, 3 JPGs):
+     - **Miette**: wordmark ultra-gordo con regla decorativa debajo y
+       etiquetas en MAYÚSCULAS espaciadas.
+     - **Beaver con taza**: personaje ilustrado a mano en tinta cobalto.
+     - **Stay Cool**: grabado con gran presencia + caps espaciadas.
+- Cambios aplicados:
+  - Wordmark: Fraunces **900** (antes 800), 40px, tracking -0.045em, con
+    **regla corta debajo** (el detalle de bistro de la referencia).
+  - **Etiquetas en mayúsculas + tracking** (`.etiqueta`: uppercase,
+    0.16em, 10px) reemplazan la manuscrita Caveat en: fecha del
+    encabezado, fechas de fila, "borrada…", período de semana/mes y el
+    label del picker. **Caveat se desinstaló** (no estaba en las
+    referencias; menos peso muerto).
+  - **Mascota ilustrada**: un gato contento con su taza, dibujado a mano
+    en tinta cobalto (SVG a mano, trazo suelto, sin relleno) en el estado
+    vacío de Hoy; la papelera también pasa a cobalto. Verificada en
+    aislamiento con captura antes de integrarla.
+  - Copy normalizado a español neutro (se me escapó voseo: "empezá").
+- Verificación: captura del encabezado en la app (wordmark + regla +
+  caps) y captura aislada de la mascota y la papelera (HTML temporal).
+- Commit: `0285259`.
+
+### Estado / siguiente paso
 - ⏭️ Para "lista para publicar": instalador (`npm run tauri build` → .exe/.msi),
   aceleradores de teclado (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub,
   ícono/branding propio de la app.
