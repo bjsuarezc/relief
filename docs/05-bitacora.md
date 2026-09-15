@@ -684,11 +684,38 @@ estado y la historia antes de continuar.
 - Verificado: build OK, captura propia de la app sin regresiones visuales.
 - Commit: `97899f6`.
 
+### Sesión 15 — pasada orgánica (quitar el "feel de IA")
+
+- Queja del propietario: "la app tiene un feel de IA, no se siente orgánico".
+  Diagnóstico honesto (coincide con los tells que lista la skill
+  `frontend-design`): el diseño era coherente pero estaba armado con **dos
+  clichés de diseño generado**:
+  1. **El "kit SaaS"**: cada fila era LA MISMA tarjeta redondeada con el
+     mismo radio y borde que todo lo demás.
+  2. **El "eyebrow" de plantilla**: etiquetas en MAYÚSCULAS espaciadas
+     repetidas en todo texto secundario.
+  Y encima: papel de color plano (sin textura) y bordes/radios perfectos.
+- Cambios aplicados (marco: skill `impeccable`):
+  1. **La lista es un cuaderno, no tarjetas**: las filas son renglones
+     separados por líneas de tinta (la fila es la unidad de lectura).
+  2. **Grano de papel**: ruido SVG embebido (feTurbulence) al 5 % en
+     multiply (claro) / screen (oscuro) → el papel es material, no un hex.
+  3. **La regla del wordmark es un trazo a mano** (path SVG con vibración).
+  4. **El check es un círculo dibujado a mano**: dejó de ser un `<circle>`
+     perfecto — es un path irregular; es el elemento más tocado.
+  5. **Cajas "cortadas a mano"**: radios levemente distintos por esquina.
+  6. **Menos mayúsculas espaciadas**: reservadas para la fecha del
+     encabezado y los períodos; fechas de fila y "borrada…" volvieron a
+     minúscula → se fue el tell del eyebrow repetido.
+- Verificado con capturas propias en claro y oscuro.
+- Commit: `b5bc4d9`.
+
 ### Estado / siguiente paso
 
 - ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.
 - ✅ Revisión de diseño aplicada: contraste AA y límites de control 3:1.
 - ✅ Código muerto fuera, assets limpios e **íconos propios** (escritorio + móvil).
+- ✅ Pasada orgánica: renglones, grano, trazos a mano (adiós feel de IA).
 - ⏭️ Pendientes para "lista para publicar": instalador
   (`npm run tauri build` → .exe/.msi), aceleradores de teclado
   (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub.
