@@ -11,7 +11,7 @@ use tauri::Manager;
 // - task_event: log append-only de TODO lo que pasa con las tareas.
 //   Es la materia prima de la capa de IA de la v2 (patrones de procrastinación,
 //   resúmenes semanales). Se escribe, nunca se edita ni se borra.
-const SCHEMA: &str = "
+pub(crate) const SCHEMA: &str = "
 CREATE TABLE IF NOT EXISTS task (
     id           TEXT PRIMARY KEY,
     title        TEXT NOT NULL,
@@ -55,6 +55,26 @@ const MIGRACIONES: &[&str] = &[
     "ALTER TABLE task ADD COLUMN deleted_at TEXT",
 ];
 
+// crear_esquema: deja una conexión lista para usar (esquema + migraciones).
+// Se separó de init_db para que los TESTS preparen una BD en memoria con
+// EXACTAMENTE el mismo esquema que la app real — una sola verdad de esquema.
+pub(crate) fn crear_esquema(conn: &Connection) -> Result<(), rusqlite::Error> {
+    conn.execute_batch(SCHEMA)?;
+
+    // Aplicar migraciones, tolerando las que ya se aplicaron antes.
+    for migracion in MIGRACIONES {
+        if let Err(e) = conn.execute_batch(migracion) {
+            // "duplicate column name" = la migración ya estaba aplicada
+            // en un arranque anterior: es el caso feliz, se ignora.
+            if !e.to_string().contains("duplicate column name") {
+                return Err(e);
+            }
+        }
+    }
+
+    Ok(())
+}
+
 pub fn init_db(app: &tauri::AppHandle) -> Result<Connection, rusqlite::Error> {
     // app_data_dir() en Windows resuelve a %APPDATA%/<identificador de la app>.
     // expect() en vez de map_err: sin directorio de datos no tiene sentido
@@ -66,19 +86,7 @@ pub fn init_db(app: &tauri::AppHandle) -> Result<Connection, rusqlite::Error> {
     std::fs::create_dir_all(&data_dir).expect("no se pudo crear el directorio de datos");
 
     let conn = Connection::open(data_dir.join("relief.db"))?;
-    conn.execute_batch(SCHEMA)?;
-
-    // Aplicar migraciones, tolerando las que ya se aplicaron antes.
-    for migracion in MIGRACIONES {
-        if let Err(e) = conn.execute_batch(migracion) {
-            let msg = e.to_string();
-            // "duplicate column name" = la migración ya estaba aplicada
-            // en un arranque anterior: es el caso feliz, se ignora.
-            if !msg.contains("duplicate column name") {
-                return Err(e);
-            }
-        }
-    }
+    crear_esquema(&conn)?;
 
     Ok(conn)
 }
