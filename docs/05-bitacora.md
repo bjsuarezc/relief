@@ -513,6 +513,42 @@ estado y la historia antes de continuar.
 - **Requiere reinicio de opencode** para cargar el catálogo completo.
 - Commits: `ecb030d` (migración) + el de AGENTS.md/bitácora.
 
+### Sesión 9 — auditoría visual exhaustiva y corrección de hallazgos
+
+- El propietario pidió auditoría visual completa con protocolo: explorar
+  el 100% de los elementos accionables, forzar todos los estados, medir
+  (no adivinar) y reportar en formato estructurado.
+- Método: inventario de código (grep de radios/alturas/textos/pesos/
+  transiciones) + tour interactivo en el navegador con el mock del puente
+  + medición de estilos computados de ~15 elementos por vista.
+- **Puntaje de consistencia: 93/100.** Hallazgos corregidos:
+  1. MED — doble contorno en el input de edición de título (borde cobalto
+     + outline focus-visible encimado; el mismo defecto ya corregido en
+     la captura, pero los inputs de fila no estaban cubiertos). Fix:
+     regla `input.ts-editar:focus-visible { outline: none }`.
+  2. MED — popover de prioridad + edición de título coexistían en la
+     misma fila. Fix: `empezarEditar` cierra los paneles abiertos.
+  3. LOW — el span del título transicionaba a 150ms vs token 140ms
+     (los spans no son botones y no heredan la regla global). Fix:
+     todas las `duration-150` (16 en 4 archivos) → `duration-[140ms]`.
+  4. LOW — `rounded-md` (6px) en el input de edición rompía la escala
+     8/12. Fix: `rounded-lg`.
+  5. LOW — layout shift al abrir paneles inline: **decisión deliberada**
+     (comportamiento estándar; la alternativa —posición absoluta—
+     taparía la lista). Documentada, no se corrige.
+- **Verificación en vivo de cada fix** (requisito del propietario):
+  popover true→false al editar (coordinación OK); input de edición con
+  radius 8px y outline "3px none" (captura en pantalla: un solo borde
+  cobalto); span del título computed `0.14s`; cero `duration-150` y
+  cero `rounded-md` en el código.
+- Nota de proceso: volví a romper la regla de encoding con Set-Content en
+  TaskList (mojibake en "pestañas"); el archivo se reescribió completo y
+  limpio, y el stash de seguridad se descartó tras verificar.
+- Commits: `8d61115` (fixes de auditoría).
+
 ### Estado / siguiente paso
+
+- ✅ Auditoría visual 93/100 con hallazgos corregidos y verificados.
+- ⏭️ Para "lista para publicar": instalador (`npm run tauri build` → .exe/.msi),
   aceleradores de teclado (Sesión 1: Ctrl+N/Enter/Ctrl+D), README para GitHub,
   ícono/branding propio de la app.
