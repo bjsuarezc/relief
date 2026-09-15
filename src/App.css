@@ -246,21 +246,6 @@ html {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='5'%3E%3Cpath d='M1 3 C 22 1.2, 44 4.2, 66 2.4 C 86 0.8, 104 3.6, 117 2.2' stroke='%236e8fe0' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
-/* Variante "v2" (ondulación) de la píldora serpiente: el trazo pasa a un
-   TILE perfectamente repetible (empieza y termina en la misma altura — el
-   SVG suelto de .pestana-pill no cierra el ciclo) a tamaño FIJO con
-   repeat-x. Fijo = el trazo no se estira cuando el cuerpo se estira; en
-   cambio FLUYE, porque PildoraSerpiente anima background-position en la
-   dirección del viaje. De ahí el "retorcerse" de la serpiente. */
-.pestana-pill-ondula {
-  background-repeat: repeat-x;
-  background-size: 44px 6px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='6'%3E%3Cpath d='M0 3 C 7 1, 15 1, 22 3 C 29 5, 37 5, 44 3' stroke='%231f4291' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-}
-.dark .pestana-pill-ondula {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='6'%3E%3Cpath d='M0 3 C 7 1, 15 1, 22 3 C 29 5, 37 5, 44 3' stroke='%236e8fe0' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-}
-
 .contador-pulso {
   display: inline-block;
   animation: contador-pulso var(--dur-slow) var(--ease-spring);
