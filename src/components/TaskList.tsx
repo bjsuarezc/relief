@@ -803,6 +803,99 @@ function VistaPapelera({
   );
 }
 
+// PildoraSerpiente: el subrayado a mano que viaja entre pestañas.
+//
+// Fase de exploración "serpiente" (Sesión 21): tres estrategias, elegidas
+// con ?variante= en el harness de desarrollo. En la app real (sin query)
+// vale "spring" — el comportamiento aprobado — hasta que el propietario
+// decida viendo las variantes.
+// - "spring": viaja como bloque rígido con física de resorte (baseline).
+// - "v1" (estirón): la CABEZA llega primero. El borde que lidera el viaje
+//   se estira hasta la nueva pestaña (cuerpo extendido, origen anclado,
+//   primera mitad del recorrido), y la COLA alcanza después. Espejo exacto
+//   al viajar hacia la izquierda.
+// - "v2" (ondulación): v1 + el trazo ondulado FLUYE bajo la píldora durante
+//   el viaje (tile repetible de tamaño fijo + background-position animada)
+//   — la serpiente se retuerce al avanzar.
+const VARIANTE_PILDORA = (() => {
+  const v = new URLSearchParams(window.location.search).get("variante");
+  return v === "v1" || v === "v2" ? v : "spring";
+})();
+
+function PildoraSerpiente({
+  x,
+  ancho,
+  xPrev,
+  anchoPrev,
+}: {
+  x: number;
+  ancho: number;
+  xPrev: number;
+  anchoPrev: number;
+}) {
+  const variante = VARIANTE_PILDORA;
+  const dist = x - xPrev;
+
+  // Sin viaje real (montaje, resize, o reaparición de la pestaña Papelera):
+  // bloque rígido con spring — y sin keyframes, para no arrastrar la
+  // píldora desde x=0 en el primer render.
+  if (variante === "spring" || dist === 0 || xPrev === 0) {
+    return (
+      <motion.span
+        aria-hidden
+        className={variante === "v2" ? "pestana-pill pestana-pill-ondula" : "pestana-pill"}
+        initial={false}
+        animate={{ x, width: ancho }}
+        transition={{ type: "spring", stiffness: 500, damping: 40 }}
+      />
+    );
+  }
+
+  const aLaDerecha = dist > 0;
+  const distancia = Math.abs(dist);
+  // Ancho del cuerpo con la serpiente extendida: cubre TODO el recorrido
+  // (distancia) más el ancho del extremo que ya llegó.
+  const anchoEstirado = distancia + (aLaDerecha ? ancho : anchoPrev);
+  // Sutil (decisión del propietario): 150ms por fase, sin rebote.
+  const dur = 0.3;
+  const easeCabeza: [number, number, number, number] = [0.22, 1, 0.36, 1];
+  // Un easing por SEGMENTO del keyframe: el tramo "plano" (espera) es
+  // lineal; el viaje, ease-out suave (el token --ease-out-soft del sistema).
+  const easeX: ("linear" | [number, number, number, number])[] =
+    aLaDerecha ? ["linear", easeCabeza] : [easeCabeza, "linear"];
+  const easeW: ("easeOut" | "linear")[] = ["easeOut", "easeOut"];
+
+  // Coreografía cabeza-primera (times = fracción del viaje):
+  // - x: el borde que lidera viaja en la fase 1 y se ancla en la 2.
+  // - width: el cuerpo se estira en la fase 1 y recupera su ancho en la 2.
+  const animate = {
+    x: aLaDerecha ? [xPrev, xPrev, x] : [xPrev, x, x],
+    width: [anchoPrev, anchoEstirado, ancho],
+    // v2: el trazo fluye en la dirección del viaje mientras el cuerpo
+    // se mueve (el tile es repetible, así que el desplazamiento es
+    // continuo — de acá sale el "retorcerse").
+    ...(variante === "v2"
+      ? { backgroundPositionX: [0, aLaDerecha ? distancia : -distancia] }
+      : {}),
+  };
+  const transition = {
+    x: { duration: dur, times: [0, 0.5, 1], ease: easeX },
+    width: { duration: dur, times: [0, 0.5, 1], ease: easeW },
+    ...(variante === "v2"
+      ? { backgroundPositionX: { duration: dur, ease: "linear" as const } }
+      : {}),
+  };
+
+  return (
+    <motion.span
+      aria-hidden
+      className={variante === "v2" ? "pestana-pill pestana-pill-ondula" : "pestana-pill"}
+      animate={animate}
+      transition={transition}
+    />
+  );
+}
+
 // El conmutador: las pestañas + el "ancla" de navegación compartida.
 // El ancla es UNA fecha: la semana la interpreta como "semana de esta
 // fecha" y el mes como "mes de esta fecha". Al cambiar de vista se
@@ -850,11 +943,16 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
   ];
 
   // Píldora deslizante: se mide la pestaña activa y la pastilla viaja
-  // hasta ella (en vez de que cada pestaña prenda/apague su propio fondo).
+  // hasta ella. Se guarda también la posición ANTERIOR: la coreografía
+  // de la serpiente (PildoraSerpiente) necesita de dónde partió.
   // Se re-mide al cambiar de vista, al aparecer/desaparecer la papelera y
   // al redimensionar la ventana.
   const contenedorPestanas = useRef<HTMLDivElement>(null);
-  const [pildora, setPildora] = useState({ izquierda: 0, ancho: 0 });
+  const [pildora, setPildora] = useState({
+    montada: false,
+    anterior: { izquierda: 0, ancho: 0 },
+    actual: { izquierda: 0, ancho: 0 },
+  });
   const [pildoraLista, setPildoraLista] = useState(false);
 
   useLayoutEffect(() => {
@@ -871,7 +969,14 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
         setPildoraLista(false);
         return;
       }
-      setPildora({ izquierda: activa.offsetLeft, ancho: activa.offsetWidth });
+      const medidas = { izquierda: activa.offsetLeft, ancho: activa.offsetWidth };
+      setPildora((prev) => ({
+        montada: true,
+        // En la PRIMERA medición anterior = actual: la píldora aparece en
+        // su lugar sin viajar desde x=0.
+        anterior: prev.montada ? prev.actual : medidas,
+        actual: medidas,
+      }));
       setPildoraLista(true);
     };
 
@@ -891,19 +996,15 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
           ref={contenedorPestanas}
           className="relative flex gap-5"
         >
-          {/* La pastilla es un subrayado a mano que viaja. Desde la PoC de
-              Motion (Sesión 20) viaja con FÍSICA DE RESORTE (spring): tiene
-              inercia real en vez de una curva cubic-bezier fingida. El
-              ancho se anima directo (no con scale) para no estirar el
-              trazo ondulado del SVG de fondo — es un elemento de 6px de
-              alto, el costo de pintarlo es despreciable. */}
+          {/* El subrayado a mano que viaja: PildoraSerpiente (ver el
+              comentario completo allá). Estrategia activa: ?variante= en
+              el harness; "spring" en la app real hasta decisión. */}
           {pildoraLista && (
-            <motion.span
-              aria-hidden
-              className="pestana-pill"
-              initial={false}
-              animate={{ x: pildora.izquierda, width: pildora.ancho }}
-              transition={{ type: "spring", stiffness: 500, damping: 40 }}
+            <PildoraSerpiente
+              x={pildora.actual.izquierda}
+              ancho={pildora.actual.ancho}
+              xPrev={pildora.anterior.izquierda}
+              anchoPrev={pildora.anterior.ancho}
             />
           )}
 
