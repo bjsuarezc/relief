@@ -182,24 +182,24 @@ pub fn configurar(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         eprintln!("no se pudo registrar el atajo {ATAJO_GLOBAL}: {e}");
     }
 
-    activar_inicio_con_sistema(app);
     Ok(())
 }
 
-// Relief arranca con Windows por defecto (sin interruptor en la app: es una
-// utilidad de bandeja, tiene que estar siempre a mano). Una build de release
-// se registra sola si no lo está, lo que además la mantiene apuntando al
-// .exe correcto si se reinstala en otra ruta. Quien no lo quiera lo apaga
-// en Windows (Administrador de tareas → Inicio) y esa decisión se respeta:
-// Windows la guarda aparte y no la pisa este registro. En dev no se toca.
-fn activar_inicio_con_sistema(app: &App) {
-    if cfg!(debug_assertions) {
-        return;
-    }
+// Inicio con Windows: ANTES se activaba solo, sin preguntar (Sesión 22).
+// Se volvió opt-in (Sesión 23) porque un instalador sin firma de reputación
+// que además se registra solo en la clave Run del registro, sin que la
+// persona lo pida, es exactamente el patrón que Windows Defender marca como
+// sospechoso ("Behavior:Win32/SuspiciousFileInRunKey") — se confirmó en una
+// instalación real. Ahora es un interruptor en el panel de ajustes; estos
+// dos comandos son el puente para leerlo y cambiarlo.
+#[tauri::command]
+pub fn obtener_inicio_con_sistema(app: AppHandle) -> bool {
+    app.autolaunch().is_enabled().unwrap_or(false)
+}
+
+#[tauri::command]
+pub fn set_inicio_con_sistema(app: AppHandle, activo: bool) -> Result<(), String> {
     let inicio = app.autolaunch();
-    if !inicio.is_enabled().unwrap_or(false) {
-        if let Err(e) = inicio.enable() {
-            eprintln!("no se pudo activar el inicio con Windows: {e}");
-        }
-    }
+    let resultado = if activo { inicio.enable() } else { inicio.disable() };
+    resultado.map_err(|e| e.to_string())
 }

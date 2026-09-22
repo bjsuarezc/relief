@@ -6,7 +6,12 @@ import { useEffect, useRef, useState } from "react";
 import { Monitor, Moon, Settings2, Sun } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { TEMAS, useAjustes, type Modo, type TemaColor } from "../lib/ajustes";
+import { api } from "../lib/api";
 import { Mascota, PALETA_PELAJE, type Animal } from "./Mascota";
+
+// Solo existe fuera del navegador (Tauri real): en dev-mock/navegador no
+// hay registro de Windows que leer ni escribir.
+const enTauri = "__TAURI_INTERNALS__" in window;
 
 // Muestras: cada tema pinta su fondo y su acento, tal cual se verá.
 const MUESTRA: Record<TemaColor, { canvas: string; acento: string }> = {
@@ -34,6 +39,25 @@ export function PanelAjustes() {
   const [abierto, setAbierto] = useState(false);
   const raiz = useRef<HTMLDivElement>(null);
   const { tema, modo, mascota, colores, setTema, setModo, setMascota, setColor } = useAjustes();
+
+  // Inicio con Windows: opt-in, apagado hasta que la persona lo prenda a
+  // propósito (ver bandeja.rs — antes se activaba solo y sin preguntar, lo
+  // que disparaba alertas de Windows Defender). `null` = todavía sin leer.
+  const [inicioSistema, setInicioSistema] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!enTauri) return;
+    void api.getInicioConSistema().then(setInicioSistema);
+  }, []);
+  const alternarInicioSistema = async () => {
+    if (inicioSistema === null) return;
+    const nuevo = !inicioSistema;
+    setInicioSistema(nuevo); // optimista: se revierte si Rust falla
+    try {
+      await api.setInicioConSistema(nuevo);
+    } catch {
+      setInicioSistema(!nuevo);
+    }
+  };
 
   // Cierra con Esc o al hacer clic fuera. Esc en la app oculta la ventana
   // (bandeja): con el panel abierto solo debe cerrar el panel.
@@ -178,6 +202,37 @@ export function PanelAjustes() {
                 </div>
               )}
             </Seccion>
+
+            {enTauri && (
+              <Seccion titulo="Sistema">
+                <button
+                  type="button"
+                  onClick={() => void alternarInicioSistema()}
+                  disabled={inicioSistema === null}
+                  aria-pressed={inicioSistema ?? false}
+                  className="flex w-full items-center justify-between gap-3 disabled:opacity-50"
+                >
+                  <span className="text-left text-sm text-ink">
+                    Iniciar con Windows
+                    <span className="block text-[11px] text-ink-faint">
+                      Relief queda lista en la bandeja al prender la PC
+                    </span>
+                  </span>
+                  <span
+                    className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${
+                      inicioSistema ? "bg-accent" : "bg-surface"
+                    }`}
+                  >
+                    <motion.span
+                      layout
+                      transition={RESORTE}
+                      className="absolute top-0.5 h-5 w-5 rounded-full bg-canvas shadow-sm"
+                      style={{ left: inicioSistema ? 18 : 2 }}
+                    />
+                  </span>
+                </button>
+              </Seccion>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

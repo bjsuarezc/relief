@@ -33,4 +33,8 @@ export const api = {
     invoke<Task>("set_task_deleted", { id, deleted }),
   purgeTask: (id: string) => invoke<void>("purge_task", { id }),
   purgeAllTasks: () => invoke<number>("purge_all_tasks"),
+  // Inicio con Windows: opt-in desde el panel de ajustes (ver bandeja.rs,
+  // Sesión 23 — antes se activaba solo, sin preguntar).
+  getInicioConSistema: () => invoke<boolean>("obtener_inicio_con_sistema"),
+  setInicioConSistema: (activo: boolean) => invoke<void>("set_inicio_con_sistema", { activo }),
 };

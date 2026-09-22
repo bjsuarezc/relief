@@ -57,7 +57,9 @@ pub fn run() {
             tasks::update_task,
             tasks::set_task_deleted,
             tasks::purge_task,
-            tasks::purge_all_tasks
+            tasks::purge_all_tasks,
+            bandeja::obtener_inicio_con_sistema,
+            bandeja::set_inicio_con_sistema
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
