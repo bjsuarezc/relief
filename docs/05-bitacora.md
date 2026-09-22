@@ -931,6 +931,103 @@ estado y la historia antes de continuar.
   estable (Δ=0). El movimiento en vivo lo juzga el propietario (HMR ya lo
   sirve en su ventana).
 
+### Sesión 22 — Relief como utilidad de bandeja
+
+- Motivo: al propietario no le gustaba una app dentro de una ventana
+  clásica de Windows; pidió acceso instantáneo desde los íconos ocultos.
+- Nota de plataforma: Windows no deja poner un botón propio junto a la
+  flecha `^`; el mecanismo es el **ícono de bandeja** (el usuario lo
+  arrastra a la barra para dejarlo siempre visible).
+- Decisiones del propietario: popover sin marco, atajo global, iniciar con
+  Windows, cerrar = ocultar a bandeja.
+- Backend (`src-tauri/src/bandeja.rs`, nuevo; `lib.rs` solo cablea):
+  1. Ícono con clic izquierdo = alternar panel (anclado sobre el ícono con
+     `tauri-plugin-positioner`, empujado hacia adentro si se sale del
+     monitor) y clic derecho = menú Abrir / Salir.
+  2. Ventana 420×640 sin marco, fuera de la barra de tareas, siempre
+     arriba, oculta al arrancar. La X oculta; perder el foco oculta.
+  3. Ventana de gracia de 250 ms tras el blur: sin ella, el clic en el
+     ícono con el panel abierto lo cerraba (blur) y lo reabría al instante.
+  4. Atajo global **Ctrl+Shift+Espacio** (`tauri-plugin-global-shortcut`).
+     Ctrl+Alt+Espacio falló con ERROR_HOTKEY_ALREADY_REGISTERED (otra app
+     lo tenía) y además Ctrl+Alt es AltGr en teclados en español. Si el
+     registro falla, la app sigue por la bandeja y avisa por consola.
+  5. Inicio con Windows (`tauri-plugin-autostart`): por defecto, solo en
+     release (en dev no toca el registro). Ver "Limpieza" abajo.
+- Frontend: evento `foco-captura` enfoca la captura al abrir el panel; `Esc`
+  oculta; encabezado reordenado (fecha bajo el wordmark) para el ancho de
+  420 px. Todo lo que usa Tauri se protege con `__TAURI_INTERNALS__` para no
+  romper navegador/dev-mock.
+- Dependencias nuevas: 3 crates (positioner, global-shortcut, autostart).
+- Verificado: el propietario probó la app en vivo y quedó bien.
+
+#### Limpieza (misma sesión, tras probarla)
+
+- **Fuera el botón de encendido** (`ToggleInicio`): el ícono parecía "apagar
+  la app" y no daba señal de qué hacía. Relief ahora inicia con Windows **por
+  defecto**, sin interruptor: en release se registra si no lo está (así
+  también sigue apuntando al .exe correcto tras reinstalar). Se fue el JS de
+  `@tauri-apps/plugin-autostart` y sus permisos. Para no iniciar con
+  Windows: Administrador de tareas → Inicio (Windows lo guarda aparte y no
+  lo pisa este registro).
+- **Fuera el botón de animaciones** (`ToggleMovimiento` + store
+  `lib/movimiento.ts`). Ese botón era quien ponía `.forzar-movimiento`, así
+  que se decidió: **la app siempre anima** (`MotionConfig reducedMotion=
+  "never"`) y se borró el bloque CSS de `prefers-reduced-motion`.
+  Consecuencia asumida: Relief ya no respeta esa preferencia del sistema.
+- **Scroll sin barra visible** (`.sin-barra` en el `<main>`): se desplaza con
+  rueda/touchpad/teclado. Costo: no hay pista visual de que hay más tareas
+  abajo (si estorba, un desvanecido sutil al pie).
+- **Desalineado tras ocultar la barra**: el `scrollbar-gutter: stable` de
+  `<html>` (Sesión 19) seguía reservando ~15px a la derecha para una barra
+  que ya no existe → márgenes 20px izq / 35px der y nav/captura cortadas
+  antes del borde. Se quitó; medido en captura (Edge headless a 600px):
+  ahora 20px a cada lado. Ojo al medir: Edge headless impone un ancho mínimo
+  (~480px) y recorta la captura, así que un `--window-size=420` engaña.
+- Verificado: `tsc --noEmit` y `cargo check` limpios, sin referencias
+  huérfanas. El aspecto del scroll y el encabezado los juzga el propietario
+  en vivo.
+
+#### Vistas constantes (misma sesión)
+
+- **Fila superior estándar** (`EncabezadoVista`, reemplaza a `PeriodoNav`):
+  las 4 vistas arrancan con la misma fila (`h-8`), título a la izquierda y
+  acciones a la derecha. Antes solo Semana/Mes la tenían; Hoy arrancaba con
+  "Atrasadas" y la Papelera con la lista.
+  Hoy → `hoy · 3/8 completadas` (la micro-victoria con resorte subió del
+  grupo "Hoy" a la fila; sin tareas de hoy, solo `hoy`) · Semana/Mes →
+  período + `‹ ›` (las flechas pasan a la derecha para que el título quede
+  siempre en el mismo sitio) · Papelera → `papelera` + `Vaciar (n)`.
+  "Atrasadas" es ahora un grupo más bajo la fila; el grupo "Hoy" usa
+  `GrupoDia` como el resto. `esDeHoy` es la definición única compartida.
+- **Barra inferior fija**: al borrar la primera tarea aparecía el botón de
+  Papelera y `justify-around` pasaba de 3 a 4 columnas → Hoy/Semana/Mes se
+  corrían a la izquierda. Se probaron (en la conversación) dejarla siempre
+  visible o reservar el hueco; el propietario rechazó ambas: la Papelera "no
+  corresponde" en esa barra. Ahora `VistaNav` solo tiene Hoy/Semana/Mes y la
+  Papelera vive en el encabezado (`BotonPapelera`, junto al tema): siempre
+  visible, conteo como insignia superpuesta (el botón mide lo mismo vacío o
+  lleno), clic la abre y estando dentro vuelve a Hoy.
+- "Vaciar" subió de `VistaPapelera` a la fila (`AccionVaciar`); la
+  confirmación se acortó a `¿Borrar N para siempre? Sí · No` para que quepa
+  junto al título a 420px.
+- **Atrasadas ya no acumula lo completado en otros días**: el propietario
+  vio en Hoy, como "atrasadas", tareas que había completado días antes. La
+  regla anterior (Sesión 1: las completadas se quedan tachadas) dejaba todo
+  lo vencido y completado en Hoy para siempre. Ahora una atrasada completada
+  se queda tachada **solo si se completó hoy** (`completedAt`, UTC → día
+  local); si se completó otro día desaparece de Hoy y sigue visible en su
+  día dentro de Semana/Mes. Mantiene la "victoria" del momento sin ensuciar
+  Hoy al día siguiente. Pendiente por decidir: "Sin fecha" tiene el mismo
+  patrón (completadas sin fecha se acumulan) y no se tocó.
+- Verificado: `tsc --noEmit` limpio; captura headless (600px) de Hoy con la
+  fila, 3 íconos abajo y papelera arriba; con el caso "completada el 14 sep"
+  del mock, ya no sale en Atrasadas. Semana/Mes/Papelera y el
+  comportamiento al borrar los juzga el propietario en vivo.
+- Pendiente: los plugins y `bandeja.rs` son solo de escritorio; para móvil
+  (v2+) habrá que ponerlos detrás de `cfg(desktop)`. El instalador
+  (`tauri build`) y el inicio con Windows no se probaron en release.
+
 ### Estado / siguiente paso
 
 - ✅ 21 tests del backend, clippy limpio, refactor de testabilidad.

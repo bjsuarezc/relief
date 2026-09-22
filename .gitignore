@@ -25,3 +25,6 @@ dist-ssr
 
 # Harness de desarrollo (mock del puente Tauri, no va al repo)
 dev-mock.html
+
+dev-mascotas.html
+src/dev-mascotas.tsx

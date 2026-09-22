@@ -13,8 +13,12 @@
         /* El tema por defecto es CLARO: la identidad del producto es
            "tinta sobre papel". El oscuro existe (toggle) y se recuerda
            solo si el usuario lo eligió explícitamente. */
-        var guardado = localStorage.getItem("relief-tema");
-        if (guardado === "dark") document.documentElement.classList.add("dark");
+        var aj = JSON.parse(localStorage.getItem("relief-ajustes") || "null");
+        var modo = aj ? aj.modo : localStorage.getItem("relief-tema") === "dark" ? "oscuro" : "claro";
+        var oscuro = modo === "oscuro" || (modo === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (oscuro) document.documentElement.classList.add("dark");
+        document.documentElement.dataset.fondo = oscuro ? "oscuro" : "claro";
+        document.documentElement.dataset.tema = (aj && ["salvia", "terracota", "tinta", "neutro"].indexOf(aj.tema) >= 0 && aj.tema) || "salvia";
 
         /* Movimiento: por defecto la app ANIMA aunque el sistema pida
            "reduced motion" (Windows suele traer las animaciones apagadas).

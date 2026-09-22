@@ -2,6 +2,7 @@
 // Solo hace "cableado" (wiring): arma el estado global y registra los comandos.
 // La lógica real vive en db.rs y tasks.rs.
 
+mod bandeja;
 mod db;
 mod tasks;
 
@@ -31,9 +32,21 @@ pub struct AppState(pub Mutex<Connection>);
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_positioner::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, _atajo, evento| bandeja::al_atajo(app, evento.state()))
+                .build(),
+        )
+        .on_window_event(bandeja::al_evento_ventana)
         .setup(|app| {
             let conn = init_db(app.handle()).expect("no se pudo inicializar la base de datos");
             app.manage(AppState(Mutex::new(conn)));
+            bandeja::configurar(app)?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

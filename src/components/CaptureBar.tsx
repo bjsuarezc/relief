@@ -1,13 +1,15 @@
 ﻿// CaptureBar: la barra de captura rápida — el corazón del MVP.
-// Estilo editorial: trazo de tinta, radios moderados, cobalto para la
-// acción principal. Un solo panel abierto a la vez.
+// Fija al pie, estilo píldora de chat (patrón mobile-first elegido por
+// el propietario): la prioridad se ve y se toca sin abrir nada.
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { addDays, format, isSameDay, startOfWeek } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Flag, Plus } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { motion } from "motion/react";
+import { listen } from "@tauri-apps/api/event";
+import { PanelDesplegable } from "./PanelDesplegable";
 import { useTasksStore } from "../lib/store";
-import { usePresencia } from "../lib/usePresencia";
 import type { CreateTaskInput, Priority } from "../lib/types";
 
 // Prioridades: una sola fuente de etiquetas en la UI (la reutiliza TaskList).
@@ -17,25 +19,42 @@ export const PRIORIDADES: { valor: Priority; etiqueta: string }[] = [
   { valor: "low", etiqueta: "Baja" },
 ];
 
+// Punto de color por prioridad (tono PLENO, no el tinte de fondo de las
+// píldoras de la lista — acá son puntitos de 12px, necesitan el color
+// entero para leerse).
+const COLOR_PUNTO_PRIORIDAD: Record<Priority, string> = {
+  high: "bg-prioridad-alta",
+  medium: "bg-prioridad-media",
+  low: "bg-prioridad-baja",
+};
+
 export function CaptureBar() {
   const createTask = useTasksStore((s) => s.createTask);
   const [title, setTitle] = useState("");
   const [captureError, setCaptureError] = useState<string | null>(null);
 
-  // Destino activo: la fecha elegida si hay chip; si no, hoy.
+  // Destino activo: la fecha elegida si hay picker; si no, hoy.
   const [captureDate, setCaptureDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  // null = sin elegir (Rust aplica medium). Tocar el punto ya elegido
+  // lo deselecciona — no hace falta un popover para esto.
   const [priority, setPriority] = useState<Priority | null>(null);
-  const [showPriority, setShowPriority] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // El panel de bandeja se oculta y se vuelve a mostrar sin recargar la
+  // página: cada vez que Rust lo abre (ícono o atajo global) manda este
+  // evento y el cursor vuelve a la captura, listo para escribir.
+  useEffect(() => {
+    if (!("__TAURI_INTERNALS__" in window)) return;
+    const desuscribir = listen("foco-captura", () => inputRef.current?.focus());
+    return () => {
+      void desuscribir.then((f) => f());
+    };
+  }, []);
+
   const today = new Date();
   const capturandoHoy = isSameDay(captureDate, today);
-
-  // Presencia de los paneles: el cierre también se anima (usePresencia).
-  const panelFecha = usePresencia(showDatePicker);
-  const panelPrioridad = usePresencia(showPriority);
 
   const submit = async () => {
     const trimmed = title.trim();
@@ -63,126 +82,103 @@ export function CaptureBar() {
   };
 
   return (
-    // <form onSubmit>: Enter dispara la creación nativamente.
-    <div className="w-full">
-      {/* La captura es un RENGLÓN de papel, no una caja: una línea de tinta
-          abajo, el texto escrito encima y el botón como el punto azul del
-          wordmark. El foco marca la línea en azul. */}
-      <div className="capture-focus border-b-2 border-line-input transition-colors duration-200">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void submit();
-          }}
-          className="flex h-14 items-center gap-3"
-        >
+    // Fija al pie (la posiciona App.tsx): píldora de captura tipo chat,
+    // igual patrón que "escribir un mensaje" — cero curva de aprendizaje.
+    // Banda de superficie propia, separada del contenido por una línea:
+    // el mismo lenguaje que VistaNav justo debajo.
+    <div className="flex flex-col border-t border-line bg-surface">
+      {/* El picker de fecha se abre HACIA ARRIBA (está antes en el orden
+          del flex column): aparece por encima de la píldora, nunca la tapa. */}
+      <div className="px-4">
+        <PanelDesplegable abierto={showDatePicker}>
+          <WeekPicker
+            selected={captureDate}
+            onSelect={(d) => {
+              setCaptureDate(d);
+              setShowDatePicker(false);
+            }}
+          />
+        </PanelDesplegable>
+      </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit();
+        }}
+        className="flex items-center gap-2 px-4 py-2.5"
+      >
+        <div className="capture-focus flex min-w-0 flex-1 items-center gap-2 rounded-full border border-line-input bg-surface px-3.5 py-2 transition-colors duration-200">
           <input
             ref={inputRef}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="¿Qué tienes que hacer?"
+            placeholder="¿Qué tenés que hacer?"
             autoFocus
-            className="entrada-papel h-full flex-1 bg-transparent outline-none placeholder:font-sans placeholder:text-[15px] placeholder:font-normal placeholder:text-ink-faint"
+            className="entrada-papel min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:font-sans placeholder:text-sm placeholder:font-normal placeholder:text-ink-faint"
           />
-          <button
-            type="submit"
-            aria-label="Crear tarea"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink hover:opacity-90"
-          >
-            <Plus size={16} strokeWidth={2.5} />
-          </button>
-        </form>
-      </div>
 
-      {/* Acciones de tinta: texto subrayado (no píldoras). Es el lenguaje
-          del papel — se leen como anotaciones al pie del renglón. */}
-      <div className="mt-4 flex items-center gap-6">
-        <button
-          type="button"
-          onClick={() => {
-            const abrir = !showDatePicker;
-            setShowDatePicker(abrir);
-            if (abrir) setShowPriority(false);
-            if (showDatePicker) setCaptureDate(today);
-          }}
-          title={
-            capturandoHoy
-              ? "Capturar para hoy — abre el picker de semana"
-              : `Capturando para ${format(captureDate, "EEE d MMM", { locale: es })}`
-          }
-          className={`accion-tinta relative inline-flex items-center gap-1.5 border-b pb-0.5 text-sm transition-colors duration-[140ms] ${
-            showDatePicker
-              ? "border-accent text-accent"
-              : "border-line text-ink-soft hover:border-line-strong hover:text-ink"
-          }`}
-        >
-          <Plus
-            size={13}
-            strokeWidth={2}
-            className={`transition-transform duration-[140ms] ${
-              showDatePicker ? "rotate-45" : ""
+          {/* Prioridad SIEMPRE visible — sin popover. Tocar el punto ya
+              elegido lo deselecciona (vuelve a "sin elegir"). */}
+          <div className="flex shrink-0 items-center gap-1.5">
+            {PRIORIDADES.map((p) => (
+              <motion.button
+                key={p.valor}
+                type="button"
+                onClick={() => setPriority(priority === p.valor ? null : p.valor)}
+                aria-label={`Prioridad ${p.etiqueta.toLowerCase()}`}
+                aria-pressed={priority === p.valor}
+                title={`Prioridad ${p.etiqueta.toLowerCase()}`}
+                whileTap={{ scale: 0.7 }}
+                animate={{ scale: priority === p.valor ? 1.15 : 1 }}
+                transition={{ type: "spring", stiffness: 600, damping: 15 }}
+                className={`h-3 w-3 shrink-0 rounded-full transition-opacity duration-[140ms] ${
+                  COLOR_PUNTO_PRIORIDAD[p.valor]
+                } ${priority === p.valor ? "opacity-100" : "opacity-30 hover:opacity-60"}`}
+              />
+            ))}
+          </div>
+
+          {/* Fecha: ícono de calendario. Se enciende en el acento si el
+              destino no es hoy — la única señal que hace falta. */}
+          <motion.button
+            type="button"
+            onClick={() => {
+              const abrir = !showDatePicker;
+              setShowDatePicker(abrir);
+              if (!abrir) setCaptureDate(today);
+            }}
+            title={
+              capturandoHoy
+                ? "Elegir fecha"
+                : `Capturando para ${format(captureDate, "EEE d MMM", { locale: es })}`
+            }
+            aria-label="Elegir fecha de la tarea"
+            whileTap={{ scale: 0.85, rotate: -8 }}
+            transition={{ type: "spring", stiffness: 600, damping: 18 }}
+            className={`shrink-0 transition-colors duration-[140ms] ${
+              showDatePicker || !capturandoHoy
+                ? "text-accent"
+                : "text-ink-faint hover:text-ink-soft"
             }`}
-          />
-          <span>
-            {capturandoHoy
-              ? "Fecha"
-              : format(captureDate, "EEE d MMM", { locale: es })}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            const abrir = !showPriority;
-            setShowPriority(abrir);
-            if (abrir) setShowDatePicker(false);
-            if (showPriority) setPriority(null);
-          }}
-          className={`accion-tinta inline-flex items-center gap-1.5 border-b pb-0.5 text-sm transition-colors duration-[140ms] ${
-            showPriority
-              ? "border-accent text-accent"
-              : "border-line text-ink-soft hover:border-line-strong hover:text-ink"
-          }`}
-        >
-          <Flag
-            size={13}
-            strokeWidth={2}
-            className={showPriority ? "text-accent" : ""}
-          />
-          <span>Prioridad</span>
-        </button>
-      </div>
-
-      {panelFecha.montado && (
-        <div className={panelFecha.saliendo ? "panel-saliendo" : "panel-animada"}>
-          <WeekPicker selected={captureDate} onSelect={setCaptureDate} />
+          >
+            <Calendar size={16} />
+          </motion.button>
         </div>
-      )}
 
-      {panelPrioridad.montado && (
-        <div
-          className={`${panelPrioridad.saliendo ? "panel-saliendo" : "panel-animada mt-3"} caja-tinta mt-3 flex items-center gap-2 rounded-xl border border-line bg-surface p-3`}
+        <motion.button
+          type="submit"
+          aria-label="Crear tarea"
+          whileTap={{ scale: 0.82 }}
+          transition={{ type: "spring", stiffness: 600, damping: 15 }}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink hover:opacity-90"
         >
-          <span className="text-xs text-ink-faint">Prioridad:</span>
-          {PRIORIDADES.map((p) => (
-            <button
-              key={p.valor}
-              type="button"
-              onClick={() => setPriority(p.valor)}
-              className={`inline-flex h-8 items-center rounded-lg border px-3 text-sm ${
-                priority === p.valor
-                  ? "border-accent bg-accent-soft text-ink"
-                  : "border-line text-ink-soft hover:border-line-strong hover:text-ink"
-              }`}
-            >
-              {p.etiqueta}
-            </button>
-          ))}
-        </div>
-      )}
+          <Plus size={16} strokeWidth={2.5} />
+        </motion.button>
+      </form>
 
       {captureError && (
-        <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+        <p className="px-4 pb-2 text-sm text-red-600 dark:text-red-400">
           {captureError}
         </p>
       )}
@@ -205,30 +201,37 @@ export function WeekPicker({
   const weekStart = startOfWeek(selected, { weekStartsOn: 1 });
   const dias = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
+  // Sin margen/borde propio: quien lo use lo envuelve en PanelDesplegable,
+  // que ya da el espacio y la línea superior — una sola fuente de ese
+  // estilo, no una copia por cada panel.
   return (
-    <div className="panel-animada caja-tinta mt-3 rounded-xl border border-line bg-surface p-3">
+    <div>
       <div className="mb-2 flex items-center justify-between">
-        <button
+        <motion.button
           type="button"
           aria-label="Semana anterior"
           onClick={() => moverSemana(addDays(selected, -7))}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft hover:text-ink"
+          whileTap={{ scale: 0.88 }}
+          transition={{ type: "spring", stiffness: 600, damping: 20 }}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft transition-colors duration-[140ms] hover:text-ink"
         >
           <ChevronLeft size={16} />
-        </button>
+        </motion.button>
         {/* El período en manuscrita: detalle editorial secundario. */}
         <span className="etiqueta text-ink-soft">
           semana del {format(dias[0], "d", { locale: es })} al{" "}
           {format(dias[6], "d 'de' MMM", { locale: es })}
         </span>
-        <button
+        <motion.button
           type="button"
           aria-label="Semana siguiente"
           onClick={() => moverSemana(addDays(selected, 7))}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft hover:text-ink"
+          whileTap={{ scale: 0.88 }}
+          transition={{ type: "spring", stiffness: 600, damping: 20 }}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft transition-colors duration-[140ms] hover:text-ink"
         >
           <ChevronRight size={16} />
-        </button>
+        </motion.button>
       </div>
 
       {/* Los 7 días: un click = destino de captura. Borde transparente en
@@ -238,11 +241,13 @@ export function WeekPicker({
           const esSeleccionado = isSameDay(d, selected);
           const esHoy = isSameDay(d, new Date());
           return (
-            <button
+            <motion.button
               key={d.toISOString()}
               type="button"
               onClick={() => onSelect(d)}
-              className={`flex h-10 flex-col items-center justify-center rounded-lg border border-transparent ${
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 600, damping: 20 }}
+              className={`flex h-10 flex-col items-center justify-center rounded-lg border border-transparent transition-colors duration-[140ms] ${
                 esSeleccionado
                   ? "border-accent bg-accent-soft text-ink"
                   : "text-ink-soft hover:border-line hover:text-ink"
@@ -255,7 +260,7 @@ export function WeekPicker({
               {esHoy && (
                 <span className="mt-0.5 h-1 w-1 rounded-full bg-accent" />
               )}
-            </button>
+            </motion.button>
           );
         })}
       </div>

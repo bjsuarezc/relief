@@ -1,11 +1,12 @@
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/sora";
+@import "@fontsource-variable/work-sans";
 @import "tailwindcss";
 
 /* ============================================================
-   Relief — sistema visual "editorial retro-moderno".
-   Tinta sobre papel: crema cálido, trazos de tinta, cobalto.
-   Plano (sin sombras difusas): todo se define con bordes.
+   Relief — sistema visual "cálido con carácter".
+   Fondo crema cálido, acento verde salvia (calma, no urgencia),
+   prioridades en tonos tierra apagados. Plano, sin sombras
+   difusas ni tarjetas: jerarquía por tipografía y espacio.
    ============================================================ */
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -22,29 +23,43 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
+  --color-prioridad-alta: var(--prioridad-alta);
+  --color-prioridad-alta-tinte: var(--prioridad-alta-tinte);
+  --color-prioridad-media: var(--prioridad-media);
+  --color-prioridad-media-tinte: var(--prioridad-media-tinte);
+  --color-prioridad-baja: var(--prioridad-baja);
+  --color-prioridad-baja-tinte: var(--prioridad-baja-tinte);
   /* Familias tipográficas como utilidades (font-display) */
   --font-sans: var(--fuente-cuerpo);
   --font-display: var(--fuente-display);
 }
 
-/* ---------- Papel (claro) — la identidad principal ---------- */
+/* ---------- Claro — la identidad principal ---------- */
 :root {
-  --canvas: #f6f1e6;      /* papel cálido (más amarillento, tipo referencia) */
-  --surface: #ede5d6;     /* tarjeta crema con contraste real */
-  --line: #d1c6b2;        /* trazo decorativo (tarjetas): sutil a propósito */
-  --line-input: #8a8275;  /* trazo de CONTROL (campo de captura): 3:1 sobre el papel (WCAG 1.4.11) */
-  --line-strong: #1a1a1a; /* tinta plena */
-  --ink: #1a1a1a;         /* negro tinta mate */
-  --ink-soft: #4c463b;
-  --ink-faint: #6a6353;   /* texto atenuado: 5.3:1 sobre papel (AA en 10-11px) */
-  --accent: #1f4291;      /* azul tinta (más profundo y apagado que el "web blue") */
-  --accent-soft: #dde2ee; /* tinte de selección apagado */
-  --accent-ink: #f6f1e6;  /* papel sobre tinta azul */
+  --canvas: #fbf3ea;      /* crema cálido */
+  --surface: #f2e8dc;     /* contraste sutil para hover/paneles */
+  --line: #e4d6c8;        /* trazo decorativo: sutil a propósito */
+  --line-input: #8a7860;  /* trazo de CONTROL (campo de captura): cumple 3:1 (WCAG 1.4.11) */
+  --line-strong: #241a16; /* tinta plena */
+  --ink: #241a16;
+  --ink-soft: #7a6a61;
+  --ink-faint: #6e5e51;   /* texto atenuado: pensado para AA en 11px+ */
+  --accent: #3f7367;      /* verde salvia — calma, no urgencia */
+  --accent-soft: #dce9e4; /* tinte de selección */
+  --accent-ink: #fbf3ea;  /* texto sobre el acento */
 
-  --fuente-cuerpo: "Inter Variable", "Segoe UI", system-ui, sans-serif;
-  --fuente-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
+  /* Prioridad: tonos tierra apagados, ninguno de alarma (RF-15). */
+  --prioridad-alta: #a8703a;
+  --prioridad-alta-tinte: #f1e3d2;
+  --prioridad-media: #7c7e55;
+  --prioridad-media-tinte: #eaeada;
+  --prioridad-baja: #4f7d82;
+  --prioridad-baja-tinte: #dce7e8;
 
-  /* Movimiento: duraciones y curvas como tokens. */
+  --fuente-cuerpo: "Work Sans Variable", "Segoe UI", system-ui, sans-serif;
+  --fuente-display: "Sora Variable", system-ui, sans-serif;
+
+  /* Movimiento: duraciones y curvas como tokens (sin cambios). */
   --dur-fast: 140ms;
   --dur-base: 180ms;
   --dur-slow: 220ms;
@@ -54,59 +69,111 @@
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ---------- Tinta nocturna (oscuro) ---------- */
+/* ---------- Oscuro ---------- */
 .dark {
-  --canvas: #14161b;
-  --surface: #1c1f26;
-  --line: #333845;
-  --line-input: #6f6a5e;
-  --line-strong: #d9d2c5;
-  --ink: #f2ede4;
-  --ink-soft: #a9a393;
-  --ink-faint: #8f8877;   /* 4.7:1 sobre la tarjeta nocturna */
-  --accent: #6e8fe0;
-  --accent-soft: #1e2a45;
-  --accent-ink: #10131a;
+  --canvas: #1c1512;
+  --surface: #241b17;
+  --line: #362a23;
+  --line-input: #6e5c4e;
+  --line-strong: #f3e8de;
+  --ink: #f3e8de;
+  --ink-soft: #b3a296;
+  --ink-faint: #8e7c6e;
+  --accent: #7fb39f;
+  --accent-soft: #22332d;
+  --accent-ink: #1c1512;
+
+  --prioridad-alta: #d9a15c;
+  --prioridad-alta-tinte: #3a2e1f;
+  --prioridad-media: #a9ac7e;
+  --prioridad-media-tinte: #2e301f;
+  --prioridad-baja: #7fb0b5;
+  --prioridad-baja-tinte: #1f2e30;
+}
+
+/* ---------- Mascotas: colores del dibujo ---------- */
+/* Son iguales en claro y oscuro: en oscuro las invertí antes y perdían el
+   carácter (cara y suéter oscuros, pelaje aclarado). Ahora el dibujo no
+   cambia y, en oscuro, gana un borde claro tipo calcomanía (--borde) que lo
+   separa del fondo. */
+:root {
+  --trazo: #241a16;
+  --relleno: #fffdf6;
+  --borde: transparent;
+}
+html[data-fondo="oscuro"] {
+  --borde: #f3e8de;
+}
+
+/* ---------- Temas de color ----------
+   Ortogonales al modo: html[data-tema] fija la paleta; .dark decide
+   claro/oscuro. "salvia" es la base (:root y .dark de arriba). Cada
+   tema define claro y oscuro con las MISMAS variables. */
+html[data-tema="terracota"] {
+  --canvas: #fcf0e8; --surface: #f4e3d7; --line: #e8d3c4;
+  --accent: #a94e33; --accent-soft: #f3ddd2; --accent-ink: #fff8f3;
+}
+html.dark[data-tema="terracota"] {
+  --canvas: #1f1512; --surface: #291c17; --line: #3d2b24;
+  --accent: #e08a6b; --accent-soft: #3a2620; --accent-ink: #1f1512;
+}
+html[data-tema="tinta"] {
+  --canvas: #f1f3f7; --surface: #e5e9f0; --line: #d3d9e4;
+  --line-input: #6f7c93; --line-strong: #1b2130;
+  --ink: #1b2130; --ink-soft: #5b677c; --ink-faint: #56617a;
+  --accent: #3b5b8c; --accent-soft: #dbe3f0; --accent-ink: #f1f3f7;
+}
+html.dark[data-tema="tinta"] {
+  --canvas: #141922; --surface: #1b212d; --line: #2b3444;
+  --line-input: #55627a; --line-strong: #e6eaf2;
+  --ink: #e6eaf2; --ink-soft: #a5afc2; --ink-faint: #8792a8;
+  --accent: #8fb0e3; --accent-soft: #1f2b40; --accent-ink: #141922;
+}
+html[data-tema="neutro"] {
+  --canvas: #f6f5f3; --surface: #ebe9e5; --line: #dcd9d3;
+  --line-input: #7d786f; --line-strong: #211f1c;
+  --ink: #211f1c; --ink-soft: #6f6b64; --ink-faint: #66625b;
+  --accent: #4a4741; --accent-soft: #e3e1dc; --accent-ink: #f6f5f3;
+}
+html.dark[data-tema="neutro"] {
+  --canvas: #1a1918; --surface: #232120; --line: #33312f;
+  --line-input: #625d56; --line-strong: #efece7;
+  --ink: #efece7; --ink-soft: #aaa59d; --ink-faint: #857f77;
+  --accent: #d5d0c7; --accent-soft: #2c2a28; --accent-ink: #1a1918;
 }
 
 body {
   font-family: var(--fuente-cuerpo);
-  font-feature-settings: "ss01", "cv01", "cv02", "cv03", "cv04";
   background-color: var(--canvas);
   color: var(--ink);
 }
 
-/* Reserva SIEMPRE el espacio de la barra de scroll. Sin esto, cuando el
-   contenido pasa de corto a largo (Hoy con pocas tareas → Semana/Mes con
-   muchas) aparece la barra, se angosta el ancho disponible y TODO el
-   contenido centrado se corre unos píxeles ("la pantalla se mueve", medido:
-   X=156 sin barra vs X=149 con barra). Con el canal reservado, no se mueve. */
-html {
-  scrollbar-gutter: stable;
-}
+/* (Aquí había `scrollbar-gutter: stable` en <html>, contra el "scrollbar
+   jump" de la Sesión 19. Ya no hay barra visible —el scroll de <main> es
+   .sin-barra— y el canal reservado solo dejaba una franja vacía de ~15px
+   a la derecha: márgenes 20px a la izquierda y 35px a la derecha.) */
 
 /* ---------------- Tipografía ---------------- */
 
-/* El wordmark: display ULTRA-gordo (el "Miette" de la referencia), con la
-   firma en azul. Sin regla debajo: la pediste fuera — menos es más. */
+/* El wordmark: Sora, confiado y recto — sin inclinaciones ni signos
+   de exclamación (eso leía "poco serio" en la exploración). El punto
+   en acento es la única firma. */
 .wordmark {
   font-family: var(--fuente-display);
-  font-size: 52px;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  line-height: 0.85;
-  font-variation-settings: "SOFT" 0, "WONK" 1, "opsz" 144;
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
   display: inline-block;
 }
 
-/* Etiquetas secundarias: MAYÚSCULAS espaciadas (la firma editorial de las
-   referencias: "CAFÉ ET TARTES", "COUNTRY CLUB"). Reemplaza la manuscrita.
-   11px (no 10): en mayúsculas espaciadas 10px se vuelve ilegible. */
+/* Etiquetas secundarias: mayúsculas con tracking moderado (encabezados
+   de grupo, fecha del header). Menos gritadas que el sistema anterior. */
 .etiqueta {
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.06em;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -114,16 +181,14 @@ html {
   font-variant-numeric: tabular-nums;
 }
 
-/* El CONTENIDO va en la serif, no en la fuente de UI: es lo que convierte
-   la lista en un documento escrito. Fraunces tiene eje óptico (opsz): a
-   tamaño de lectura se comporta como una serif de texto y no como un
-   display. La interfaz (botones, etiquetas) sigue en Inter. */
+/* El CONTENIDO (títulos de tarea, texto de captura) va en Sora —
+   la misma voz del wordmark — mientras que la interfaz (botones,
+   pestañas, etiquetas) usa Work Sans. Dos voces, un trabajo cada una. */
 .titulo-tarea,
 .entrada-papel {
   font-family: var(--fuente-display);
-  font-variation-settings: "opsz" 20, "SOFT" 0, "WONK" 1;
-  font-weight: 550;
-  letter-spacing: -0.012em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .titulo-tarea {
@@ -135,210 +200,45 @@ html {
   font-size: 19px;
 }
 
-/* Grano de papel: textura real sobre el color plano. Sin esto, el "papel"
-   es un hex y el ojo lo lee como pantalla. SVG de ruido embebido (sin
-   assets ni requests) a opacidad mínima. */
-.grano::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.05;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-.dark .grano::before {
-  opacity: 0.06;
-  mix-blend-mode: screen;
-}
-
-/* Caja "cortada a mano": radios apenas distintos por esquina. La
-   irregularidad mínima es lo que separa un objeto dibujado de un div. */
-.caja-tinta {
-  border-radius: 14px 12px 15px 11px;
-}
-
-/* ---------------- Animaciones ---------------- */
-
-@keyframes aparecer {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes caer {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes saliendo {
-  from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(-4px); }
-}
-
-@keyframes contador-pulso {
-  0% { transform: scale(1); }
-  45% { transform: scale(1.16); }
-  100% { transform: scale(1); }
-}
-
-.vista-animada {
-  animation: aparecer var(--dur-slow) var(--ease-out-soft);
-}
-
-/* Cambio de vista HORIZONTAL (pedido del propietario): la vista nueva entra
-   desplazándose desde el lado hacia el que viajas — derecha si avanzas
-   (Hoy → Semana → Mes), izquierda si vuelves. Es la dirección del gesto
-   la que comunica "me moví dentro de la línea de tiempo". */
-@keyframes entrar-derecha {
-  from { opacity: 0; transform: translateX(26px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-@keyframes entrar-izquierda {
-  from { opacity: 0; transform: translateX(-26px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-.vista-entra-derecha {
-  animation: entrar-derecha var(--dur-base) var(--ease-out-soft);
-}
-.vista-entra-izquierda {
-  animation: entrar-izquierda var(--dur-base) var(--ease-out-soft);
-}
-
-.panel-animada {
-  transform-origin: top;
-  animation: caer var(--dur-base) var(--ease-out-soft);
-}
-
-.panel-saliendo {
-  transform-origin: top;
-  animation: saliendo var(--dur-fast) var(--ease-standard) forwards;
-}
-
-.entrada-cascada > * {
-  animation: aparecer var(--dur-slow) var(--ease-out-soft) backwards;
-}
-.entrada-cascada > *:nth-child(1) { animation-delay: 0ms; }
-.entrada-cascada > *:nth-child(2) { animation-delay: 30ms; }
-.entrada-cascada > *:nth-child(3) { animation-delay: 60ms; }
-.entrada-cascada > *:nth-child(4) { animation-delay: 90ms; }
-.entrada-cascada > *:nth-child(5) { animation-delay: 120ms; }
-.entrada-cascada > *:nth-child(6) { animation-delay: 150ms; }
-.entrada-cascada > *:nth-child(7) { animation-delay: 180ms; }
-.entrada-cascada > *:nth-child(n + 8) { animation-delay: 210ms; }
-
-/* Píldora del conmutador: ahora es un SUBRAYADO A MANO que viaja entre
-   pestañas (el mismo trazo del wordmark). El "segmented control" con
-   fondo de píldora es lenguaje de kit de UI; el subrayado es de papel. */
-/* La pastilla viaja con Motion (spring, Sesión 20): sin transition acá —
-   dos motores sobre el mismo transform pelearían. El reduced-motion lo
-   resuelve MotionConfig (App.tsx), no el bloque de acá abajo. */
-.pestana-pill {
-  position: absolute;
-  bottom: -7px;
-  left: 0;
-  height: 6px;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='5'%3E%3Cpath d='M1 3 C 22 1.2, 44 4.2, 66 2.4 C 86 0.8, 104 3.6, 117 2.2' stroke='%231f4291' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-}
-.dark .pestana-pill {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='5'%3E%3Cpath d='M1 3 C 22 1.2, 44 4.2, 66 2.4 C 86 0.8, 104 3.6, 117 2.2' stroke='%236e8fe0' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-}
-
-.contador-pulso {
-  display: inline-block;
-  animation: contador-pulso var(--dur-slow) var(--ease-spring);
-}
-
-/* ---------------- Check: tinta que se dibuja ---------------- */
-
+/* ---------------- Check ----------------
+   El color/trazo/pop del check ahora los anima Motion directamente
+   (ver TaskList.tsx) — acá solo el centrado del ícono. */
 .ts-check {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-.ts-check:hover {
-  scale: 1.08;
-}
-.ts-check svg {
-  scale: 0.94;
-  transition: scale var(--dur-slow) var(--ease-spring);
-}
-.ts-check.completed svg {
-  scale: 1;
-}
 
-.ch-ring {
-  stroke: var(--ink-faint);
-  transition: stroke var(--dur-base) var(--ease-out-soft);
-}
-.ch-mark {
-  stroke: var(--accent);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 16;
-  stroke-dashoffset: 16;
-  transition: stroke-dashoffset var(--dur-base) var(--ease-out-soft) 40ms;
-}
-.ts-check.completed .ch-ring {
-  stroke: var(--accent);
-}
-.ts-check.completed .ch-mark {
-  stroke-dashoffset: 0;
-}
+/* ---------------- Filas de tarea: renglones ---------------- */
 
-/* ---------------- Filas de tarea: trazo, no sombra ---------------- */
-
-/* ---------------- Filas de tarea: renglones, no tarjetas ----------------
-   El sistema anterior (una tarjeta idéntica por fila, con el mismo radio y
-   borde que todo lo demás) es el "kit SaaS": el tell más reconocible de
-   diseño generado. Ahora la lista se lee como papel rayado: renglones
-   separados por una línea de tinta. */
 .tarea-fila {
   border-bottom: 1px solid var(--line);
   transition:
     background-color var(--dur-fast) var(--ease-out-ui),
     border-color var(--dur-fast) var(--ease-out-ui);
 }
-/* El primer renglón NO lleva línea arriba: la lista se abre sin cerrar el
-   bloque (menos caja, más aire — pedido de minimalismo del propietario). */
 .tarea-fila:hover {
   border-bottom-color: var(--line-strong);
   background: color-mix(in oklab, var(--ink) 4%, transparent);
 }
-/* Muro de victorias: la completada se apaga con un lavado de tinta. */
 .tarea-fila.completada {
   background: color-mix(in oklab, var(--ink) 3%, transparent);
 }
 
-/* ---------------- Botones: presión universal ---------------- */
+/* ---------------- Botones ---------------- */
 
-button:not([data-presion="off"]) {
-  transition:
-    scale var(--dur-fast) var(--ease-spring),
-    color var(--dur-fast) var(--ease-out-ui),
-    background-color var(--dur-fast) var(--ease-out-ui),
-    border-color var(--dur-fast) var(--ease-out-ui),
-    opacity var(--dur-fast) var(--ease-out-ui);
+button {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-button:not([data-presion="off"]):active {
-  scale: 0.96;
-}
 
 /* En pantallas táctiles (v2 móvil) el área de toque crece a 44px sin
-   cambiar el layout de escritorio: la altura visual sigue siendo h-8,
-   pero el elemento gana padding vertical invisible al ojo. */
+   cambiar el layout de escritorio. */
 @media (pointer: coarse) {
   button:not(.accion-tinta) {
     min-height: 44px;
     min-width: 44px;
   }
-  /* Las acciones de tinta (texto subrayado) crecen en alto de toque sin
-     mover el subrayado del texto. */
   .accion-tinta {
     padding-block: 12px 14px;
   }
@@ -354,14 +254,11 @@ input:focus-visible {
 .capture-focus input:focus-visible {
   outline: none;
 }
-/* La edición de título vive dentro de la fila: su borde de cobalto es el
-   indicador de foco; el outline global sería un segundo contorno (el
-   mismo defecto que ya corregimos en la captura). */
 input.ts-editar:focus-visible {
   outline: none;
 }
 
-/* Captura enfocada: se marca con tinta de cobalto (plano, sin halo). */
+/* Captura enfocada: se marca con el acento (plano, sin halo). */
 .capture-focus:focus-within {
   border-color: var(--accent) !important;
 }
@@ -372,30 +269,12 @@ input.ts-editar:focus-visible {
   transition: none !important;
 }
 
-/* ---------------- Movimiento reducido ---------------- */
-
-@media (prefers-reduced-motion: reduce) {
-  html:not(.forzar-movimiento) *,
-  html:not(.forzar-movimiento) *::before,
-  html:not(.forzar-movimiento) *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  html:not(.forzar-movimiento) .entrada-cascada > *,
-  html:not(.forzar-movimiento) .vista-animada,
-  html:not(.forzar-movimiento) .vista-entra-derecha,
-  html:not(.forzar-movimiento) .vista-entra-izquierda,
-  html:not(.forzar-movimiento) .panel-animada,
-  html:not(.forzar-movimiento) .panel-saliendo,
-  html:not(.forzar-movimiento) .contador-pulso,
-  html:not(.forzar-movimiento) .ts-check,
-  html:not(.forzar-movimiento) .ts-check svg,
-  html:not(.forzar-movimiento) .ch-mark,
-  html:not(.forzar-movimiento) .tarea-fila {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-    scale: 1 !important;
-  }
+/* Zona con scroll sin barra visible: la estética manda, se desplaza con
+   rueda/touchpad/teclado. scrollbar-width cubre Firefox y Chromium nuevo;
+   el pseudo-elemento, WebView2 más viejo. */
+.sin-barra {
+  scrollbar-width: none;
+}
+.sin-barra::-webkit-scrollbar {
+  display: none;
 }
