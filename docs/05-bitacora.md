@@ -1052,3 +1052,211 @@ estado y la historia antes de continuar.
 - ⏭️ Calidad pendiente: ESLint/Prettier en el frontend (requiere aprobar
   dependencias de desarrollo), tests de los componentes React,
   CI en GitHub Actions (lint + tests + build).
+
+### Sesión 23 — desde cero: rediseño D2, mascotas animadas, panel de ajustes y distribución (2026-09-19 a 2026-09-22)
+
+Sesión larga, sin cortes registrados en la bitácora hasta ahora: todo lo de
+abajo quedó en un solo commit (`0993120`), sin pasar por `docs/` en el
+camino. El disparador fue el propietario sintiendo que se estaba
+trabajando "sobre una mala base" y pidiendo empezar de cero — layout,
+componentes y concepto visual, no solo retocar lo de las Sesiones 1–22.
+
+#### Decisión de empezar de cero + validación de stack
+
+- Antes de tocar diseño, el propietario preguntó si Tauri/React/SQLite
+  seguía siendo el stack correcto pensando en llevar Relief a **móvil** y
+  en **sincronizar notas entre PC y celular**. Se confirmó que sí (Tauri 2
+  tiene target móvil), pero ambas cosas quedaron explícitamente
+  **aplazadas** ("después lo vemos"): el foco de la sesión fue solo diseño.
+  Turso/libSQL quedó anotado como candidato para la sync futura, sin
+  empezar nada de eso.
+- Se probaron 3 mockups de dirección visual (A "precisión", B "vívido", C)
+  en un Artifact de tipo canvas, primero en desktop y luego repetidos en
+  móvil a pedido del propietario ("no pareciera que está orientada a
+  dispositivos móviles"). Veredicto: B era el más atractivo pero "poco
+  serio"; A "sencillo" pero aburrido; C "muy IA" pero no feo. De ahí salió
+  **D "cálido con carácter"** y su variante **D2 "cálido, acento en
+  calma"** (mismo layout, acento verde salvia en vez de coral) — D2 fue la
+  elegida.
+
+#### Layout mobile-first (decisión de estructura, no solo de estilo)
+
+- El propietario pidió que el layout **móvil sea el layout principal**, no
+  una adaptación aparte: captura y navegación fijas al pie, como una app de
+  chat (su comparación explícita), encabezado arriba reducido a lo mínimo.
+  Esto llevó el estado de navegación (`vista`/`ancla`/`direccion`) de
+  `TaskList` a `App.tsx`, porque el pie (`VistaNav`) y el contenido ya no
+  son padre-hijo sino hermanos que comparten el mismo estado.
+- `App.css` reescrito con los tokens D2 (`--canvas`, `--accent` salvia,
+  `--prioridad-*` con tinte, dark set) y fuentes Sora/Work Sans
+  (`@fontsource-variable`), reemplazando Fraunces/Inter.
+
+#### Motion: reconstrucción completa de las transiciones de vista
+
+- Pedido explícito: sacar **todo** el movimiento heredado de sesiones
+  anteriores y empezar de cero para evitar solapamientos, y después
+  "aprovechar Motion al máximo".
+- Bug recurrente ("las tareas empiezan desde abajo y después suben"),
+  reportado tres veces antes de quedar resuelto. Causas encadenadas:
+  (a) solapamiento de *stagger* en CSS, (b) `mode="popLayout"` de
+  `AnimatePresence` no aplicaba porque los componentes propios no
+  reenvían `ref`, (c) el prop `layout` sumaba un `translateY` extra.
+  Arreglo final: apilar las vistas en la misma celda de un grid CSS
+  (`gridArea: "1 / 1"`) en vez de depender de `popLayout`. Verificado por
+  medición de DOM (no por captura de pantalla, que resultó poco confiable
+  para esto): 0 desviación vertical en 5 transiciones de vista.
+- Resultado: `AnimatePresence custom={direccion}` con `usePresenceData`
+  desliza el contenido izquierda/derecha según si se avanza o se retrocede
+  en Hoy→Semana→Mes; filas de tarea, check, pestañas y paneles
+  desplegables con resortes de Motion en vez de transiciones CSS sueltas.
+- Lección de método: el tablero de pruebas (`dev-mock.html`, no se commitea)
+  tenía una insignia de diagnóstico en la esquina que tapaba el botón
+  "Hoy" durante las pruebas — parecía un bug de la app y era del arnés. Se
+  quitó la insignia.
+
+#### Mascotas: de la idea a un rig animado en capas
+
+- Origen: el propietario vio unas referencias en `Inspiracion/` (nutria,
+  oso) y quiso integrar animales con personalidad — estados vacíos, al
+  completar una tarea, al completar el día — **eligiendo la mejor calidad
+  posible**, no solo lo que el stack ya traía puesto.
+- Pipeline decidido en conjunto: arte a tinta generado por IA (prompts
+  armados a medida, con el bloque de estilo integrado) → vectorizado con
+  **potrace** (gratis, sin Python disponible en la máquina: se resolvió
+  con los paquetes npm `potrace` + `pngjs`) → separado en capas → animado
+  con Motion, recoloreable por variables CSS.
+- El propietario generó él mismo los 3 dibujos finales (nutria con taza,
+  oso con gorro/bufanda/lista, gato con suéter) y los puso en
+  `Inspiracion/{nutria,oso,gato}.png`.
+- Vectorización (script en el scratchpad, no versionado): umbral de tinta
+  por luminancia, silueta por *flood fill* desde el borde, trazo con
+  `potrace`; salida a `src/lib/mascotas-datos.ts` (paths SVG + regiones de
+  recorte por capa, generado, no se edita a mano).
+- Rig (`src/components/Mascota.tsx`): capas cuerpo/cabeza/brazo/cola/ojos
+  con `clipPath`, cada capa dibujada ~15px más adentro de su región de
+  recorte (los "huecos" en `mascotas-datos.ts`) para que un giro nunca deje
+  un hueco visible entre capas — este fue el fix a "el brazo y la cabeza se
+  cortan del torso" que el propietario reportó. Estados: reposo (respira,
+  parpadea), `celebrar` (salta con anticipación y rebote, chispas, ojos
+  cerrados en arco feliz durante el salto), `dormir` (cabeza caída, ojos en
+  arco cerrado, "z" subiendo), y una reacción corta (`reaccion++`) al
+  completar una tarea.
+- Ojos: 3 iteraciones a pedido del propietario. Primero muy chicos y sin
+  vida → se agrandaron y se les puso doble brillo → "muy grandes, se ven
+  falsos, muy redondos, se sienten muertos" → forma ovalada e inclinada,
+  un solo brillo pequeño, más chicos que el original.
+- Color de pelaje en tema oscuro: primero se invertía (cara/suéter oscuros,
+  pelaje claro) y el oso se perdía contra el fondo. Se cambió a un
+  **contorno claro tipo calcomanía** que se activa según la **luminancia
+  real del `--canvas`** (no según el modo claro/oscuro), así un tema con
+  fondo intermedio tampoco pierde el contorno.
+- Paletas de pelaje: se probó una paleta distinta de 5 colores por animal,
+  el propietario pidió reducirla ("tantas opciones desordena la app") y
+  unificarla en **una sola paleta de 3 colores, en el mismo orden, para
+  los 3 animales** — Chocolate, Grafito y un tercero que pasó por dos
+  vueltas: "Canela" (`#a5733f`) se reportó como "se ve terrible, muy
+  naranjo" y se reemplazó por **Piedra** (`#6b5d52`), un gris pardo neutro
+  que combina con los 4 temas de color.
+
+#### Panel de ajustes (`PanelAjustes.tsx`, botón de engranaje)
+
+- Reemplaza al `ThemeToggle` suelto del encabezado. Reúne tema de color,
+  modo claro/oscuro/auto y elección de mascota + su color de pelaje, todo
+  aplicado al instante (sin botón "guardar") y persistido en
+  `localStorage` (`relief-ajustes`, store `src/lib/ajustes.ts`).
+- 4 temas de color, ortogonales al modo: salvia (base), terracota, tinta,
+  neutro. Se probó reducir a 3 (sacando neutro) y el propietario lo pidió
+  de vuelta ("quedaba muy bien") — quedaron los 4.
+- El contorno de las mascotas y el atributo `data-fondo` se calculan a
+  partir de la luminancia de `--canvas` ya renderizado, no de una tabla
+  fija por tema, para que sigan funcionando si se agrega un tema nuevo.
+- `MascotaActual.tsx` centraliza "qué mascota y qué color mostrar" (o nada,
+  si se eligió "ninguna") para no repetir la lógica en cada pantalla donde
+  aparece.
+
+#### Mascotas en la app
+
+- Estado vacío de Hoy: el gato dibujado a mano (línea suelta, cobalto) se
+  reemplazó por la mascota elegida, dormida.
+- `App.tsx`: nuevo estado (`cargado`, `previo`) que arma una línea base
+  después de la carga inicial — completar tareas que ya estaban hechas
+  al abrir la app no dispara ninguna reacción; solo lo que se completa
+  después de esa línea base. Dispara `reaccion++` al completar una tarea
+  de hoy, y `celebrando` (5 s) cuando las tareas de hoy quedan todas
+  completas (N/N).
+- La papelera vacía conserva su propio dibujo a mano (el mensaje ahí es
+  distinto: "no hay nada que restaurar", no "no tenés nada que hacer").
+
+#### Empaquetado y distribución
+
+- Motivo: el propietario quiso instalar Relief en otra PC sin que pida
+  permisos de administrador, y poder actualizarla fácil después.
+- `tauri.conf.json`: `bundle.targets` pasó de `"all"` a **solo `["nsis"]`**
+  (el `.msi` de Windows siempre pide admin, sin excepción) con
+  `windows.nsis.installMode: "currentUser"` — instala en `%LOCALAPPDATA%`,
+  sin UAC. Instalación silenciosa por terminal: `Relief_x64-setup.exe /S`.
+- Repositorio público nuevo: **github.com/bjsuarezc/relief**. `gh` no
+  estaba instalado (el MSI de `winget` falló por falta de permisos); se
+  usó una copia portable descargada del zip de releases, autenticada con
+  `gh auth login --web` (flujo de código de un solo uso, requiere que la
+  persona lo apruebe a mano en el navegador — no se puede automatizar del
+  lado del agente). `gh auth refresh -s workflow` (el scope que hubiera
+  hecho falta para pushear workflows de GitHub Actions) falló repetido con
+  "context deadline exceeded"; no se insistió más y se descartó CI
+  automático por ahora — el release es manual (`gh release create`).
+- Windows Defender bloqueó el instalador sin firmar en una segunda PC
+  ("el archivo contiene un virus", falso positivo típico de heurística en
+  NSIS sin firmar — confirmado con una instalación silenciosa exitosa en
+  la PC de desarrollo antes de que apareciera el bloqueo en la otra
+  máquina). Se investigó **SignPath Foundation** (firma real y gratuita
+  para proyectos open source) y se descartó por ahora: exige licencia OSI
+  en el repo, 2FA en GitHub, README y "política de firma" documentados,
+  aprobación manual de **cada release** en su panel, y la revisión inicial
+  del proyecto tarda de días a semanas — mucho más compromiso del que
+  pedía el problema puntual. En su lugar: un **certificado autofirmado**
+  (`New-SelfSignedCertificate`, sin costo, sin admin, sin espera), firmado
+  con `signtool` (viene con el Windows SDK). Probado en la segunda PC:
+  **funcionó**, instaló sin bloqueo.
+- Detalle del certificado y el flujo de publicar una versión nueva
+  quedaron en la memoria del proyecto (`distribucion-relief.md`), no acá,
+  porque son datos operativos que cambian con cada release, no decisiones
+  de diseño.
+- Comando para instalar o actualizar Relief desde cualquier PC (PowerShell,
+  sin admin, siempre la versión más nueva publicada):
+  ```powershell
+  $rel = Invoke-RestMethod "https://api.github.com/repos/bjsuarezc/relief/releases/latest"
+  $asset = $rel.assets | Where-Object { $_.name -like "*setup.exe" } | Select-Object -First 1
+  Invoke-WebRequest $asset.browser_download_url -OutFile "$env:TEMP\$($asset.name)"
+  Start-Process "$env:TEMP\$($asset.name)" -ArgumentList "/S" -Wait
+  ```
+
+#### Verificación y sus límites (honesto)
+
+- Todo lo de Motion y el rig de las mascotas se verificó con medición de
+  DOM/`getComputedStyle` y capturas de una página de pruebas
+  (`dev-mascotas.html`, no se commitea), nunca viendo el movimiento real a
+  60 fps — eso lo juzgó el propietario en la ventana de Tauri.
+  `tsc --noEmit` limpio en cada paso.
+- La instalación silenciosa y el certificado autofirmado sí se probaron de
+  punta a punta en dos PCs distintas (no solo en teoría).
+- No se tocó: aceleradores de teclado, tests de componentes React,
+  ESLint/Prettier, CI. `AGENTS.md` no se actualizó con los módulos nuevos
+  (`lib/ajustes.ts`, `components/Mascota*.tsx`).
+
+### Estado / siguiente paso
+
+- ✅ Rediseño D2 completo (mobile-first, tokens, tipografía) y transiciones
+  de vista reconstruidas con Motion, sin el bug de layout de antes.
+- ✅ Mascotas (nutria/oso/gato) vectorizadas desde arte propio, en rig
+  animado por capas, integradas en estado vacío y reacciones de Hoy.
+- ✅ Panel de ajustes: 4 temas de color, modo claro/oscuro/auto, mascota y
+  color de pelaje (paleta compartida de 3), todo persistido.
+- ✅ Instalador NSIS sin admin, repo público y distribución por terminal
+  funcionando y probada en 2 PCs (incluido el bloqueo de Defender resuelto
+  con firma autofirmada).
+- ⏭️ Pendiente de antes, sigue pendiente: aceleradores de teclado, tests
+  de componentes, ESLint/Prettier, CI.
+- ⏭️ Nuevo pendiente: README real para el repo público (sigue siendo la
+  plantilla de Tauri) y `AGENTS.md` sin los módulos de ajustes/mascotas.
+- ⏭️ Aplazado explícitamente por el propietario: sync entre dispositivos
+  (candidato: Turso/libSQL) y build móvil.
