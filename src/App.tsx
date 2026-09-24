@@ -18,6 +18,7 @@ import {
 } from "./components/TaskList";
 import { MascotaActual } from "./components/MascotaActual";
 import { PanelAjustes } from "./components/PanelAjustes";
+import { PapelBurbuja } from "./components/PapelBurbuja";
 import { useTasksStore } from "./lib/store";
 
 function App() {
@@ -122,6 +123,7 @@ function App() {
               activa={vista === "papelera"}
               onClick={() => cambiarVista(vista === "papelera" ? "hoy" : "papelera")}
             />
+            <PapelBurbuja />
             <PanelAjustes />
           </div>
         </header>
