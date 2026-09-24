@@ -7,7 +7,7 @@ import { Monitor, Moon, Settings2, Sun } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { TEMAS, useAjustes, type Modo, type TemaColor } from "../lib/ajustes";
 import { api } from "../lib/api";
-import { Mascota, PALETA_PELAJE, type Animal } from "./Mascota";
+import { Mascota, MASCOTAS_HABILITADAS, PALETA_PELAJE, type Animal } from "./Mascota";
 
 // Solo existe fuera del navegador (Tauri real): en dev-mock/navegador no
 // hay registro de Windows que leer ni escribir.
@@ -164,6 +164,7 @@ export function PanelAjustes() {
               </div>
             </Seccion>
 
+            {MASCOTAS_HABILITADAS && (
             <Seccion titulo="Mascota">
               <div className="grid grid-cols-4 gap-2">
                 {ANIMALES.map(({ id, nombre }) => (
@@ -202,6 +203,7 @@ export function PanelAjustes() {
                 </div>
               )}
             </Seccion>
+            )}
 
             {enTauri && (
               <Seccion titulo="Sistema">

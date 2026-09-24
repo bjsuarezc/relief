@@ -2,7 +2,7 @@
 // eligió "ninguna"). Un solo lugar para que cada pantalla no repita la lógica.
 
 import { useAjustes } from "../lib/ajustes";
-import { Mascota, PALETA_PELAJE, type EstadoMascota } from "./Mascota";
+import { Mascota, MASCOTAS_HABILITADAS, PALETA_PELAJE, type EstadoMascota } from "./Mascota";
 
 export function MascotaActual({
   estado,
@@ -15,7 +15,7 @@ export function MascotaActual({
 }) {
   const animal = useAjustes((s) => s.mascota);
   const indice = useAjustes((s) => (s.mascota === "ninguna" ? 0 : s.colores[s.mascota]));
-  if (animal === "ninguna") return null;
+  if (!MASCOTAS_HABILITADAS || animal === "ninguna") return null;
   const pelaje = PALETA_PELAJE[indice]?.color;
   return <Mascota animal={animal} estado={estado} reaccion={reaccion} pelaje={pelaje} className={className} />;
 }

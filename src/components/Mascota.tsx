@@ -13,6 +13,14 @@ import { useId } from "react";
 import { motion } from "motion/react";
 import { MASCOTAS } from "../lib/mascotas-datos";
 
+// Interruptor temporal: Windows Defender viene eliminando el instalador
+// (falsos positivos de ML — Wacatac, Bearfoos — sin relación con el código
+// de las mascotas, pero mientras se resuelve la distribución, el propietario
+// pidió sacarlas de la app). El rig, los datos vectorizados y el panel de
+// ajustes siguen todos acá, listos para reactivar cambiando esta línea:
+// no se borró nada, solo se apaga la salida a pantalla.
+export const MASCOTAS_HABILITADAS = false;
+
 export type Animal = "nutria" | "oso" | "gato";
 export type EstadoMascota = "reposo" | "celebrar" | "dormir";
 
